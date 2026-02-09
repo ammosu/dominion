@@ -121,6 +121,42 @@ impl SimpleAi {
 
         Some(PlayerAction::PlayRemodel { trash, gain })
     }
+
+    /// Check if it's late game (Province pile low)
+    fn is_late_game(game: &GameState) -> bool {
+        game.supply.get(&Card::Province).copied().unwrap_or(0) <= 4
+    }
+
+    /// Decide what card to buy based on available coins
+    fn decide_purchase(game: &GameState, player_idx: usize) -> Option<Card> {
+        let player = &game.players[player_idx];
+        let coins = player.coins;
+        let is_late = Self::is_late_game(game);
+
+        // Helper to check if card is available
+        let available = |card: Card| -> bool {
+            game.supply.get(&card).copied().unwrap_or(0) > 0
+        };
+
+        // Purchase priority based on coins
+        if coins >= 8 && available(Card::Province) {
+            Some(Card::Province)
+        } else if coins >= 6 && !is_late && available(Card::Gold) {
+            Some(Card::Gold)
+        } else if coins >= 6 && is_late && available(Card::Duchy) {
+            Some(Card::Duchy)
+        } else if coins >= 5 && is_late && available(Card::Duchy) {
+            Some(Card::Duchy)
+        } else if coins >= 5 && !is_late && available(Card::Duchy) {
+            Some(Card::Duchy)
+        } else if coins >= 3 && available(Card::Silver) {
+            Some(Card::Silver)
+        } else if coins >= 2 && available(Card::Estate) {
+            Some(Card::Estate)
+        } else {
+            None
+        }
+    }
 }
 
 impl AiPlayer for SimpleAi {
@@ -159,7 +195,22 @@ impl AiPlayer for SimpleAi {
                 Some(PlayerAction::EndPhase)
             }
             TurnPhase::Buy => {
-                // Will implement in next task
+                let player = &game.players[player_idx];
+
+                // First, play all treasure cards if we haven't
+                let has_treasures = player.hand.iter().any(|c| c.card_type() == CardType::Treasure);
+                if has_treasures {
+                    return Some(PlayerAction::PlayAllTreasures);
+                }
+
+                // Then try to buy something
+                if player.buys > 0 {
+                    if let Some(card) = Self::decide_purchase(game, player_idx) {
+                        return Some(PlayerAction::BuyCard { card });
+                    }
+                }
+
+                // No more actions, end turn
                 Some(PlayerAction::EndPhase)
             }
             _ => None,
