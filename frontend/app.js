@@ -1,28 +1,79 @@
+// --- Localization ---
+let currentLang = localStorage.getItem("dominion-lang") || "en";
+
 const CARD_DATA = {
-  Copper:     { type: "treasure", cost: 0, coins: 1 },
-  Silver:     { type: "treasure", cost: 3, coins: 2 },
-  Gold:       { type: "treasure", cost: 6, coins: 3 },
-  Estate:     { type: "victory",  cost: 2, vp: 1 },
-  Duchy:      { type: "victory",  cost: 5, vp: 3 },
-  Province:   { type: "victory",  cost: 8, vp: 6 },
-  Curse:      { type: "curse",    cost: 0, vp: -1 },
-  Cellar:     { type: "action",   cost: 2, desc: "+1 Action, discard any, +1 Card each" },
-  Market:     { type: "action",   cost: 5, desc: "+1 Card, +1 Action, +1 Buy, +1 Coin" },
-  Militia:    { type: "action",   cost: 4, desc: "+2 Coins, others discard to 3" },
-  Mine:       { type: "action",   cost: 5, desc: "Trash Treasure, gain +3 cost to hand" },
-  Moat:       { type: "action",   cost: 2, desc: "+2 Cards, blocks Attacks" },
-  Remodel:    { type: "action",   cost: 4, desc: "Trash card, gain +2 cost" },
-  Smithy:     { type: "action",   cost: 4, desc: "+3 Cards" },
-  Village:    { type: "action",   cost: 3, desc: "+1 Card, +2 Actions" },
-  Woodcutter: { type: "action",   cost: 3, desc: "+1 Buy, +2 Coins" },
-  Workshop:   { type: "action",   cost: 3, desc: "Gain card costing up to 4" },
+  Copper:     { type: "treasure", cost: 0, coins: 1, name: { en: "Copper", zh: "銅幣" } },
+  Silver:     { type: "treasure", cost: 3, coins: 2, name: { en: "Silver", zh: "銀幣" } },
+  Gold:       { type: "treasure", cost: 6, coins: 3, name: { en: "Gold", zh: "金幣" } },
+  Estate:     { type: "victory",  cost: 2, vp: 1, name: { en: "Estate", zh: "莊園" } },
+  Duchy:      { type: "victory",  cost: 5, vp: 3, name: { en: "Duchy", zh: "公國" } },
+  Province:   { type: "victory",  cost: 8, vp: 6, name: { en: "Province", zh: "行省" } },
+  Curse:      { type: "curse",    cost: 0, vp: -1, name: { en: "Curse", zh: "詛咒" } },
+  Cellar:     { type: "action",   cost: 2, name: { en: "Cellar", zh: "地窖" }, desc: { en: "+1 Action, discard any, +1 Card each", zh: "+1 行動，棄任意張牌，每張抽 1 張牌" } },
+  Market:     { type: "action",   cost: 5, name: { en: "Market", zh: "市集" }, desc: { en: "+1 Card, +1 Action, +1 Buy, +1 Coin", zh: "+1 張牌、+1 行動、+1 購買、+1 金幣" } },
+  Militia:    { type: "action",   cost: 4, name: { en: "Militia", zh: "義勇軍" }, desc: { en: "+2 Coins, others discard to 3", zh: "+2 金幣，其他玩家棄牌至 3 張" } },
+  Mine:       { type: "action",   cost: 5, name: { en: "Mine", zh: "礦坑" }, desc: { en: "Trash Treasure, gain +3 cost to hand", zh: "廢棄財寶牌，獲得價值 +3 的財寶牌到手牌" } },
+  Moat:       { type: "action",   cost: 2, name: { en: "Moat", zh: "護城河" }, desc: { en: "+2 Cards, blocks Attacks", zh: "+2 張牌，抵擋攻擊" } },
+  Remodel:    { type: "action",   cost: 4, name: { en: "Remodel", zh: "重建" }, desc: { en: "Trash card, gain +2 cost", zh: "廢棄 1 張牌，獲得價值 +2 的牌" } },
+  Smithy:     { type: "action",   cost: 4, name: { en: "Smithy", zh: "鐵匠" }, desc: { en: "+3 Cards", zh: "+3 張牌" } },
+  Village:    { type: "action",   cost: 3, name: { en: "Village", zh: "村莊" }, desc: { en: "+1 Card, +2 Actions", zh: "+1 張牌、+2 行動" } },
+  Woodcutter: { type: "action",   cost: 3, name: { en: "Woodcutter", zh: "伐木工" }, desc: { en: "+1 Buy, +2 Coins", zh: "+1 購買、+2 金幣" } },
+  Workshop:   { type: "action",   cost: 3, name: { en: "Workshop", zh: "工作室" }, desc: { en: "Gain card costing up to 4", zh: "獲得價值至多 4 的牌" } },
 };
 
+const UI_TEXT = {
+  treasure: { en: "Treasure", zh: "財寶" },
+  victory: { en: "Victory", zh: "分數" },
+  curse: { en: "Curse", zh: "詛咒" },
+  kingdom: { en: "Kingdom", zh: "王國" },
+  action: { en: "Action", zh: "行動" },
+  buy: { en: "Buy", zh: "購買" },
+  cleanup: { en: "Cleanup", zh: "清場" },
+  actions: { en: "Actions", zh: "行動" },
+  buys: { en: "Buys", zh: "購買" },
+  coins: { en: "Coins", zh: "金幣" },
+  coin: { en: "Coin", zh: "金幣" },
+  vp: { en: "VP", zh: "分" },
+  hand: { en: "Hand", zh: "手牌" },
+  deck: { en: "Deck", zh: "牌庫" },
+  discard: { en: "Discard", zh: "棄牌堆" },
+  players: { en: "Players", zh: "玩家" },
+  log: { en: "Log", zh: "記錄" },
+  yourHand: { en: "Your Hand", zh: "你的手牌" },
+  supply: { en: "Supply", zh: "供應區" },
+  left: { en: "left", zh: "剩餘" },
+  endActions: { en: "End Actions", zh: "結束行動" },
+  endTurn: { en: "End Turn", zh: "結束回合" },
+  playAllTreasures: { en: "Play All Treasures", zh: "打出所有財寶" },
+  cancel: { en: "Cancel", zh: "取消" },
+  confirmCellar: { en: "Confirm Cellar (discard", zh: "確認地窖（棄" },
+  selectSupplyUpTo4: { en: "Select a supply pile costing 4 or less", zh: "選擇價值至多 4 的供應堆" },
+  selectTreasureTrash: { en: "Select a Treasure from hand to trash", zh: "從手牌選擇財寶牌廢棄" },
+  trashing: { en: "Trashing", zh: "廢棄" },
+  selectTreasureUpTo: { en: "Select a Treasure costing up to", zh: "選擇價值至多" },
+  selectCardTrash: { en: "Select a card from hand to trash", zh: "從手牌選擇一張牌廢棄" },
+  selectCardUpTo: { en: "Select a card costing up to", zh: "選擇價值至多" },
+  gameOver: { en: "Game Over", zh: "遊戲結束" },
+  newGame: { en: "New Game", zh: "新遊戲" },
+  startGame: { en: "Start Game", zh: "開始遊戲" },
+  playerName: { en: "Player", zh: "玩家" },
+  name: { en: "name", zh: "名稱" },
+  gameStarted: { en: "Game started!", zh: "遊戲開始！" },
+};
+
+function t(key) {
+  return UI_TEXT[key]?.[currentLang] || key;
+}
+
+function getCardName(name) {
+  return CARD_DATA[name]?.name[currentLang] || name;
+}
+
 const SUPPLY_GROUPS = [
-  { label: "Treasure", cards: ["Copper", "Silver", "Gold"] },
-  { label: "Victory",  cards: ["Estate", "Duchy", "Province"] },
-  { label: "Curse",    cards: ["Curse"] },
-  { label: "Kingdom",  cards: ["Cellar", "Market", "Militia", "Mine", "Moat", "Remodel", "Smithy", "Village", "Woodcutter", "Workshop"] },
+  { label: "treasure", cards: ["Copper", "Silver", "Gold"] },
+  { label: "victory",  cards: ["Estate", "Duchy", "Province"] },
+  { label: "curse",    cards: ["Curse"] },
+  { label: "kingdom",  cards: ["Cellar", "Market", "Militia", "Mine", "Moat", "Remodel", "Smithy", "Village", "Woodcutter", "Workshop"] },
 ];
 
 // --- State ---
@@ -82,17 +133,24 @@ function cancelMode() {
 // --- Helpers ---
 function cardDetail(name) {
   const d = CARD_DATA[name];
-  if (d.desc) return d.desc;
-  if (d.coins) return `+${d.coins} Coin${d.coins > 1 ? "s" : ""}`;
-  if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} VP`;
-  return "Action";
+  if (d.desc) return d.desc[currentLang];
+  if (d.coins) return currentLang === "zh" ? `+${d.coins} ${t("coin")}` : `+${d.coins} ${t("coin")}${d.coins > 1 ? "s" : ""}`;
+  if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} ${t("vp")}`;
+  return t("action");
 }
 
 function cardShortDetail(name) {
   const d = CARD_DATA[name];
-  if (d.coins) return `+${d.coins} Coin${d.coins > 1 ? "s" : ""}`;
-  if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} VP`;
-  return "Action";
+  if (d.coins) return currentLang === "zh" ? `+${d.coins} ${t("coin")}` : `+${d.coins} ${t("coin")}${d.coins > 1 ? "s" : ""}`;
+  if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} ${t("vp")}`;
+  return t("action");
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === "en" ? "zh" : "en";
+  localStorage.setItem("dominion-lang", currentLang);
+  updateStaticText();
+  if (game) render();
 }
 
 function currentPlayer() {
@@ -113,26 +171,33 @@ function renderTurnInfo() {
   document.getElementById("current-player").textContent = player.name;
 
   const badge = document.getElementById("phase-badge");
-  badge.textContent = game.phase;
+  badge.textContent = t(game.phase.toLowerCase());
   badge.className = game.phase === "Buy" ? "buy-phase" : "";
 
-  document.getElementById("actions-counter").textContent = `Actions: ${player.actions}`;
-  document.getElementById("buys-counter").textContent = `Buys: ${player.buys}`;
-  document.getElementById("coins-counter").textContent = `Coins: ${player.coins}`;
+  document.getElementById("actions-counter").textContent = `${t("actions")}: ${player.actions}`;
+  document.getElementById("buys-counter").textContent = `${t("buys")}: ${player.buys}`;
+  document.getElementById("coins-counter").textContent = `${t("coins")}: ${player.coins}`;
 
   const btns = document.getElementById("phase-buttons");
   btns.innerHTML = "";
 
+  // Language toggle button
+  const langBtn = document.createElement("button");
+  langBtn.className = "secondary";
+  langBtn.textContent = currentLang === "en" ? "中文" : "EN";
+  langBtn.onclick = toggleLanguage;
+  btns.appendChild(langBtn);
+
   if (game.phase === "Action") {
     const btn = document.createElement("button");
     btn.className = "secondary";
-    btn.textContent = "End Actions";
+    btn.textContent = t("endActions");
     btn.onclick = () => sendAction({ action: "EndPhase" });
     btns.appendChild(btn);
   } else if (game.phase === "Buy") {
     const btn = document.createElement("button");
     btn.className = "secondary";
-    btn.textContent = "End Turn";
+    btn.textContent = t("endTurn");
     btn.onclick = () => sendAction({ action: "EndPhase" });
     btns.appendChild(btn);
   }
@@ -148,7 +213,7 @@ function renderSupply() {
   for (const group of SUPPLY_GROUPS) {
     const label = document.createElement("div");
     label.className = "supply-group-label";
-    label.textContent = group.label;
+    label.textContent = t(group.label);
     grid.appendChild(label);
 
     const row = document.createElement("div");
@@ -171,9 +236,9 @@ function renderSupply() {
       pile.dataset.tooltip = cardDetail(cardName);
       pile.innerHTML = `
         <span class="card-cost">${data.cost}</span>
-        <span class="card-name">${cardName}</span>
+        <span class="card-name">${getCardName(cardName)}</span>
         <span class="card-detail">${cardShortDetail(cardName)}</span>
-        <span class="pile-count">${count} left</span>
+        <span class="pile-count">${count} ${t("left")}</span>
       `;
 
       if (canWorkshopGain) {
@@ -233,7 +298,7 @@ function renderHand() {
     card.dataset.tooltip = cardDetail(cardName);
     card.innerHTML = `
       <span class="card-cost">${data.cost}</span>
-      <span class="card-name">${cardName}</span>
+      <span class="card-name">${getCardName(cardName)}</span>
       <span class="card-detail">${cardShortDetail(cardName)}</span>
     `;
 
@@ -284,7 +349,7 @@ function renderHandButtons() {
   if (uiMode === "cellar-select") {
     const confirm = document.createElement("button");
     confirm.className = "success";
-    confirm.textContent = `Confirm Cellar (discard ${cellarSelected.size})`;
+    confirm.textContent = `${t("confirmCellar")} ${cellarSelected.size})`;
     confirm.onclick = () => {
       const discards = [...cellarSelected].map(i => player.hand[i]);
       sendAction({ action: "PlayCellar", discards });
@@ -292,25 +357,25 @@ function renderHandButtons() {
     btns.appendChild(confirm);
     appendCancelButton(btns);
   } else if (uiMode === "workshop-select") {
-    appendModeInfo(btns, "Select a supply pile costing 4 or less");
+    appendModeInfo(btns, t("selectSupplyUpTo4"));
     appendCancelButton(btns);
   } else if (uiMode === "mine-trash-select") {
-    appendModeInfo(btns, "Select a Treasure from hand to trash");
+    appendModeInfo(btns, t("selectTreasureTrash"));
     appendCancelButton(btns);
   } else if (uiMode === "mine-gain-select") {
     const maxCost = CARD_DATA[pendingTrash].cost + 3;
-    appendModeInfo(btns, `Trashing ${pendingTrash}. Select a Treasure costing up to ${maxCost}`);
+    appendModeInfo(btns, `${t("trashing")} ${getCardName(pendingTrash)}. ${t("selectTreasureUpTo")} ${maxCost}`);
     appendCancelButton(btns);
   } else if (uiMode === "remodel-trash-select") {
-    appendModeInfo(btns, "Select a card from hand to trash");
+    appendModeInfo(btns, t("selectCardTrash"));
     appendCancelButton(btns);
   } else if (uiMode === "remodel-gain-select") {
     const maxCost = CARD_DATA[pendingTrash].cost + 2;
-    appendModeInfo(btns, `Trashing ${pendingTrash}. Select a card costing up to ${maxCost}`);
+    appendModeInfo(btns, `${t("trashing")} ${getCardName(pendingTrash)}. ${t("selectCardUpTo")} ${maxCost}`);
     appendCancelButton(btns);
   } else if (isBuyPhase && hasTreasures) {
     const btn = document.createElement("button");
-    btn.textContent = "Play All Treasures";
+    btn.textContent = t("playAllTreasures");
     btn.onclick = () => sendAction({ action: "PlayAllTreasures" });
     btns.appendChild(btn);
   }
@@ -326,7 +391,7 @@ function appendModeInfo(container, text) {
 function appendCancelButton(container) {
   const cancel = document.createElement("button");
   cancel.className = "secondary";
-  cancel.textContent = "Cancel";
+  cancel.textContent = t("cancel");
   cancel.onclick = cancelMode;
   container.appendChild(cancel);
 }
@@ -362,9 +427,9 @@ function renderPlayers() {
     card.innerHTML = `
       <div class="player-name">${player.name}${i === game.current_player ? " ★" : ""}</div>
       <div class="player-stats">
-        <div class="stat"><span>Hand</span><span>${player.hand.length}</span></div>
-        <div class="stat"><span>Deck</span><span>${player.deck.length}</span></div>
-        <div class="stat"><span>Discard</span><span>${player.discard.length}</span></div>
+        <div class="stat"><span>${t("hand")}</span><span>${player.hand.length}</span></div>
+        <div class="stat"><span>${t("deck")}</span><span>${player.deck.length}</span></div>
+        <div class="stat"><span>${t("discard")}</span><span>${player.discard.length}</span></div>
       </div>
     `;
     list.appendChild(card);
@@ -404,17 +469,42 @@ function showGameOver() {
   for (const s of scores) {
     const row = document.createElement("div");
     row.className = `score-row${s.score === maxScore ? " winner" : ""}`;
-    row.innerHTML = `<span>${s.name}</span><span>${s.score} VP</span>`;
+    row.innerHTML = `<span>${s.name}</span><span>${s.score} ${t("vp")}</span>`;
     scoresEl.appendChild(row);
   }
 }
 
+// --- Update Static Text ---
+function updateStaticText() {
+  // Lobby
+  document.querySelector("#lobby-box h1").textContent = currentLang === "zh" ? "皇輿爭霸" : "Dominion";
+  document.getElementById("start-game-btn").textContent = t("startGame");
+  const inputs = document.querySelectorAll(".player-name-input");
+  inputs.forEach((input, i) => {
+    input.placeholder = `${t("playerName")} ${i + 1} ${t("name")}`;
+  });
+
+  // Game screen
+  document.querySelector("#supply h2").textContent = t("supply");
+  document.querySelector("#players-sidebar h2").textContent = t("players");
+  document.querySelector("#action-log h2").textContent = t("log");
+  document.querySelector("#hand-header h2").textContent = t("yourHand");
+
+  // Game over
+  document.querySelector("#game-over-box h1").textContent = t("gameOver");
+  document.getElementById("new-game-btn").textContent = t("newGame");
+}
+
 // --- Init ---
+document.addEventListener("DOMContentLoaded", () => {
+  updateStaticText();
+});
+
 document.getElementById("start-game-btn").addEventListener("click", async () => {
   const inputs = document.querySelectorAll(".player-name-input");
   const names = [...inputs].map(i => i.value.trim()).filter(n => n);
   if (names.length < 2) {
-    alert("Enter at least 2 player names");
+    alert(currentLang === "zh" ? "請輸入至少 2 位玩家名稱" : "Enter at least 2 player names");
     return;
   }
 
@@ -433,4 +523,5 @@ document.getElementById("new-game-btn").addEventListener("click", () => {
   document.getElementById("lobby").classList.remove("hidden");
   gameId = null;
   game = null;
+  updateStaticText();
 });
