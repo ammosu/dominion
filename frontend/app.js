@@ -61,6 +61,47 @@ const UI_TEXT = {
   gameStarted: { en: "Game started!", zh: "遊戲開始！" },
 };
 
+const RULES_TEXT = {
+  title: { en: "How to Play Dominion", zh: "如何遊玩皇輿爭霸" },
+  sections: [
+    {
+      title: { en: "Game Goal", zh: "遊戲目標" },
+      content: {
+        en: "Accumulate the most Victory Points (VP) by the end of the game. Victory cards like Estate (+1 VP), Duchy (+3 VP), and Province (+6 VP) provide points. Beware of Curse cards (-1 VP)!",
+        zh: "在遊戲結束時累積最多分數。分數卡如莊園（+1 分）、公國（+3 分）、行省（+6 分）提供分數。小心詛咒卡（-1 分）！"
+      }
+    },
+    {
+      title: { en: "Turn Structure", zh: "回合流程" },
+      content: {
+        en: "Each turn has three phases:\n\n1. **Action Phase**: Play one Action card from your hand (if you have Actions available). Some cards give you more Actions.\n\n2. **Buy Phase**: Play Treasure cards (Copper, Silver, Gold) to generate coins, then buy one card from the Supply (if you have Buys available).\n\n3. **Cleanup Phase**: Discard all cards in play and in your hand, then draw 5 new cards for your next turn.",
+        zh: "每個回合有三個階段：\n\n1. **行動階段**：從手牌打出一張行動卡（如果你有行動次數）。某些卡片會給你更多行動次數。\n\n2. **購買階段**：打出財寶卡（銅幣、銀幣、金幣）產生金幣，然後從供應區購買一張卡片（如果你有購買次數）。\n\n3. **清場階段**：棄掉所有在場上和手牌的卡片，然後抽 5 張新牌作為下回合手牌。"
+      }
+    },
+    {
+      title: { en: "Card Types", zh: "卡片類型" },
+      content: {
+        en: "**Treasure Cards**: Provide coins for buying cards (Copper = 1 coin, Silver = 2 coins, Gold = 3 coins).\n\n**Victory Cards**: Provide Victory Points at the end of game (Estate = 1 VP, Duchy = 3 VP, Province = 6 VP).\n\n**Action Cards**: Provide special effects when played during Action Phase. Hover over any card to see its effect.\n\n**Curse Cards**: Negative Victory Points (-1 VP). Clutter your deck.",
+        zh: "**財寶卡**：提供購買卡片所需的金幣（銅幣 = 1 金幣、銀幣 = 2 金幣、金幣 = 3 金幣）。\n\n**分數卡**：在遊戲結束時提供分數（莊園 = 1 分、公國 = 3 分、行省 = 6 分）。\n\n**行動卡**：在行動階段打出時提供特殊效果。將滑鼠移到任何卡片上查看效果。\n\n**詛咒卡**：負分數（-1 分）。會塞滿你的牌庫。"
+      }
+    },
+    {
+      title: { en: "Winning the Game", zh: "遊戲勝利" },
+      content: {
+        en: "The game ends when either:\n- The Province pile is empty, OR\n- Any 3 Supply piles are empty\n\nCount all Victory Points from cards in your deck, discard pile, and hand. The player with the most VP wins!",
+        zh: "當以下情況發生時遊戲結束：\n- 行省堆空了，或\n- 任意 3 個供應堆空了\n\n計算你牌庫、棄牌堆和手牌中所有卡片的分數。分數最高的玩家獲勝！"
+      }
+    },
+    {
+      title: { en: "Basic Strategy", zh: "基本策略" },
+      content: {
+        en: "- **Early game**: Buy Silver and useful Action cards to build your deck engine.\n- **Mid game**: Balance between Treasure cards and Victory cards.\n- **Late game**: Focus on buying Province and Duchy for Victory Points.\n- **Key tip**: Victory cards don't help during the game - they only count at the end!",
+        zh: "- **前期**：購買銀幣和有用的行動卡來建立你的牌庫引擎。\n- **中期**：在財寶卡和分數卡之間取得平衡。\n- **後期**：專注於購買行省和公國以獲得分數。\n- **關鍵提示**：分數卡在遊戲中沒有幫助 - 它們只在遊戲結束時計分！"
+      }
+    }
+  ]
+};
+
 function t(key) {
   return UI_TEXT[key]?.[currentLang] || key;
 }
@@ -151,6 +192,47 @@ function toggleLanguage() {
   localStorage.setItem("dominion-lang", currentLang);
   updateStaticText();
   if (game) render();
+  // Update rules modal if it's open
+  if (!document.getElementById("rules-modal").classList.contains("hidden")) {
+    renderRulesContent();
+  }
+}
+
+function openRulesModal() {
+  document.getElementById("rules-modal").classList.remove("hidden");
+  renderRulesContent();
+}
+
+function closeRulesModal() {
+  document.getElementById("rules-modal").classList.add("hidden");
+}
+
+function renderRulesContent() {
+  const titleEl = document.getElementById("rules-title");
+  const bodyEl = document.getElementById("rules-body");
+
+  titleEl.textContent = RULES_TEXT.title[currentLang];
+
+  bodyEl.innerHTML = "";
+  for (const section of RULES_TEXT.sections) {
+    const sectionEl = document.createElement("div");
+    sectionEl.className = "rules-section";
+
+    const titleEl = document.createElement("h3");
+    titleEl.textContent = section.title[currentLang];
+    sectionEl.appendChild(titleEl);
+
+    const content = section.content[currentLang];
+    const paragraphs = content.split("\n\n");
+
+    for (const para of paragraphs) {
+      const p = document.createElement("p");
+      p.innerHTML = para.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      sectionEl.appendChild(p);
+    }
+
+    bodyEl.appendChild(sectionEl);
+  }
 }
 
 function currentPlayer() {
@@ -187,6 +269,14 @@ function renderTurnInfo() {
   langBtn.textContent = currentLang === "en" ? "中文" : "EN";
   langBtn.onclick = toggleLanguage;
   btns.appendChild(langBtn);
+
+  // Rules button
+  const rulesBtn = document.createElement("button");
+  rulesBtn.className = "secondary";
+  rulesBtn.textContent = "?";
+  rulesBtn.title = currentLang === "en" ? "Game Rules" : "遊戲規則";
+  rulesBtn.onclick = openRulesModal;
+  btns.appendChild(rulesBtn);
 
   if (game.phase === "Action") {
     const btn = document.createElement("button");
@@ -484,6 +574,12 @@ function updateStaticText() {
     input.placeholder = `${t("playerName")} ${i + 1} ${t("name")}`;
   });
 
+  // Rules button
+  const rulesBtnText = document.querySelector("#rules-btn-lobby .rules-btn-text");
+  if (rulesBtnText) {
+    rulesBtnText.textContent = currentLang === "en" ? "Game Rules" : "遊戲規則";
+  }
+
   // Game screen
   document.querySelector("#supply h2").textContent = t("supply");
   document.querySelector("#players-sidebar h2").textContent = t("players");
@@ -499,6 +595,8 @@ function updateStaticText() {
 document.addEventListener("DOMContentLoaded", () => {
   updateStaticText();
 });
+
+document.getElementById("rules-btn-lobby").addEventListener("click", openRulesModal);
 
 document.getElementById("start-game-btn").addEventListener("click", async () => {
   const inputs = document.querySelectorAll(".player-name-input");
