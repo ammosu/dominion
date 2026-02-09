@@ -148,7 +148,12 @@ async function sendAction(action) {
     cellarSelected.clear();
     pendingTrash = null;
     render();
-    if (game.game_over) showGameOver();
+    if (game.game_over) {
+      showGameOver();
+    } else {
+      // Check if next player is AI
+      checkAndExecuteAiTurn();
+    }
   } catch (e) {
     showError(e.message);
   }
@@ -514,8 +519,9 @@ function renderPlayers() {
   game.players.forEach((player, i) => {
     const card = document.createElement("div");
     card.className = `player-card${i === game.current_player ? " active" : ""}`;
+    const aiIcon = player.is_ai ? " 🤖" : "";
     card.innerHTML = `
-      <div class="player-name">${player.name}${i === game.current_player ? " ★" : ""}</div>
+      <div class="player-name">${player.name}${aiIcon}${i === game.current_player ? " ★" : ""}</div>
       <div class="player-stats">
         <div class="stat"><span>${t("hand")}</span><span>${player.hand.length}</span></div>
         <div class="stat"><span>${t("deck")}</span><span>${player.deck.length}</span></div>
@@ -565,9 +571,41 @@ function showGameOver() {
 }
 
 // --- AI Turn Execution ---
-function checkAndExecuteAiTurn() {
-  // Will be implemented in Task 9
-  // This is a placeholder to prevent errors
+async function checkAndExecuteAiTurn() {
+  if (!game || game.game_over) return;
+
+  const currentPlayer = game.players[game.current_player];
+
+  if (currentPlayer.is_ai) {
+    try {
+      // Show AI thinking message
+      showAiThinking();
+
+      // Execute AI turn
+      game = await apiPost(`/api/game/${gameId}/ai-turn`, {});
+
+      render();
+
+      if (game.game_over) {
+        showGameOver();
+      } else {
+        // Check if next player is also AI
+        setTimeout(checkAndExecuteAiTurn, 300);
+      }
+    } catch (e) {
+      showError(e.message);
+    }
+  }
+}
+
+function showAiThinking() {
+  const entries = document.getElementById("log-entries");
+  const el = document.createElement("div");
+  el.className = "log-entry ai-thinking";
+  el.style.color = "var(--action)";
+  el.textContent = currentLang === "zh" ? "🤖 AI 思考中..." : "🤖 AI thinking...";
+  entries.appendChild(el);
+  entries.scrollTop = entries.scrollHeight;
 }
 
 // --- Update Static Text ---
