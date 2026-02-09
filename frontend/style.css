@@ -629,3 +629,44 @@ button.success:hover {
 .rules-btn-text {
   margin-left: 4px;
 }
+
+.player-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.player-input-row .player-name-input {
+  flex: 1;
+}
+
+.ai-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.ai-toggle:hover {
+  background: var(--surface);
+}
+
+.ai-toggle input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.ai-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ai-toggle input[type="checkbox"]:checked ~ .ai-label {
+  color: var(--action);
+}

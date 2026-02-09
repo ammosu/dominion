@@ -13,8 +13,20 @@
       <h1>Dominion</h1>
       <button id="rules-btn-lobby" class="secondary rules-btn">📖 <span class="rules-btn-text">Game Rules</span></button>
       <div id="player-inputs">
-        <input type="text" class="player-name-input" placeholder="Player 1 name" value="Alice">
-        <input type="text" class="player-name-input" placeholder="Player 2 name" value="Bob">
+        <div class="player-input-row">
+          <input type="text" class="player-name-input" placeholder="Player 1 name" value="Alice">
+          <label class="ai-toggle">
+            <input type="checkbox" class="ai-checkbox">
+            <span class="ai-label">AI</span>
+          </label>
+        </div>
+        <div class="player-input-row">
+          <input type="text" class="player-name-input" placeholder="Player 2 name" value="Bot">
+          <label class="ai-toggle">
+            <input type="checkbox" class="ai-checkbox" checked>
+            <span class="ai-label">AI</span>
+          </label>
+        </div>
       </div>
       <button id="start-game-btn">Start Game</button>
     </div>

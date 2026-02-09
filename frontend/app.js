@@ -564,6 +564,12 @@ function showGameOver() {
   }
 }
 
+// --- AI Turn Execution ---
+function checkAndExecuteAiTurn() {
+  // Will be implemented in Task 9
+  // This is a placeholder to prevent errors
+}
+
 // --- Update Static Text ---
 function updateStaticText() {
   // Lobby
@@ -579,6 +585,11 @@ function updateStaticText() {
   if (rulesBtnText) {
     rulesBtnText.textContent = currentLang === "en" ? "Game Rules" : "遊戲規則";
   }
+
+  // AI labels
+  document.querySelectorAll(".ai-label").forEach(label => {
+    label.textContent = currentLang === "zh" ? "電腦" : "AI";
+  });
 
   // Game screen
   document.querySelector("#supply h2").textContent = t("supply");
@@ -599,20 +610,37 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("rules-btn-lobby").addEventListener("click", openRulesModal);
 
 document.getElementById("start-game-btn").addEventListener("click", async () => {
-  const inputs = document.querySelectorAll(".player-name-input");
-  const names = [...inputs].map(i => i.value.trim()).filter(n => n);
-  if (names.length < 2) {
+  const rows = document.querySelectorAll(".player-input-row");
+  const players = [];
+
+  for (const row of rows) {
+    const nameInput = row.querySelector(".player-name-input");
+    const aiCheckbox = row.querySelector(".ai-checkbox");
+    const name = nameInput.value.trim();
+
+    if (name) {
+      players.push({
+        name: name,
+        is_ai: aiCheckbox.checked
+      });
+    }
+  }
+
+  if (players.length < 2) {
     alert(currentLang === "zh" ? "請輸入至少 2 位玩家名稱" : "Enter at least 2 player names");
     return;
   }
 
-  const data = await apiPost("/api/game/new", { player_names: names });
+  const data = await apiPost("/api/game/new", { players });
   gameId = data.game_id;
   game = data.state;
 
   document.getElementById("lobby").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   render();
+
+  // Check if first player is AI and trigger AI turn
+  checkAndExecuteAiTurn();
 });
 
 document.getElementById("new-game-btn").addEventListener("click", () => {
