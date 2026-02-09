@@ -53,6 +53,11 @@ impl GameState {
             return Err(ActionError::GameOver);
         }
 
+        // Capture state before executing action
+        let is_ai = self.players[self.current_player].is_ai;
+        let old_phase = self.phase.clone();
+        let old_player = self.current_player;
+
         let result = match action {
             PlayerAction::PlayCard { card } => self.play_action_card(card),
             PlayerAction::PlayCellar { discards } => self.play_cellar(discards),
@@ -67,7 +72,26 @@ impl GameState {
         };
 
         if let Ok(ref entries) = result {
-            self.log.extend(entries.iter().cloned());
+            // Add [AI] prefix to log entries if current player is AI
+            let prefixed_entries: Vec<String> = entries
+                .iter()
+                .map(|entry| {
+                    if is_ai {
+                        format!("[AI] {}", entry)
+                    } else {
+                        entry.clone()
+                    }
+                })
+                .collect();
+            self.log.extend(prefixed_entries);
+
+            // If turn changed (Buy phase -> Action phase with new player), add turn announcement
+            if matches!(old_phase, TurnPhase::Buy)
+                && matches!(self.phase, TurnPhase::Action)
+                && old_player != self.current_player {
+                let next_name = &self.players[self.current_player].name;
+                self.log.push(format!("{}'s turn", next_name));
+            }
         }
 
         result
@@ -498,8 +522,8 @@ impl GameState {
                 self.current_player = (self.current_player + 1) % self.players.len();
                 self.phase = TurnPhase::Action;
 
-                let next_name = &self.players[self.current_player].name;
-                log.push(format!("{next_name}'s turn"));
+                // Note: The "{name}'s turn" message is now added in execute()
+                // after AI prefix handling, so it doesn't get the [AI] prefix
             }
             TurnPhase::Cleanup => {
                 self.phase = TurnPhase::Action;
