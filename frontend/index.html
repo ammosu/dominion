@@ -11,6 +11,7 @@
   <div id="lobby">
     <div id="lobby-box">
       <h1>Dominion</h1>
+      <button id="rules-btn-lobby" class="secondary rules-btn">📖 <span class="rules-btn-text">Game Rules</span></button>
       <div id="player-inputs">
         <input type="text" class="player-name-input" placeholder="Player 1 name" value="Alice">
         <input type="text" class="player-name-input" placeholder="Player 2 name" value="Bob">
@@ -66,6 +67,18 @@
       <h1>Game Over</h1>
       <div id="final-scores"></div>
       <button id="new-game-btn">New Game</button>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="hidden">
+    <div class="modal-overlay" onclick="closeRulesModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="rules-title">How to Play Dominion</h2>
+        <button class="modal-close" onclick="closeRulesModal()">✕</button>
+      </div>
+      <div id="rules-body" class="modal-body"></div>
     </div>
   </div>
 

@@ -531,3 +531,101 @@ button.success:hover {
 [data-tooltip]:hover::after {
   opacity: 1;
 }
+
+/* --- Rules Modal --- */
+#rules-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.modal-close:hover {
+  background: var(--border);
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.rules-section {
+  margin-bottom: 24px;
+}
+
+.rules-section h3 {
+  color: var(--highlight);
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.rules-section p {
+  line-height: 1.6;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.rules-section ul {
+  margin-left: 20px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.rules-btn {
+  margin: 12px 0;
+  padding: 10px 20px;
+}
+
+.rules-btn-text {
+  margin-left: 4px;
+}
