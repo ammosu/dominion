@@ -1,3 +1,5 @@
+mod ai;
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -6,6 +8,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{routing::{get, post}, Json, Router};
 use serde::{Deserialize, Serialize};
+use shared as shared;  // Make shared accessible as crate::shared in AI modules
 use shared::action::PlayerAction;
 use shared::game::{GameState, PlayerInfo};
 use tower_http::services::ServeDir;
