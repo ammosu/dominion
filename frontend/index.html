@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dominion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="turn-info">
+      <span id="current-player"></span>
+      <span id="phase-badge"></span>
+      <div id="counters">
+        <span id="actions-counter" class="counter">Actions: 0</span>
+        <span id="buys-counter" class="counter">Buys: 0</span>
+        <span id="coins-counter" class="counter">Coins: 0</span>
+      </div>
+    </header>
+
+    <main id="board">
+      <section id="supply">
+        <h2>Supply</h2>
+        <div id="supply-grid"></div>
+      </section>
+
+      <aside id="players-sidebar">
+        <h2>Players</h2>
+        <div id="players-list"></div>
+      </aside>
+    </main>
+
+    <footer id="hand-area">
+      <h2>Your Hand</h2>
+      <div id="hand"></div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

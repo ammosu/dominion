@@ -1,0 +1,319 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --text: #e0e0e0;
+  --text-muted: #8a8a9a;
+  --border: #2a2a4a;
+
+  --treasure: #b8860b;
+  --treasure-bg: #3d2e0a;
+  --victory: #2e7d32;
+  --victory-bg: #0a2e0d;
+  --action: #1565c0;
+  --action-bg: #0a1a3d;
+  --curse: #6a1b9a;
+  --curse-bg: #2a0a3d;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --- Turn Info Bar --- */
+#turn-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+#current-player {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+#phase-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--action);
+  color: #fff;
+}
+
+#counters {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.counter {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+/* --- Board (Supply + Sidebar) --- */
+#board {
+  display: flex;
+  flex: 1;
+  gap: 0;
+}
+
+#supply {
+  flex: 1;
+  padding: 20px 24px;
+}
+
+#supply h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+#supply-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.supply-group-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.supply-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* --- Supply Pile Card --- */
+.supply-pile {
+  width: 110px;
+  height: 150px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.supply-pile:hover {
+  border-color: var(--text-muted);
+}
+
+.supply-pile .card-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.supply-pile .card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #333;
+  color: #ffd700;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.supply-pile .pile-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Card type colors for supply */
+.supply-pile.treasure {
+  background: var(--treasure-bg);
+  border-color: var(--treasure);
+}
+.supply-pile.victory {
+  background: var(--victory-bg);
+  border-color: var(--victory);
+}
+.supply-pile.action {
+  background: var(--action-bg);
+  border-color: var(--action);
+}
+.supply-pile.curse {
+  background: var(--curse-bg);
+  border-color: var(--curse);
+}
+
+/* --- Players Sidebar --- */
+#players-sidebar {
+  width: 220px;
+  padding: 20px 16px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+}
+
+#players-sidebar h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.player-card {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.player-card.active {
+  border-color: var(--action);
+}
+
+.player-card .player-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.player-card .player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-card .stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.player-card .stat span:last-child {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* --- Hand Area --- */
+#hand-area {
+  padding: 16px 24px 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+#hand-area h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+#hand {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* --- Hand Card --- */
+.hand-card {
+  min-width: 100px;
+  height: 140px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.hand-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--text-muted);
+}
+
+.hand-card .card-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.hand-card .card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #333;
+  color: #ffd700;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hand-card .card-detail {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Card type colors for hand */
+.hand-card.treasure {
+  background: var(--treasure-bg);
+  border-color: var(--treasure);
+}
+.hand-card.victory {
+  background: var(--victory-bg);
+  border-color: var(--victory);
+}
+.hand-card.action {
+  background: var(--action-bg);
+  border-color: var(--action);
+}
+.hand-card.curse {
+  background: var(--curse-bg);
+  border-color: var(--curse);
+}
