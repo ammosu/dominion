@@ -343,7 +343,17 @@ function renderSupply() {
       } else if (canRemodelGain) {
         pile.onclick = () => sendAction({ action: "PlayRemodel", trash: pendingTrash, gain: cardName });
       } else if (canBuy) {
-        pile.onclick = () => sendAction({ action: "BuyCard", card: cardName });
+        pile.onclick = () => {
+          const cardDisplayName = getCardName(cardName);
+          const cost = data.cost;
+          const confirmMsg = currentLang === "zh"
+            ? `確定要購買 ${cardDisplayName}（花費 ${cost} 金幣）嗎？`
+            : `Buy ${cardDisplayName} for ${cost} coin${cost === 1 ? '' : 's'}?`;
+
+          if (confirm(confirmMsg)) {
+            sendAction({ action: "BuyCard", card: cardName });
+          }
+        };
       }
 
       row.appendChild(pile);
