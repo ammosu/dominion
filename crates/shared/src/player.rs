@@ -11,10 +11,11 @@ pub struct Player {
     pub actions: u32,
     pub buys: u32,
     pub coins: u32,
+    pub is_ai: bool,
 }
 
 impl Player {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, is_ai: bool) -> Self {
         use rand::seq::SliceRandom;
 
         let mut deck: Vec<Card> = Vec::with_capacity(10);
@@ -38,6 +39,7 @@ impl Player {
             actions: 1,
             buys: 1,
             coins: 0,
+            is_ai,
         }
     }
 

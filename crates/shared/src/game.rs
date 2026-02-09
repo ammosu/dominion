@@ -7,6 +7,12 @@ use crate::player::Player;
 
 pub type Supply = HashMap<Card, u32>;
 
+#[derive(Debug, Deserialize)]
+pub struct PlayerInfo {
+    pub name: String,
+    pub is_ai: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TurnPhase {
     Action,
@@ -26,10 +32,13 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn new(player_names: Vec<String>) -> Self {
-        let num_players = player_names.len();
+    pub fn new(player_info: Vec<PlayerInfo>) -> Self {
+        let num_players = player_info.len();
 
-        let players: Vec<Player> = player_names.into_iter().map(Player::new).collect();
+        let players: Vec<Player> = player_info
+            .into_iter()
+            .map(|info| Player::new(info.name, info.is_ai))
+            .collect();
 
         let mut supply = HashMap::new();
 

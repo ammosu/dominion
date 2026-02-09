@@ -7,7 +7,7 @@ use axum::response::IntoResponse;
 use axum::{routing::{get, post}, Json, Router};
 use serde::{Deserialize, Serialize};
 use shared::action::PlayerAction;
-use shared::game::GameState;
+use shared::game::{GameState, PlayerInfo};
 use tower_http::services::ServeDir;
 use uuid::Uuid;
 
@@ -15,7 +15,7 @@ type Games = Arc<Mutex<HashMap<String, GameState>>>;
 
 #[derive(Deserialize)]
 struct NewGameRequest {
-    player_names: Vec<String>,
+    players: Vec<PlayerInfo>,
 }
 
 #[derive(Serialize)]
@@ -38,7 +38,7 @@ async fn new_game(
     Json(req): Json<NewGameRequest>,
 ) -> impl IntoResponse {
     let game_id = Uuid::new_v4().to_string();
-    let game = GameState::new(req.player_names);
+    let game = GameState::new(req.players);
 
     let response = NewGameResponse {
         game_id: game_id.clone(),
