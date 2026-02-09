@@ -61,6 +61,8 @@ const UI_TEXT = {
   gameStarted: { en: "Game started!", zh: "遊戲開始！" },
   confirmPurchase: { en: "Confirm Purchase", zh: "確認購買" },
   confirm: { en: "Confirm", zh: "確認" },
+  hintEndActions: { en: "💡 No actions to play - click 'End Actions' to continue", zh: "💡 沒有可打出的行動卡 - 點擊「結束行動」繼續" },
+  hintEndTurn: { en: "💡 Click 'End Turn' when you're done buying", zh: "💡 購買完畢後點擊「結束回合」" },
 };
 
 const RULES_TEXT = {
@@ -302,6 +304,28 @@ function renderTurnInfo() {
   document.getElementById("actions-counter").textContent = `${t("actions")}: ${player.actions}`;
   document.getElementById("buys-counter").textContent = `${t("buys")}: ${player.buys}`;
   document.getElementById("coins-counter").textContent = `${t("coins")}: ${player.coins}`;
+
+  // Show hint when appropriate
+  const hintEl = document.getElementById("phase-hint");
+  let showHint = false;
+  let hintText = "";
+
+  if (game.phase === "Action") {
+    // Check if player has any action cards in hand
+    const hasActionCards = player.hand.some(cardName => CARD_DATA[cardName]?.type === "action");
+    // Show hint if no actions left OR no action cards in hand
+    if (player.actions === 0 || !hasActionCards) {
+      showHint = true;
+      hintText = t("hintEndActions");
+    }
+  }
+
+  if (showHint) {
+    hintEl.textContent = hintText;
+    hintEl.classList.remove("hidden");
+  } else {
+    hintEl.classList.add("hidden");
+  }
 
   const btns = document.getElementById("phase-buttons");
   btns.innerHTML = "";
