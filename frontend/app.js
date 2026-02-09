@@ -59,6 +59,8 @@ const UI_TEXT = {
   playerName: { en: "Player", zh: "玩家" },
   name: { en: "name", zh: "名稱" },
   gameStarted: { en: "Game started!", zh: "遊戲開始！" },
+  confirmPurchase: { en: "Confirm Purchase", zh: "確認購買" },
+  confirm: { en: "Confirm", zh: "確認" },
 };
 
 const RULES_TEXT = {
@@ -212,6 +214,42 @@ function closeRulesModal() {
   document.getElementById("rules-modal").classList.add("hidden");
 }
 
+// --- Confirm Modal ---
+function showConfirmModal(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const titleEl = document.getElementById("confirm-title");
+    const messageEl = document.getElementById("confirm-message");
+    const okBtn = document.getElementById("confirm-ok");
+    const cancelBtn = document.getElementById("confirm-cancel");
+
+    titleEl.textContent = t("confirmPurchase");
+    messageEl.textContent = message;
+    okBtn.textContent = t("confirm");
+    cancelBtn.textContent = t("cancel");
+    modal.classList.remove("hidden");
+
+    const handleOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      modal.classList.add("hidden");
+      okBtn.removeEventListener("click", handleOk);
+      cancelBtn.removeEventListener("click", handleCancel);
+    };
+
+    okBtn.addEventListener("click", handleOk);
+    cancelBtn.addEventListener("click", handleCancel);
+  });
+}
+
 function renderRulesContent() {
   const titleEl = document.getElementById("rules-title");
   const bodyEl = document.getElementById("rules-body");
@@ -343,14 +381,15 @@ function renderSupply() {
       } else if (canRemodelGain) {
         pile.onclick = () => sendAction({ action: "PlayRemodel", trash: pendingTrash, gain: cardName });
       } else if (canBuy) {
-        pile.onclick = () => {
+        pile.onclick = async () => {
           const cardDisplayName = getCardName(cardName);
           const cost = data.cost;
           const confirmMsg = currentLang === "zh"
-            ? `確定要購買 ${cardDisplayName}（花費 ${cost} 金幣）嗎？`
-            : `Buy ${cardDisplayName} for ${cost} coin${cost === 1 ? '' : 's'}?`;
+            ? `購買 ${cardDisplayName}（花費 ${cost} 金幣）`
+            : `Buy ${cardDisplayName} for ${cost} coin${cost === 1 ? '' : 's'}`;
 
-          if (confirm(confirmMsg)) {
+          const confirmed = await showConfirmModal(confirmMsg);
+          if (confirmed) {
             sendAction({ action: "BuyCard", card: cardName });
           }
         };

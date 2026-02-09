@@ -671,3 +671,23 @@ button.success:hover {
 .ai-toggle input[type="checkbox"]:checked ~ .ai-label {
   color: var(--action);
 }
+
+/* --- Confirm Modal --- */
+.confirm-modal-content {
+  max-width: 400px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+}
+
+#confirm-message {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: center;
+  padding: 8px 0;
+}
