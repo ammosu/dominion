@@ -575,6 +575,10 @@ button.success:hover {
   text-align: center;
 }
 
+.hand-card[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
 /* --- Rules Modal --- */
 #rules-modal {
   position: fixed;
