@@ -23,8 +23,13 @@ pub enum Card {
     // Action
     Cellar,
     Market,
+    Militia,
+    Mine,
+    Moat,
+    Remodel,
     Smithy,
     Village,
+    Woodcutter,
     Workshop,
 }
 
@@ -40,8 +45,13 @@ impl Card {
             Card::Curse => 0,
             Card::Cellar => 2,
             Card::Market => 5,
+            Card::Militia => 4,
+            Card::Mine => 5,
+            Card::Moat => 2,
+            Card::Remodel => 4,
             Card::Smithy => 4,
             Card::Village => 3,
+            Card::Woodcutter => 3,
             Card::Workshop => 3,
         }
     }
@@ -51,9 +61,16 @@ impl Card {
             Card::Copper | Card::Silver | Card::Gold => CardType::Treasure,
             Card::Estate | Card::Duchy | Card::Province => CardType::Victory,
             Card::Curse => CardType::Curse,
-            Card::Cellar | Card::Market | Card::Smithy | Card::Village | Card::Workshop => {
-                CardType::Action
-            }
+            Card::Cellar
+            | Card::Market
+            | Card::Militia
+            | Card::Mine
+            | Card::Moat
+            | Card::Remodel
+            | Card::Smithy
+            | Card::Village
+            | Card::Woodcutter
+            | Card::Workshop => CardType::Action,
         }
     }
 
@@ -74,5 +91,9 @@ impl Card {
             Card::Curse => -1,
             _ => 0,
         }
+    }
+
+    pub fn is_attack(&self) -> bool {
+        matches!(self, Card::Militia)
     }
 }

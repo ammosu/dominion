@@ -1,30 +1,39 @@
 const CARD_DATA = {
-  Copper:   { type: "treasure", cost: 0, coins: 1 },
-  Silver:   { type: "treasure", cost: 3, coins: 2 },
-  Gold:     { type: "treasure", cost: 6, coins: 3 },
-  Estate:   { type: "victory",  cost: 2, vp: 1 },
-  Duchy:    { type: "victory",  cost: 5, vp: 3 },
-  Province: { type: "victory",  cost: 8, vp: 6 },
-  Curse:    { type: "curse",    cost: 0, vp: -1 },
-  Cellar:   { type: "action",   cost: 2 },
-  Market:   { type: "action",   cost: 5 },
-  Smithy:   { type: "action",   cost: 4 },
-  Village:  { type: "action",   cost: 3 },
-  Workshop: { type: "action",   cost: 3 },
+  Copper:     { type: "treasure", cost: 0, coins: 1 },
+  Silver:     { type: "treasure", cost: 3, coins: 2 },
+  Gold:       { type: "treasure", cost: 6, coins: 3 },
+  Estate:     { type: "victory",  cost: 2, vp: 1 },
+  Duchy:      { type: "victory",  cost: 5, vp: 3 },
+  Province:   { type: "victory",  cost: 8, vp: 6 },
+  Curse:      { type: "curse",    cost: 0, vp: -1 },
+  Cellar:     { type: "action",   cost: 2, desc: "+1 Action, discard any, +1 Card each" },
+  Market:     { type: "action",   cost: 5, desc: "+1 Card, +1 Action, +1 Buy, +1 Coin" },
+  Militia:    { type: "action",   cost: 4, desc: "+2 Coins, others discard to 3" },
+  Mine:       { type: "action",   cost: 5, desc: "Trash Treasure, gain +3 cost to hand" },
+  Moat:       { type: "action",   cost: 2, desc: "+2 Cards, blocks Attacks" },
+  Remodel:    { type: "action",   cost: 4, desc: "Trash card, gain +2 cost" },
+  Smithy:     { type: "action",   cost: 4, desc: "+3 Cards" },
+  Village:    { type: "action",   cost: 3, desc: "+1 Card, +2 Actions" },
+  Woodcutter: { type: "action",   cost: 3, desc: "+1 Buy, +2 Coins" },
+  Workshop:   { type: "action",   cost: 3, desc: "Gain card costing up to 4" },
 };
 
 const SUPPLY_GROUPS = [
   { label: "Treasure", cards: ["Copper", "Silver", "Gold"] },
   { label: "Victory",  cards: ["Estate", "Duchy", "Province"] },
   { label: "Curse",    cards: ["Curse"] },
-  { label: "Kingdom",  cards: ["Cellar", "Market", "Smithy", "Village", "Workshop"] },
+  { label: "Kingdom",  cards: ["Cellar", "Market", "Militia", "Mine", "Moat", "Remodel", "Smithy", "Village", "Woodcutter", "Workshop"] },
 ];
 
 // --- State ---
 let gameId = null;
 let game = null;
-let uiMode = "normal"; // "normal" | "cellar-select" | "workshop-select"
-let cellarSelected = new Set(); // indices into hand for cellar discard selection
+// UI modes: "normal" | "cellar-select" | "workshop-select"
+//         | "mine-trash-select" | "mine-gain-select"
+//         | "remodel-trash-select" | "remodel-gain-select"
+let uiMode = "normal";
+let cellarSelected = new Set(); // indices into hand for cellar discard
+let pendingTrash = null; // card being trashed for mine/remodel gain step
 
 // --- API ---
 async function apiPost(path, body) {
@@ -45,6 +54,7 @@ async function sendAction(action) {
     game = await apiPost(`/api/game/${gameId}/action`, action);
     uiMode = "normal";
     cellarSelected.clear();
+    pendingTrash = null;
     render();
     if (game.game_over) showGameOver();
   } catch (e) {
@@ -53,7 +63,6 @@ async function sendAction(action) {
 }
 
 function showError(msg) {
-  // Flash error in the log
   const entries = document.getElementById("log-entries");
   const el = document.createElement("div");
   el.className = "log-entry";
@@ -63,8 +72,23 @@ function showError(msg) {
   entries.scrollTop = entries.scrollHeight;
 }
 
+function cancelMode() {
+  uiMode = "normal";
+  cellarSelected.clear();
+  pendingTrash = null;
+  render();
+}
+
 // --- Helpers ---
 function cardDetail(name) {
+  const d = CARD_DATA[name];
+  if (d.desc) return d.desc;
+  if (d.coins) return `+${d.coins} Coin${d.coins > 1 ? "s" : ""}`;
+  if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} VP`;
+  return "Action";
+}
+
+function cardShortDetail(name) {
   const d = CARD_DATA[name];
   if (d.coins) return `+${d.coins} Coin${d.coins > 1 ? "s" : ""}`;
   if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} VP`;
@@ -96,7 +120,6 @@ function renderTurnInfo() {
   document.getElementById("buys-counter").textContent = `Buys: ${player.buys}`;
   document.getElementById("coins-counter").textContent = `Coins: ${player.coins}`;
 
-  // Phase buttons
   const btns = document.getElementById("phase-buttons");
   btns.innerHTML = "";
 
@@ -134,21 +157,30 @@ function renderSupply() {
     for (const cardName of group.cards) {
       const count = game.supply[cardName] ?? 0;
       const data = CARD_DATA[cardName];
+
       const canBuy = isBuyPhase && count > 0 && player.buys > 0 && player.coins >= data.cost;
       const canWorkshopGain = uiMode === "workshop-select" && count > 0 && data.cost <= 4;
-      const clickable = canBuy || canWorkshopGain;
+      const canMineGain = uiMode === "mine-gain-select" && count > 0
+        && data.type === "treasure" && pendingTrash && data.cost <= CARD_DATA[pendingTrash].cost + 3;
+      const canRemodelGain = uiMode === "remodel-gain-select" && count > 0
+        && pendingTrash && data.cost <= CARD_DATA[pendingTrash].cost + 2;
+      const clickable = canBuy || canWorkshopGain || canMineGain || canRemodelGain;
 
       const pile = document.createElement("div");
       pile.className = `supply-pile ${data.type}${clickable ? " clickable" : ""}${count === 0 ? " empty" : ""}`;
       pile.innerHTML = `
         <span class="card-cost">${data.cost}</span>
         <span class="card-name">${cardName}</span>
-        <span class="card-detail">${cardDetail(cardName)}</span>
+        <span class="card-detail">${cardShortDetail(cardName)}</span>
         <span class="pile-count">${count} left</span>
       `;
 
       if (canWorkshopGain) {
         pile.onclick = () => sendAction({ action: "PlayWorkshop", gain: cardName });
+      } else if (canMineGain) {
+        pile.onclick = () => sendAction({ action: "PlayMine", trash: pendingTrash, gain: cardName });
+      } else if (canRemodelGain) {
+        pile.onclick = () => sendAction({ action: "PlayRemodel", trash: pendingTrash, gain: cardName });
       } else if (canBuy) {
         pile.onclick = () => sendAction({ action: "BuyCard", card: cardName });
       }
@@ -178,12 +210,17 @@ function renderHand() {
     let dimmed = false;
 
     if (uiMode === "cellar-select") {
-      // In cellar selection mode, any non-Cellar card in hand can be toggled
       clickable = true;
       selected = cellarSelected.has(index);
-    } else if (uiMode === "workshop-select") {
-      // In workshop selection, hand cards are dimmed (select from supply)
+    } else if (uiMode === "workshop-select" || uiMode === "mine-gain-select" || uiMode === "remodel-gain-select") {
       dimmed = true;
+    } else if (uiMode === "mine-trash-select") {
+      // Only treasures can be selected for Mine trash
+      clickable = isTreasure;
+      dimmed = !isTreasure;
+    } else if (uiMode === "remodel-trash-select") {
+      // Any card can be selected for Remodel trash
+      clickable = true;
     } else if (isActionPhase && isAction && player.actions > 0) {
       clickable = true;
     } else if (isBuyPhase && isTreasure) {
@@ -195,7 +232,7 @@ function renderHand() {
     card.innerHTML = `
       <span class="card-cost">${data.cost}</span>
       <span class="card-name">${cardName}</span>
-      <span class="card-detail">${cardDetail(cardName)}</span>
+      <span class="card-detail">${cardShortDetail(cardName)}</span>
     `;
 
     if (uiMode === "cellar-select" && clickable) {
@@ -207,6 +244,18 @@ function renderHand() {
         }
         renderHand();
         renderHandButtons();
+      };
+    } else if (uiMode === "mine-trash-select" && clickable) {
+      card.onclick = () => {
+        pendingTrash = cardName;
+        uiMode = "mine-gain-select";
+        render();
+      };
+    } else if (uiMode === "remodel-trash-select" && clickable) {
+      card.onclick = () => {
+        pendingTrash = cardName;
+        uiMode = "remodel-gain-select";
+        render();
       };
     } else if (uiMode === "normal" && clickable) {
       if (isActionPhase && isAction) {
@@ -239,36 +288,45 @@ function renderHandButtons() {
       sendAction({ action: "PlayCellar", discards });
     };
     btns.appendChild(confirm);
-
-    const cancel = document.createElement("button");
-    cancel.className = "secondary";
-    cancel.textContent = "Cancel";
-    cancel.onclick = () => {
-      uiMode = "normal";
-      cellarSelected.clear();
-      render();
-    };
-    btns.appendChild(cancel);
+    appendCancelButton(btns);
   } else if (uiMode === "workshop-select") {
-    const info = document.createElement("span");
-    info.style.cssText = "color: var(--highlight); font-size: 0.85rem; font-weight: 600;";
-    info.textContent = "Select a supply pile costing 4 or less";
-    btns.appendChild(info);
-
-    const cancel = document.createElement("button");
-    cancel.className = "secondary";
-    cancel.textContent = "Cancel";
-    cancel.onclick = () => {
-      uiMode = "normal";
-      render();
-    };
-    btns.appendChild(cancel);
+    appendModeInfo(btns, "Select a supply pile costing 4 or less");
+    appendCancelButton(btns);
+  } else if (uiMode === "mine-trash-select") {
+    appendModeInfo(btns, "Select a Treasure from hand to trash");
+    appendCancelButton(btns);
+  } else if (uiMode === "mine-gain-select") {
+    const maxCost = CARD_DATA[pendingTrash].cost + 3;
+    appendModeInfo(btns, `Trashing ${pendingTrash}. Select a Treasure costing up to ${maxCost}`);
+    appendCancelButton(btns);
+  } else if (uiMode === "remodel-trash-select") {
+    appendModeInfo(btns, "Select a card from hand to trash");
+    appendCancelButton(btns);
+  } else if (uiMode === "remodel-gain-select") {
+    const maxCost = CARD_DATA[pendingTrash].cost + 2;
+    appendModeInfo(btns, `Trashing ${pendingTrash}. Select a card costing up to ${maxCost}`);
+    appendCancelButton(btns);
   } else if (isBuyPhase && hasTreasures) {
     const btn = document.createElement("button");
     btn.textContent = "Play All Treasures";
     btn.onclick = () => sendAction({ action: "PlayAllTreasures" });
     btns.appendChild(btn);
   }
+}
+
+function appendModeInfo(container, text) {
+  const info = document.createElement("span");
+  info.style.cssText = "color: var(--highlight); font-size: 0.85rem; font-weight: 600;";
+  info.textContent = text;
+  container.appendChild(info);
+}
+
+function appendCancelButton(container) {
+  const cancel = document.createElement("button");
+  cancel.className = "secondary";
+  cancel.textContent = "Cancel";
+  cancel.onclick = cancelMode;
+  container.appendChild(cancel);
 }
 
 function handlePlayAction(cardName) {
@@ -279,6 +337,14 @@ function handlePlayAction(cardName) {
   } else if (cardName === "Workshop") {
     uiMode = "workshop-select";
     render();
+  } else if (cardName === "Mine") {
+    uiMode = "mine-trash-select";
+    render();
+  } else if (cardName === "Remodel") {
+    uiMode = "remodel-trash-select";
+    render();
+  } else if (cardName === "Militia") {
+    sendAction({ action: "PlayMilitia" });
   } else {
     sendAction({ action: "PlayCard", card: cardName });
   }
@@ -324,7 +390,6 @@ function showGameOver() {
   const scoresEl = document.getElementById("final-scores");
   scoresEl.innerHTML = "";
 
-  // Calculate scores from the log (last entries have "Name: N points")
   const scores = game.players.map(p => {
     const total = [...p.hand, ...p.deck, ...p.discard]
       .reduce((sum, c) => sum + (CARD_DATA[c]?.vp || 0), 0);

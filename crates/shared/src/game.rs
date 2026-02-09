@@ -51,8 +51,13 @@ impl GameState {
         // Kingdom (action) cards: 10 each
         supply.insert(Card::Cellar, 10);
         supply.insert(Card::Market, 10);
+        supply.insert(Card::Militia, 10);
+        supply.insert(Card::Mine, 10);
+        supply.insert(Card::Moat, 10);
+        supply.insert(Card::Remodel, 10);
         supply.insert(Card::Smithy, 10);
         supply.insert(Card::Village, 10);
+        supply.insert(Card::Woodcutter, 10);
         supply.insert(Card::Workshop, 10);
 
         GameState {
