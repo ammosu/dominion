@@ -568,6 +568,13 @@ button.success:hover {
   opacity: 1;
 }
 
+/* Better tooltips for hand cards - allow wrapping for long descriptions */
+.hand-card[data-tooltip]::after {
+  white-space: normal;
+  max-width: 200px;
+  text-align: center;
+}
+
 /* --- Rules Modal --- */
 #rules-modal {
   position: fixed;
