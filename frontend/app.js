@@ -650,6 +650,7 @@ function translateLog(msg) {
 }
 
 function renderLog() {
+  const logContainer = document.getElementById("action-log");
   const entries = document.getElementById("log-entries");
   entries.innerHTML = "";
 
@@ -659,7 +660,8 @@ function renderLog() {
     el.textContent = translateLog(msg);
     entries.appendChild(el);
   }
-  entries.scrollTop = entries.scrollHeight;
+  // Scroll the log container to bottom to show latest entries
+  logContainer.scrollTop = logContainer.scrollHeight;
 }
 
 // --- Game Over ---

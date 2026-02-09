@@ -364,6 +364,25 @@ button.success:hover {
   max-height: 300px;
 }
 
+/* Custom scrollbar for log */
+#action-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+#action-log::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-radius: 4px;
+}
+
+#action-log::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+#action-log::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 #log-entries {
   display: flex;
   flex-direction: column;
