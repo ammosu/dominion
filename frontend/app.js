@@ -532,6 +532,50 @@ function renderPlayers() {
   });
 }
 
+function translateLog(msg) {
+  if (currentLang === "en") return msg;
+
+  // Translate card names in the message
+  let translated = msg;
+  for (const [cardKey, cardData] of Object.entries(CARD_DATA)) {
+    const enName = cardData.name.en;
+    const zhName = cardData.name.zh;
+    translated = translated.replace(new RegExp(enName, 'g'), zhName);
+  }
+
+  // Translate common log patterns
+  translated = translated
+    // Turn announcement
+    .replace(/(\[AI\] )?(.+)'s turn/, (m, ai, name) => `${ai || ""}${name} 的回合`)
+    // Played card patterns (order matters - more specific first!)
+    .replace(/played (.+), \+(\d+) action, \+(\d+) buy, \+(\d+) coin, drew (\d+) card/, "打出了 $1，+$2 行動、+$3 購買、+$4 金幣，抽了 $5 張牌")
+    .replace(/played (.+), \+(\d+) actions?, drew (\d+) cards?/, "打出了 $1，+$2 行動，抽了 $3 張牌")
+    .replace(/played (.+), \+(\d+) coins?/, "打出了 $1，+$2 金幣")
+    .replace(/played (.+), \+(\d+) buy, \+(\d+) coins?/, "打出了 $1，+$2 購買、+$3 金幣")
+    .replace(/played (.+), drew (\d+) cards?/, "打出了 $1，抽了 $2 張牌")
+    .replace(/played (.+), discarded (\d+), drew (\d+)/, "打出了 $1，棄了 $2 張牌，抽了 $3 張牌")
+    .replace(/played (.+), gained (.+)/, "打出了 $1，獲得了 $2")
+    .replace(/played (.+), trashed (.+), gained (.+) to hand/, "打出了 $1，廢棄了 $2，獲得 $3 到手牌")
+    .replace(/played (.+), trashed (.+), gained (.+)/, "打出了 $1，廢棄了 $2，獲得了 $3")
+    .replace(/played (.+) for \+(\d+) coin\(s\)/, "打出了 $1，獲得 $2 金幣")
+    .replace(/played all treasures for \+(\d+) coin\(s\)/, "打出所有財寶，獲得 $1 金幣")
+    // Buy/Gain
+    .replace(/bought (.+)/, "購買了 $1")
+    .replace(/gained (.+) to hand/, "獲得 $1 到手牌")
+    // Phase end
+    .replace(/ended Action phase/, "結束行動階段")
+    .replace(/ended turn/, "結束回合")
+    // Moat defense
+    .replace(/reveals (.+), unaffected/, "展示了 $1，不受影響")
+    // Militia effects
+    .replace(/discards (.+)/, "棄了 $1")
+    // Game over
+    .replace(/Game over!/, "遊戲結束！")
+    .replace(/(.+): (\d+) points/, "$1：$2 分");
+
+  return translated;
+}
+
 function renderLog() {
   const entries = document.getElementById("log-entries");
   entries.innerHTML = "";
@@ -539,7 +583,7 @@ function renderLog() {
   for (const msg of game.log) {
     const el = document.createElement("div");
     el.className = "log-entry";
-    el.textContent = msg;
+    el.textContent = translateLog(msg);
     entries.appendChild(el);
   }
   entries.scrollTop = entries.scrollHeight;

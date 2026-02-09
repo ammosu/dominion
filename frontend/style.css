@@ -345,6 +345,7 @@ button.success:hover {
   border-top: 1px solid var(--border);
   overflow-y: auto;
   min-height: 0;
+  max-height: 300px;
 }
 
 #log-entries {
