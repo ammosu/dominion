@@ -540,44 +540,7 @@ button.success:hover {
 }
 
 /* --- Tooltips --- */
-[data-tooltip] {
-  position: relative;
-}
-
-[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.95);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 1000;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-}
-
-[data-tooltip]:hover::after {
-  opacity: 1;
-}
-
-/* Better tooltips for hand cards - allow wrapping for long descriptions */
-.hand-card[data-tooltip]::after {
-  white-space: normal;
-  max-width: 200px;
-  text-align: center;
-}
-
-.hand-card[data-tooltip]:hover::after {
-  opacity: 1;
-}
+/* CSS tooltips disabled - using JS-controlled tooltip instead */
 
 /* --- Card Tooltip (JS-controlled) --- */
 #card-tooltip {

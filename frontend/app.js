@@ -298,49 +298,53 @@ function render() {
 }
 
 // --- Card Tooltip System ---
+let tooltipListenersAdded = false;
+
 function setupCardTooltips() {
+  // Only add listeners once (use event delegation on document)
+  if (tooltipListenersAdded) return;
+  tooltipListenersAdded = true;
+
   const tooltip = document.getElementById("card-tooltip");
 
-  // Remove old listeners by cloning and replacing (simple way to clear all listeners)
-  document.querySelectorAll('[data-tooltip]').forEach(card => {
-    const newCard = card.cloneNode(true);
-    card.parentNode?.replaceChild(newCard, card);
+  // Use event delegation on document level
+  document.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('[data-tooltip]');
+    if (!card) return;
+
+    const text = card.getAttribute('data-tooltip');
+    if (!text) return;
+
+    tooltip.textContent = text;
+    tooltip.classList.remove('hidden');
+
+    // Position tooltip above the card
+    const rect = card.getBoundingClientRect();
+    tooltip.style.display = 'block'; // Ensure visible for measurement
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+    let top = rect.top - tooltipRect.height - 8;
+
+    // Keep tooltip on screen
+    if (left < 5) left = 5;
+    if (left + tooltipRect.width > window.innerWidth - 5) {
+      left = window.innerWidth - tooltipRect.width - 5;
+    }
+    if (top < 5) {
+      // If no room above, show below
+      top = rect.bottom + 8;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
   });
 
-  // Add listeners to all cards with data-tooltip
-  document.querySelectorAll('[data-tooltip]').forEach(card => {
-    card.addEventListener('mouseenter', (e) => {
-      const text = card.getAttribute('data-tooltip');
-      if (!text) return;
+  document.addEventListener('mouseout', (e) => {
+    const card = e.target.closest('[data-tooltip]');
+    if (!card) return;
 
-      tooltip.textContent = text;
-      tooltip.classList.remove('hidden');
-
-      // Position tooltip above the card
-      const rect = card.getBoundingClientRect();
-      tooltip.style.display = 'block'; // Temporary for measurement
-      const tooltipRect = tooltip.getBoundingClientRect();
-
-      let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-      let top = rect.top - tooltipRect.height - 8;
-
-      // Keep tooltip on screen
-      if (left < 5) left = 5;
-      if (left + tooltipRect.width > window.innerWidth - 5) {
-        left = window.innerWidth - tooltipRect.width - 5;
-      }
-      if (top < 5) {
-        // If no room above, show below
-        top = rect.bottom + 8;
-      }
-
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-    });
-
-    card.addEventListener('mouseleave', () => {
-      tooltip.classList.add('hidden');
-    });
+    tooltip.classList.add('hidden');
   });
 }
 
