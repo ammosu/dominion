@@ -168,6 +168,7 @@ function renderSupply() {
 
       const pile = document.createElement("div");
       pile.className = `supply-pile ${data.type}${clickable ? " clickable" : ""}${count === 0 ? " empty" : ""}`;
+      pile.dataset.tooltip = cardDetail(cardName);
       pile.innerHTML = `
         <span class="card-cost">${data.cost}</span>
         <span class="card-name">${cardName}</span>
@@ -229,6 +230,7 @@ function renderHand() {
 
     const card = document.createElement("div");
     card.className = `hand-card ${data.type}${clickable ? " clickable" : ""}${selected ? " selected" : ""}${dimmed ? " dimmed" : ""}`;
+    card.dataset.tooltip = cardDetail(cardName);
     card.innerHTML = `
       <span class="card-cost">${data.cost}</span>
       <span class="card-name">${cardName}</span>
