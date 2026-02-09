@@ -21,6 +21,8 @@ pub struct GameState {
     pub current_player: usize,
     pub phase: TurnPhase,
     pub trash: Vec<Card>,
+    pub game_over: bool,
+    pub log: Vec<String>,
 }
 
 impl GameState {
@@ -59,6 +61,8 @@ impl GameState {
             current_player: 0,
             phase: TurnPhase::Action,
             trash: Vec::new(),
+            game_over: false,
+            log: vec!["Game started!".to_string()],
         }
     }
 }

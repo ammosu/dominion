@@ -19,6 +19,8 @@
   --action-bg: #0a1a3d;
   --curse: #6a1b9a;
   --curse-bg: #2a0a3d;
+
+  --highlight: #ffd700;
 }
 
 body {
@@ -28,6 +30,99 @@ body {
   min-height: 100vh;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* --- Lobby --- */
+#lobby {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#lobby-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  min-width: 320px;
+}
+
+#lobby-box h1 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+}
+
+#player-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.player-name-input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+}
+
+.player-name-input:focus {
+  border-color: var(--action);
+}
+
+/* --- Buttons --- */
+button {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--action);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+button:hover {
+  background: #1976d2;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+button.secondary:hover {
+  background: var(--bg);
+}
+
+button.success {
+  background: var(--victory);
+}
+
+button.success:hover {
+  background: #388e3c;
+}
+
+#start-game-btn {
+  font-size: 1.1rem;
+  padding: 12px 32px;
+}
+
+/* --- App Layout --- */
 #app {
   display: flex;
   flex-direction: column;
@@ -60,10 +155,13 @@ body {
   color: #fff;
 }
 
+#phase-badge.buy-phase {
+  background: var(--treasure);
+}
+
 #counters {
   display: flex;
   gap: 16px;
-  margin-left: auto;
 }
 
 .counter {
@@ -74,7 +172,13 @@ body {
   background: var(--bg);
 }
 
-/* --- Board (Supply + Sidebar) --- */
+#phase-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* --- Board (Supply + Right Panel) --- */
 #board {
   display: flex;
   flex: 1;
@@ -126,11 +230,21 @@ body {
   justify-content: center;
   gap: 6px;
   position: relative;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
-.supply-pile:hover {
-  border-color: var(--text-muted);
+.supply-pile.clickable {
+  cursor: pointer;
+}
+
+.supply-pile.clickable:hover {
+  border-color: var(--highlight);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+.supply-pile.empty {
+  opacity: 0.35;
 }
 
 .supply-pile .card-name {
@@ -161,37 +275,31 @@ body {
 }
 
 /* Card type colors for supply */
-.supply-pile.treasure {
-  background: var(--treasure-bg);
-  border-color: var(--treasure);
-}
-.supply-pile.victory {
-  background: var(--victory-bg);
-  border-color: var(--victory);
-}
-.supply-pile.action {
-  background: var(--action-bg);
-  border-color: var(--action);
-}
-.supply-pile.curse {
-  background: var(--curse-bg);
-  border-color: var(--curse);
-}
+.supply-pile.treasure { background: var(--treasure-bg); border-color: var(--treasure); }
+.supply-pile.victory { background: var(--victory-bg); border-color: var(--victory); }
+.supply-pile.action { background: var(--action-bg); border-color: var(--action); }
+.supply-pile.curse { background: var(--curse-bg); border-color: var(--curse); }
 
-/* --- Players Sidebar --- */
-#players-sidebar {
-  width: 220px;
-  padding: 20px 16px;
+/* --- Right Panel (Players + Log) --- */
+#right-panel {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border-left: 1px solid var(--border);
 }
 
-#players-sidebar h2 {
+#players-sidebar {
+  padding: 20px 16px;
+}
+
+#players-sidebar h2,
+#action-log h2 {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .player-card {
@@ -230,6 +338,28 @@ body {
   font-weight: 500;
 }
 
+/* --- Action Log --- */
+#action-log {
+  flex: 1;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#log-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.log-entry {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
 /* --- Hand Area --- */
 #hand-area {
   padding: 16px 24px 24px;
@@ -237,12 +367,23 @@ body {
   border-top: 1px solid var(--border);
 }
 
+#hand-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
 #hand-area h2 {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 12px;
+}
+
+#hand-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 #hand {
@@ -265,12 +406,27 @@ body {
   gap: 8px;
   position: relative;
   flex-shrink: 0;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
-.hand-card:hover {
+.hand-card.clickable {
+  cursor: pointer;
+}
+
+.hand-card.clickable:hover {
   transform: translateY(-6px);
-  border-color: var(--text-muted);
+  border-color: var(--highlight);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+.hand-card.selected {
+  transform: translateY(-8px);
+  border-color: var(--highlight);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+}
+
+.hand-card.dimmed {
+  opacity: 0.4;
 }
 
 .hand-card .card-name {
@@ -301,19 +457,48 @@ body {
 }
 
 /* Card type colors for hand */
-.hand-card.treasure {
-  background: var(--treasure-bg);
-  border-color: var(--treasure);
+.hand-card.treasure { background: var(--treasure-bg); border-color: var(--treasure); }
+.hand-card.victory { background: var(--victory-bg); border-color: var(--victory); }
+.hand-card.action { background: var(--action-bg); border-color: var(--action); }
+.hand-card.curse { background: var(--curse-bg); border-color: var(--curse); }
+
+/* --- Game Over Overlay --- */
+#game-over {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
 }
-.hand-card.victory {
-  background: var(--victory-bg);
-  border-color: var(--victory);
+
+#game-over-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  min-width: 320px;
 }
-.hand-card.action {
-  background: var(--action-bg);
-  border-color: var(--action);
+
+#game-over-box h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
 }
-.hand-card.curse {
-  background: var(--curse-bg);
-  border-color: var(--curse);
+
+#final-scores {
+  margin-bottom: 24px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 1.1rem;
+}
+
+.score-row.winner {
+  color: var(--highlight);
+  font-weight: 700;
 }

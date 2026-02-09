@@ -40,4 +40,26 @@ impl Player {
             coins: 0,
         }
     }
+
+    pub fn draw_cards(&mut self, n: usize) {
+        use rand::seq::SliceRandom;
+
+        for _ in 0..n {
+            if self.deck.is_empty() {
+                if self.discard.is_empty() {
+                    return; // No cards left anywhere
+                }
+                self.deck.append(&mut self.discard);
+                let mut rng = rand::rng();
+                self.deck.shuffle(&mut rng);
+            }
+            if let Some(card) = self.deck.pop() {
+                self.hand.push(card);
+            }
+        }
+    }
+
+    pub fn discard_hand(&mut self) {
+        self.discard.append(&mut self.hand);
+    }
 }

@@ -7,7 +7,20 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
+  <!-- Lobby Screen -->
+  <div id="lobby">
+    <div id="lobby-box">
+      <h1>Dominion</h1>
+      <div id="player-inputs">
+        <input type="text" class="player-name-input" placeholder="Player 1 name" value="Alice">
+        <input type="text" class="player-name-input" placeholder="Player 2 name" value="Bob">
+      </div>
+      <button id="start-game-btn">Start Game</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="app" class="hidden">
     <header id="turn-info">
       <span id="current-player"></span>
       <span id="phase-badge"></span>
@@ -16,6 +29,7 @@
         <span id="buys-counter" class="counter">Buys: 0</span>
         <span id="coins-counter" class="counter">Coins: 0</span>
       </div>
+      <div id="phase-buttons"></div>
     </header>
 
     <main id="board">
@@ -24,16 +38,35 @@
         <div id="supply-grid"></div>
       </section>
 
-      <aside id="players-sidebar">
-        <h2>Players</h2>
-        <div id="players-list"></div>
-      </aside>
+      <div id="right-panel">
+        <aside id="players-sidebar">
+          <h2>Players</h2>
+          <div id="players-list"></div>
+        </aside>
+
+        <aside id="action-log">
+          <h2>Log</h2>
+          <div id="log-entries"></div>
+        </aside>
+      </div>
     </main>
 
     <footer id="hand-area">
-      <h2>Your Hand</h2>
+      <div id="hand-header">
+        <h2>Your Hand</h2>
+        <div id="hand-buttons"></div>
+      </div>
       <div id="hand"></div>
     </footer>
+  </div>
+
+  <!-- Game Over Overlay -->
+  <div id="game-over" class="hidden">
+    <div id="game-over-box">
+      <h1>Game Over</h1>
+      <div id="final-scores"></div>
+      <button id="new-game-btn">New Game</button>
+    </div>
   </div>
 
   <script src="app.js"></script>
