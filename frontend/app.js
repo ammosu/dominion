@@ -2,23 +2,23 @@
 let currentLang = localStorage.getItem("dominion-lang") || "en";
 
 const CARD_DATA = {
-  Copper:     { type: "treasure", cost: 0, coins: 1, name: { en: "Copper", zh: "銅幣" } },
-  Silver:     { type: "treasure", cost: 3, coins: 2, name: { en: "Silver", zh: "銀幣" } },
-  Gold:       { type: "treasure", cost: 6, coins: 3, name: { en: "Gold", zh: "金幣" } },
-  Estate:     { type: "victory",  cost: 2, vp: 1, name: { en: "Estate", zh: "莊園" } },
-  Duchy:      { type: "victory",  cost: 5, vp: 3, name: { en: "Duchy", zh: "公國" } },
-  Province:   { type: "victory",  cost: 8, vp: 6, name: { en: "Province", zh: "行省" } },
-  Curse:      { type: "curse",    cost: 0, vp: -1, name: { en: "Curse", zh: "詛咒" } },
-  Cellar:     { type: "action",   cost: 2, name: { en: "Cellar", zh: "地窖" }, desc: { en: "+1 Action, discard any, +1 Card each", zh: "+1 行動，棄任意張牌，每張抽 1 張牌" } },
-  Market:     { type: "action",   cost: 5, name: { en: "Market", zh: "市集" }, desc: { en: "+1 Card, +1 Action, +1 Buy, +1 Coin", zh: "+1 張牌、+1 行動、+1 購買、+1 金幣" } },
-  Militia:    { type: "action",   cost: 4, name: { en: "Militia", zh: "義勇軍" }, desc: { en: "+2 Coins, others discard to 3", zh: "+2 金幣，其他玩家棄牌至 3 張" } },
-  Mine:       { type: "action",   cost: 5, name: { en: "Mine", zh: "礦坑" }, desc: { en: "Trash Treasure, gain +3 cost to hand", zh: "廢棄財寶牌，獲得價值 +3 的財寶牌到手牌" } },
-  Moat:       { type: "action",   cost: 2, name: { en: "Moat", zh: "護城河" }, desc: { en: "+2 Cards, blocks Attacks", zh: "+2 張牌，抵擋攻擊" } },
-  Remodel:    { type: "action",   cost: 4, name: { en: "Remodel", zh: "重建" }, desc: { en: "Trash card, gain +2 cost", zh: "廢棄 1 張牌，獲得價值 +2 的牌" } },
-  Smithy:     { type: "action",   cost: 4, name: { en: "Smithy", zh: "鐵匠" }, desc: { en: "+3 Cards", zh: "+3 張牌" } },
-  Village:    { type: "action",   cost: 3, name: { en: "Village", zh: "村莊" }, desc: { en: "+1 Card, +2 Actions", zh: "+1 張牌、+2 行動" } },
-  Woodcutter: { type: "action",   cost: 3, name: { en: "Woodcutter", zh: "伐木工" }, desc: { en: "+1 Buy, +2 Coins", zh: "+1 購買、+2 金幣" } },
-  Workshop:   { type: "action",   cost: 3, name: { en: "Workshop", zh: "工作室" }, desc: { en: "Gain card costing up to 4", zh: "獲得價值至多 4 的牌" } },
+  Copper:     { type: "treasure", cost: 0, coins: 1, name: { en: "Copper", zh: "銅幣" }, tooltip: { en: "Worth 1 coin", zh: "價值 1 金幣" } },
+  Silver:     { type: "treasure", cost: 3, coins: 2, name: { en: "Silver", zh: "銀幣" }, tooltip: { en: "Worth 2 coins", zh: "價值 2 金幣" } },
+  Gold:       { type: "treasure", cost: 6, coins: 3, name: { en: "Gold", zh: "金幣" }, tooltip: { en: "Worth 3 coins", zh: "價值 3 金幣" } },
+  Estate:     { type: "victory",  cost: 2, vp: 1, name: { en: "Estate", zh: "莊園" }, tooltip: { en: "Worth 1 Victory Point", zh: "價值 1 分" } },
+  Duchy:      { type: "victory",  cost: 5, vp: 3, name: { en: "Duchy", zh: "公國" }, tooltip: { en: "Worth 3 Victory Points", zh: "價值 3 分" } },
+  Province:   { type: "victory",  cost: 8, vp: 6, name: { en: "Province", zh: "行省" }, tooltip: { en: "Worth 6 Victory Points", zh: "價值 6 分" } },
+  Curse:      { type: "curse",    cost: 0, vp: -1, name: { en: "Curse", zh: "詛咒" }, tooltip: { en: "Worth -1 Victory Point", zh: "價值 -1 分" } },
+  Cellar:     { type: "action",   cost: 2, name: { en: "Cellar", zh: "地窖" }, desc: { en: "+1 Action, discard any, +1 Card each", zh: "+1 行動，棄任意張牌，每張抽 1 張牌" }, tooltip: { en: "Discard any number of cards, then draw that many. Gives +1 Action.", zh: "棄掉任意數量的牌，然後抽取相同數量的牌。+1 行動。" } },
+  Market:     { type: "action",   cost: 5, name: { en: "Market", zh: "市集" }, desc: { en: "+1 Card, +1 Action, +1 Buy, +1 Coin", zh: "+1 張牌、+1 行動、+1 購買、+1 金幣" }, tooltip: { en: "Draw 1 card. +1 Action, +1 Buy, +1 Coin.", zh: "抽 1 張牌。+1 行動、+1 購買、+1 金幣。" } },
+  Militia:    { type: "action",   cost: 4, name: { en: "Militia", zh: "義勇軍" }, desc: { en: "+2 Coins, others discard to 3", zh: "+2 金幣，其他玩家棄牌至 3 張" }, tooltip: { en: "+2 Coins. Each other player discards down to 3 cards in hand.", zh: "+2 金幣。每個其他玩家將手牌棄至 3 張。" } },
+  Mine:       { type: "action",   cost: 5, name: { en: "Mine", zh: "礦坑" }, desc: { en: "Trash Treasure, gain +3 cost to hand", zh: "廢棄財寶牌，獲得價值 +3 的財寶牌到手牌" }, tooltip: { en: "Trash a Treasure from hand. Gain a Treasure to hand costing up to 3 more.", zh: "從手牌廢棄一張財寶牌。獲得一張價值多至多 3 的財寶牌到手牌。" } },
+  Moat:       { type: "action",   cost: 2, name: { en: "Moat", zh: "護城河" }, desc: { en: "+2 Cards, blocks Attacks", zh: "+2 張牌，抵擋攻擊" }, tooltip: { en: "Draw 2 cards. When another player plays an Attack, you may reveal this to be unaffected.", zh: "抽 2 張牌。當其他玩家打出攻擊牌時，你可以展示此牌以不受影響。" } },
+  Remodel:    { type: "action",   cost: 4, name: { en: "Remodel", zh: "重建" }, desc: { en: "Trash card, gain +2 cost", zh: "廢棄 1 張牌，獲得價值 +2 的牌" }, tooltip: { en: "Trash a card from hand. Gain a card costing up to 2 more than it.", zh: "從手牌廢棄一張牌。獲得一張價值多至多 2 的牌。" } },
+  Smithy:     { type: "action",   cost: 4, name: { en: "Smithy", zh: "鐵匠" }, desc: { en: "+3 Cards", zh: "+3 張牌" }, tooltip: { en: "Draw 3 cards from your deck.", zh: "從你的牌庫抽 3 張牌。" } },
+  Village:    { type: "action",   cost: 3, name: { en: "Village", zh: "村莊" }, desc: { en: "+1 Card, +2 Actions", zh: "+1 張牌、+2 行動" }, tooltip: { en: "Draw 1 card. +2 Actions.", zh: "抽 1 張牌。+2 行動。" } },
+  Woodcutter: { type: "action",   cost: 3, name: { en: "Woodcutter", zh: "伐木工" }, desc: { en: "+1 Buy, +2 Coins", zh: "+1 購買、+2 金幣" }, tooltip: { en: "+1 Buy and +2 Coins.", zh: "+1 購買、+2 金幣。" } },
+  Workshop:   { type: "action",   cost: 3, name: { en: "Workshop", zh: "工作室" }, desc: { en: "Gain card costing up to 4", zh: "獲得價值至多 4 的牌" }, tooltip: { en: "Gain a card costing up to 4.", zh: "獲得一張價值至多 4 的牌。" } },
 };
 
 const UI_TEXT = {
@@ -183,6 +183,9 @@ function cancelMode() {
 // --- Helpers ---
 function cardDetail(name) {
   const d = CARD_DATA[name];
+  // Use tooltip for detailed descriptions
+  if (d.tooltip) return d.tooltip[currentLang];
+  // Fallback to short desc
   if (d.desc) return d.desc[currentLang];
   if (d.coins) return currentLang === "zh" ? `+${d.coins} ${t("coin")}` : `+${d.coins} ${t("coin")}${d.coins > 1 ? "s" : ""}`;
   if (d.vp !== undefined) return `${d.vp > 0 ? "+" : ""}${d.vp} ${t("vp")}`;
