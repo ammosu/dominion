@@ -38,5 +38,17 @@ export class TableScene extends Phaser.Scene {
     this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dropped: boolean) => {
       gameObject.emit('dragend', pointer, dropped);
     });
+
+    // 監聽卡片點擊
+    this.events.on('card-clicked', (cardName: string) => {
+      console.log('Card clicked:', cardName);
+      // 發送到外部（React）
+      this.events.emit('play-card-request', cardName);
+    });
+
+    // 監聽卡片 Hover
+    this.events.on('card-hovered', (cardName: string | null) => {
+      this.events.emit('card-hover-changed', cardName);
+    });
   }
 }

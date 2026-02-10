@@ -32,6 +32,11 @@ export class Card extends Phaser.GameObjects.Container {
     this.setSize(80, 120);
     this.setInteractive({ draggable: true });
     this.setupDragHandlers();
+
+    // 點擊事件
+    this.on('pointerdown', this.onPointerDown, this);
+    this.on('pointerover', this.onPointerOver, this);
+    this.on('pointerout', this.onPointerOut, this);
   }
 
   getCardName(): string {
@@ -85,5 +90,35 @@ export class Card extends Phaser.GameObjects.Container {
         this.setDepth(10);
       },
     });
+  }
+
+  private onPointerDown() {
+    // 發送事件到 Scene
+    this.scene.events.emit('card-clicked', this.cardName);
+  }
+
+  private onPointerOver() {
+    // Hover 效果
+    this.scene.tweens.add({
+      targets: this,
+      y: this.y - 10,
+      duration: 150,
+      ease: 'Cubic.easeOut',
+    });
+
+    // 通知 Scene
+    this.scene.events.emit('card-hovered', this.cardName);
+  }
+
+  private onPointerOut() {
+    // 取消 Hover
+    this.scene.tweens.add({
+      targets: this,
+      y: this.y + 10,
+      duration: 150,
+      ease: 'Cubic.easeOut',
+    });
+
+    this.scene.events.emit('card-hovered', null);
   }
 }
