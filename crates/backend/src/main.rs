@@ -1,4 +1,6 @@
 mod ai;
+mod websocket;
+mod events;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -172,6 +174,7 @@ async fn main() {
         .route("/api/game/{id}", get(get_game))
         .route("/api/game/{id}/action", post(game_action))
         .route("/api/game/{id}/ai-turn", post(execute_ai_turn))
+        .route("/ws", get(websocket::websocket_handler))
         .with_state(games);
 
     let app = api.fallback_service(ServeDir::new("frontend"));
