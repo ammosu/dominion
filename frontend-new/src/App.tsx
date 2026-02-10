@@ -5,6 +5,7 @@ import { ActionLog } from './components/GameUI/ActionLog';
 import { TurnControls } from './components/GameUI/TurnControls';
 import { PhaseInstructions } from './components/GameUI/PhaseInstructions';
 import { DeckAreas } from './components/GameUI/DeckAreas';
+import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { wsService } from './services/websocket';
@@ -45,6 +46,7 @@ function App() {
       <TurnControls />
       <PhaseInstructions />
       <DeckAreas />
+      <Toast />
       <GameContainer />
       {isGameOver && finalScores && (
         <GameOverModal scores={finalScores} onClose={handleCloseGameOver} />

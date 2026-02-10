@@ -18,6 +18,9 @@ interface UIStore {
 
   language: 'zh' | 'en';
   setLanguage: (lang: 'zh' | 'en') => void;
+
+  toast: { message: string; type: 'error' | 'success' | 'info' } | null;
+  showToast: (message: string, type: 'error' | 'success' | 'info') => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -34,4 +37,7 @@ export const useUIStore = create<UIStore>((set) => ({
 
   language: 'zh',
   setLanguage: (lang) => set({ language: lang }),
+
+  toast: null,
+  showToast: (message, type) => set({ toast: { message, type } }),
 }));
