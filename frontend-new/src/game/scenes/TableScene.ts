@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
 import { Card } from '../objects/Card';
+import { Hand } from '../objects/Hand';
 
 export class TableScene extends Phaser.Scene {
+  private hand!: Hand;
+
   constructor() {
     super('TableScene');
   }
@@ -12,6 +15,16 @@ export class TableScene extends Phaser.Scene {
 
     // 桌面背景
     this.add.rectangle(width / 2, height / 2, width, height, 0x2d4a3e);
+
+    // 建立手牌區
+    this.hand = new Hand(this);
+
+    // 測試：建立 5 張手牌
+    const testCards = ['Copper', 'Silver', 'Gold', 'Estate', 'Smithy'];
+    testCards.forEach((cardName) => {
+      const card = new Card(this, 0, 0, cardName);
+      this.hand.addCard(card);
+    });
 
     // 啟用拖放
     this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
@@ -24,12 +37,6 @@ export class TableScene extends Phaser.Scene {
 
     this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dropped: boolean) => {
       gameObject.emit('dragend', pointer, dropped);
-    });
-
-    // 測試：建立幾張卡片
-    const testCards = ['Copper', 'Silver', 'Gold', 'Estate', 'Smithy'];
-    testCards.forEach((cardName, i) => {
-      new Card(this, 200 + i * 100, 400, cardName);
     });
   }
 }
