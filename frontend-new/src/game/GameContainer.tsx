@@ -22,7 +22,17 @@ export function GameContainer() {
       const scene = gameRef.current.getScene('TableScene');
       if (scene) {
         scene.events.on('play-card-request', (cardName: string) => {
-          wsService.send({ type: 'PlayCard', card: cardName });
+          // Determine if it's a treasure or action card
+          const treasures = ['Copper', 'Silver', 'Gold'];
+          const isTreasure = treasures.includes(cardName);
+
+          if (isTreasure) {
+            // Treasures are played in Buy phase to add coins
+            wsService.send({ type: 'PlayTreasure', card: cardName });
+          } else {
+            // Action cards are played in Action phase
+            wsService.send({ type: 'PlayCard', card: cardName });
+          }
         });
 
         scene.events.on('card-hover-changed', (cardName: string | null) => {

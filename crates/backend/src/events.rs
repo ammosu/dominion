@@ -5,6 +5,7 @@ use shared::game::GameState;
 #[serde(tag = "type")]
 pub enum ClientMessage {
     PlayCard { card: String },
+    PlayTreasure { card: String },
     BuyCard { card: String },
     EndPhase,
     PlayCellar { cards: Vec<String> },

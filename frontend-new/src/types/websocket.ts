@@ -1,6 +1,7 @@
 // Backend expects tagged enum format: { type: "BuyCard", card: "Copper" }
 export type ClientMessage =
   | { type: 'PlayCard'; card: string }
+  | { type: 'PlayTreasure'; card: string }
   | { type: 'BuyCard'; card: string }
   | { type: 'EndPhase' }
   | { type: 'PlayCellar'; cards: string[] }

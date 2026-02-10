@@ -64,6 +64,13 @@ async fn handle_socket(socket: WebSocket, _games: Games) {
                             Err(shared::action::ActionError::InvalidTarget)
                         }
                     }
+                    ClientMessage::PlayTreasure { card } => {
+                        if let Ok(card_enum) = parse_card(&card) {
+                            test_game.execute(shared::action::PlayerAction::PlayTreasure { card: card_enum })
+                        } else {
+                            Err(shared::action::ActionError::InvalidTarget)
+                        }
+                    }
                     ClientMessage::BuyCard { card } => {
                         if let Ok(card_enum) = parse_card(&card) {
                             test_game.execute(shared::action::PlayerAction::BuyCard { card: card_enum })
