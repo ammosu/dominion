@@ -1,5 +1,5 @@
 export interface ClientMessage {
-  type: 'PlayCard' | 'BuyCard' | 'EndPhase' | 'PlayCellar';
+  type: 'PlayCard' | 'BuyCard' | 'EndPhase' | 'PlayCellar' | 'StartGame';
   payload?: Record<string, unknown>;
 }
 
