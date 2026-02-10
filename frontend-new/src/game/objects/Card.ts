@@ -61,12 +61,12 @@ export class Card extends Phaser.GameObjects.Container {
     this.setDepth(100);
   }
 
-  private onDrag(pointer: Phaser.Input.Pointer, dragX: number, dragY: number) {
+  private onDrag(_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) {
     this.x = dragX;
     this.y = dragY;
   }
 
-  private onDragEnd(pointer: Phaser.Input.Pointer, dropped: boolean) {
+  private onDragEnd(_pointer: Phaser.Input.Pointer, dropped: boolean) {
     if (!dropped) {
       // 返回原位
       this.returnToOriginalPosition();
