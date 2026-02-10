@@ -3,6 +3,7 @@ import { GameContainer } from './game/GameContainer';
 import { TopBar } from './components/GameUI/TopBar';
 import { ActionLog } from './components/GameUI/ActionLog';
 import { TurnControls } from './components/GameUI/TurnControls';
+import { PhaseInstructions } from './components/GameUI/PhaseInstructions';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { wsService } from './services/websocket';
@@ -41,6 +42,7 @@ function App() {
       <TopBar />
       <ActionLog />
       <TurnControls />
+      <PhaseInstructions />
       <GameContainer />
       {isGameOver && finalScores && (
         <GameOverModal scores={finalScores} onClose={handleCloseGameOver} />

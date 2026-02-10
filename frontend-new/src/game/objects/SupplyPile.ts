@@ -66,10 +66,13 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private onPointerOver() {
     this.scene.tweens.add({
       targets: this,
-      scale: 1.05,
+      scale: 1.15,
+      y: this.y - 10,
       duration: 150,
       ease: 'Cubic.easeOut',
     });
+    // Highlight the card
+    this.cardBg.setStrokeStyle(3, 0xFFD700);
     this.scene.events.emit('supply-card-hovered', this.cardName);
   }
 
@@ -77,9 +80,12 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.scene.tweens.add({
       targets: this,
       scale: 1,
+      y: this.y + 10,
       duration: 150,
       ease: 'Cubic.easeOut',
     });
+    // Remove highlight
+    this.cardBg.setStrokeStyle(0);
     this.scene.events.emit('supply-card-hovered', null);
   }
 
