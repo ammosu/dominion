@@ -2,11 +2,14 @@ import { useEffect, useRef } from 'react';
 import { PhaserGame } from './PhaserGame';
 import { wsService } from '../services/websocket';
 import { useUIStore } from '../store/uiStore';
+import { useGameStore } from '../store/gameStore';
+import { getAllCardCosts } from '../utils/cardData';
 
 export function GameContainer() {
   const gameRef = useRef<PhaserGame | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const setHoveredCard = useUIStore((state) => state.setHoveredCard);
+  const gameState = useGameStore((state) => state.gameState);
 
   useEffect(() => {
     if (containerRef.current && !gameRef.current) {
@@ -42,38 +45,14 @@ export function GameContainer() {
     };
   }, [setHoveredCard]);
 
-  // Mock supply data for testing
+  // Sync supply with game state
   useEffect(() => {
     const scene = gameRef.current?.getScene('TableScene') as any;
-    if (scene && scene.updateSupply) {
-      scene.updateSupply(
-        {
-          Copper: 60,
-          Silver: 40,
-          Gold: 30,
-          Estate: 12,
-          Duchy: 12,
-          Province: 12,
-          Curse: 10,
-          Smithy: 10,
-          Village: 10,
-          Market: 10,
-        },
-        {
-          Copper: 0,
-          Silver: 3,
-          Gold: 6,
-          Estate: 2,
-          Duchy: 5,
-          Province: 8,
-          Curse: 0,
-          Smithy: 4,
-          Village: 3,
-          Market: 5,
-        }
-      );
+    if (scene && scene.updateSupply && gameState?.supply) {
+      const costs = getAllCardCosts(gameState.supply);
+      scene.updateSupply(gameState.supply, costs);
     }
-  }, []);
+  }, [gameState?.supply]);
 
   return <div id="phaser-container" ref={containerRef} />;
 }

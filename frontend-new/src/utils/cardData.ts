@@ -94,3 +94,15 @@ export const CARD_DATA: Record<string, CardData> = {
     tooltip: { en: 'Gain a card costing up to 4 coins.', zh: '獲得一張價值不超過 4 金幣的牌。' },
   },
 };
+
+export function getCardCost(cardName: string): number {
+  return CARD_DATA[cardName]?.cost || 0;
+}
+
+export function getAllCardCosts(supply: Record<string, number>): Record<string, number> {
+  const costs: Record<string, number> = {};
+  Object.keys(supply).forEach((cardName) => {
+    costs[cardName] = getCardCost(cardName);
+  });
+  return costs;
+}

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 
 export class SupplyPile extends Phaser.GameObjects.Container {
   private cardName: string;
-  private count: number;
+  private cardCount: number;
   private cardBg: Phaser.GameObjects.Rectangle;
   private cardText: Phaser.GameObjects.Text;
   private countText: Phaser.GameObjects.Text;
@@ -12,7 +12,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     super(scene, x, y);
 
     this.cardName = cardName;
-    this.count = count;
+    this.cardCount = count;
 
     // Card background
     this.cardBg = scene.add.rectangle(0, 0, 70, 100, 0xffffff);
@@ -87,7 +87,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   }
 
   updateCount(count: number) {
-    this.count = count;
+    this.cardCount = count;
     this.countText.setText(count.toString());
 
     // Gray out if empty
@@ -103,6 +103,6 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   }
 
   getCount(): number {
-    return this.count;
+    return this.cardCount;
   }
 }
