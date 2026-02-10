@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Card } from '../objects/Card';
 import { Hand } from '../objects/Hand';
 import { SupplyArea } from '../objects/SupplyArea';
+import { CardAnimations } from '../animations/CardAnimations';
 
 export class TableScene extends Phaser.Scene {
   private hand!: Hand;
@@ -64,6 +65,40 @@ export class TableScene extends Phaser.Scene {
     // 監聽卡片 Hover
     this.events.on('card-hovered', (cardName: string | null) => {
       this.events.emit('card-hover-changed', cardName);
+    });
+
+    // Animation event listeners
+    this.events.on('animate-draw', (cardName: string) => {
+      const deckX = 100;
+      const deckY = 400;
+      const handY = 650;
+      const handX = this.cameras.main.width / 2;
+
+      const card = CardAnimations.animateDrawCard(
+        this,
+        cardName,
+        deckX,
+        deckY,
+        handX,
+        handY,
+        () => {
+          this.hand.addCard(card);
+        }
+      );
+    });
+
+    this.events.on('animate-buy', (data: { cardName: string; pileX: number; pileY: number }) => {
+      const discardX = 200;
+      const discardY = 400;
+
+      CardAnimations.animateBuyCard(
+        this,
+        data.cardName,
+        data.pileX,
+        data.pileY,
+        discardX,
+        discardY
+      );
     });
   }
 

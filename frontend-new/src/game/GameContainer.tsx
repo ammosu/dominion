@@ -63,5 +63,30 @@ export function GameContainer() {
     }
   }, [gameState?.current_player, gameState?.phase]);
 
+  // Listen for animation hints from WebSocket messages
+  useEffect(() => {
+    const unsubscribe = wsService.onMessage((msg) => {
+      if (msg.payload.animation_hints) {
+        const hint = msg.payload.animation_hints;
+        const scene = gameRef.current?.getScene('TableScene');
+
+        if (scene) {
+          if (hint.type === 'draw') {
+            scene.events.emit('animate-draw', hint.card);
+          } else if (hint.type === 'buy') {
+            // TODO: Get actual pile position from SupplyArea
+            scene.events.emit('animate-buy', {
+              cardName: hint.card,
+              pileX: 200,
+              pileY: 200,
+            });
+          }
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
   return <div id="phaser-container" ref={containerRef} />;
 }
