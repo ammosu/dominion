@@ -23,12 +23,8 @@ export class TableScene extends Phaser.Scene {
     // 建立手牌區
     this.hand = new Hand(this);
 
-    // 測試：建立 5 張手牌
-    const testCards = ['Copper', 'Silver', 'Gold', 'Estate', 'Smithy'];
-    testCards.forEach((cardName) => {
-      const card = new Card(this, 0, 0, cardName);
-      this.hand.addCard(card);
-    });
+    // Hand will be populated from game state via updateHand()
+    // (Removed hardcoded test cards)
 
     // Create supply area
     this.supplyArea = new SupplyArea(this);
@@ -115,6 +111,37 @@ export class TableScene extends Phaser.Scene {
       this.supplyArea.updateSupply(supply);
     } else {
       this.supplyArea.setupSupply(supply, costs);
+    }
+  }
+
+  // Add method to update hand from game state
+  updateHand(handCards: string[]) {
+    if (!this.hand) {
+      this.hand = new Hand(this);
+    }
+
+    // Clear existing cards
+    this.hand.clear();
+
+    // Create new cards from game state
+    handCards.forEach((cardName) => {
+      const card = new Card(this, 0, 0, cardName);
+      this.hand.addCard(card);
+    });
+  }
+
+  // Add method to update language for all visible cards
+  updateLanguage(lang: 'en' | 'zh') {
+    // Update hand cards
+    if (this.hand) {
+      this.hand.getCards().forEach((card) => {
+        card.updateLanguage(lang);
+      });
+    }
+
+    // Update supply cards
+    if (this.supplyArea) {
+      this.supplyArea.updateLanguage(lang);
     }
   }
 }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { getCardName } from '../../utils/cardData';
 
 export class SupplyPile extends Phaser.GameObjects.Container {
   private cardName: string;
@@ -104,5 +105,10 @@ export class SupplyPile extends Phaser.GameObjects.Container {
 
   getCount(): number {
     return this.cardCount;
+  }
+
+  updateLanguage(lang: 'en' | 'zh') {
+    const translatedName = getCardName(this.cardName, lang);
+    this.cardText.setText(translatedName);
   }
 }

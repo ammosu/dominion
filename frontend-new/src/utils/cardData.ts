@@ -106,3 +106,7 @@ export function getAllCardCosts(supply: Record<string, number>): Record<string, 
   });
   return costs;
 }
+
+export function getCardName(cardName: string, lang: 'en' | 'zh'): string {
+  return CARD_DATA[cardName]?.name[lang] || cardName;
+}

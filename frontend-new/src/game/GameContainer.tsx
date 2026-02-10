@@ -12,6 +12,7 @@ export function GameContainer() {
   const aiController = useRef(new AITurnController());
   const setHoveredCard = useUIStore((state) => state.setHoveredCard);
   const gameState = useGameStore((state) => state.gameState);
+  const language = useUIStore((state) => state.language);
 
   useEffect(() => {
     if (containerRef.current && !gameRef.current) {
@@ -55,6 +56,25 @@ export function GameContainer() {
       scene.updateSupply(gameState.supply, costs);
     }
   }, [gameState?.supply]);
+
+  // Sync hand with game state
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene') as any;
+    if (scene && scene.updateHand && gameState) {
+      const currentPlayer = gameState.players[gameState.current_player];
+      if (currentPlayer && currentPlayer.hand) {
+        scene.updateHand(currentPlayer.hand);
+      }
+    }
+  }, [gameState?.players, gameState?.current_player]);
+
+  // Update language for all visible cards
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene') as any;
+    if (scene && scene.updateLanguage) {
+      scene.updateLanguage(language);
+    }
+  }, [language]);
 
   // Process AI turns automatically
   useEffect(() => {

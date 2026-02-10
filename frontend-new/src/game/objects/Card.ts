@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { getCardName } from '../../utils/cardData';
 
 export class Card extends Phaser.GameObjects.Container {
   private cardName: string;
@@ -16,7 +17,7 @@ export class Card extends Phaser.GameObjects.Container {
     this.cardBg = scene.add.rectangle(0, 0, 80, 120, 0xffffff);
     this.add(this.cardBg);
 
-    // 卡片名稱
+    // 卡片名稱 (use English as default initially)
     this.cardText = scene.add.text(0, 0, cardName, {
       fontSize: '12px',
       color: '#000000',
@@ -42,6 +43,11 @@ export class Card extends Phaser.GameObjects.Container {
 
   getCardName(): string {
     return this.cardName;
+  }
+
+  updateLanguage(lang: 'en' | 'zh') {
+    const translatedName = getCardName(this.cardName, lang);
+    this.cardText.setText(translatedName);
   }
 
   private setupDragHandlers() {

@@ -70,4 +70,10 @@ export class SupplyArea {
     this.piles.forEach((pile) => pile.destroy());
     this.piles.clear();
   }
+
+  updateLanguage(lang: 'en' | 'zh') {
+    this.piles.forEach((pile) => {
+      pile.updateLanguage(lang);
+    });
+  }
 }
