@@ -1,8 +1,9 @@
+import { GameContainer } from './game/GameContainer';
+
 function App() {
   return (
-    <div>
-      <h1>Dominion - React + Phaser 3</h1>
-      <p>架構測試成功</p>
+    <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
+      <GameContainer />
     </div>
   );
 }
