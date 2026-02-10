@@ -16,7 +16,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
     // Send start game request to backend
     wsService.send({
       type: 'StartGame',
-      payload: { playerName },
+      playerName,
     });
     onStart();
   };

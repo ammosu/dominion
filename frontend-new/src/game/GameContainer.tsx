@@ -22,7 +22,7 @@ export function GameContainer() {
       const scene = gameRef.current.getScene('TableScene');
       if (scene) {
         scene.events.on('play-card-request', (cardName: string) => {
-          wsService.send({ type: 'PlayCard', payload: { card: cardName } });
+          wsService.send({ type: 'PlayCard', card: cardName });
         });
 
         scene.events.on('card-hover-changed', (cardName: string | null) => {
@@ -31,7 +31,7 @@ export function GameContainer() {
 
         scene.events.on('buy-card-request', (cardName: string) => {
           console.log('Buy card request:', cardName);
-          wsService.send({ type: 'BuyCard', payload: { card: cardName } });
+          wsService.send({ type: 'BuyCard', card: cardName });
         });
 
         scene.events.on('supply-card-hover-changed', (cardName: string | null) => {
