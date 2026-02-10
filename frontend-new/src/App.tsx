@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { GameContainer } from './game/GameContainer';
 import { TopBar } from './components/GameUI/TopBar';
 import { ActionLog } from './components/GameUI/ActionLog';
+import { TurnControls } from './components/GameUI/TurnControls';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
 
@@ -27,6 +28,7 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
       <TopBar />
       <ActionLog />
+      <TurnControls />
       <GameContainer />
     </div>
   );
