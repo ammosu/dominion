@@ -6,6 +6,11 @@ export function TopBar() {
   const gameState = useGameStore((state) => state.gameState);
   const currentPlayer = useGameStore((state) => state.currentPlayer);
   const language = useUIStore((state) => state.language);
+  const setLanguage = useUIStore((state) => state.setLanguage);
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'zh' ? 'en' : 'zh');
+  };
 
   if (!gameState || !currentPlayer) {
     return (
@@ -43,6 +48,9 @@ export function TopBar() {
         <span className={styles.counter}>
           {language === 'zh' ? '金幣' : 'Coins'}: {currentPlayer.coins}
         </span>
+        <button className={styles.langButton} onClick={toggleLanguage}>
+          {language === 'zh' ? 'EN' : '中文'}
+        </button>
       </div>
     </div>
   );
