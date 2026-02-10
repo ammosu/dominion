@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
+import { SoundManager } from '../../utils/SoundManager';
 import styles from './TurnControls.module.css';
 
 export function TurnControls() {
   const gameState = useGameStore((state) => state.gameState);
   const currentPlayer = useGameStore((state) => state.currentPlayer);
   const language = useUIStore((state) => state.language);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   if (!gameState || !currentPlayer) {
     return null;
@@ -14,6 +17,12 @@ export function TurnControls() {
 
   const handleEndPhase = () => {
     wsService.send({ type: 'EndPhase' });
+  };
+
+  const toggleSound = () => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    SoundManager.getInstance().setEnabled(newState);
   };
 
   const phaseButton = {
@@ -24,6 +33,9 @@ export function TurnControls() {
 
   return (
     <div className={styles.turnControls}>
+      <button className={styles.soundButton} onClick={toggleSound}>
+        {soundEnabled ? '🔊' : '🔇'}
+      </button>
       <button className={styles.endPhaseButton} onClick={handleEndPhase}>
         {phaseButton[gameState.phase][language]}
       </button>

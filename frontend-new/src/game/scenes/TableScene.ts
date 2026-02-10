@@ -3,6 +3,7 @@ import { Card } from '../objects/Card';
 import { Hand } from '../objects/Hand';
 import { SupplyArea } from '../objects/SupplyArea';
 import { CardAnimations } from '../animations/CardAnimations';
+import { SoundManager } from '../../utils/SoundManager';
 
 export class TableScene extends Phaser.Scene {
   private hand!: Hand;
@@ -35,6 +36,7 @@ export class TableScene extends Phaser.Scene {
     // Listen to supply card events
     this.events.on('supply-card-clicked', (cardName: string) => {
       console.log('Supply card clicked:', cardName);
+      SoundManager.getInstance().playCardBuy();
       this.events.emit('buy-card-request', cardName);
     });
 
@@ -58,6 +60,7 @@ export class TableScene extends Phaser.Scene {
     // 監聽卡片點擊
     this.events.on('card-clicked', (cardName: string) => {
       console.log('Card clicked:', cardName);
+      SoundManager.getInstance().playCardPlay();
       // 發送到外部（React）
       this.events.emit('play-card-request', cardName);
     });
@@ -69,6 +72,7 @@ export class TableScene extends Phaser.Scene {
 
     // Animation event listeners
     this.events.on('animate-draw', (cardName: string) => {
+      SoundManager.getInstance().playCardDraw();
       const deckX = 100;
       const deckY = 400;
       const handY = 650;
