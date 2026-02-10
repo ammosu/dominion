@@ -3,6 +3,7 @@ export interface GameState {
   phase: 'Action' | 'Buy' | 'Cleanup';
   players: Player[];
   supply: Record<string, number>;
+  trash: string[];
   log: string[];
 }
 
