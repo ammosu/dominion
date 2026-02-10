@@ -79,4 +79,31 @@ impl GameState {
             log: vec!["Game started!".to_string()],
         }
     }
+
+    pub fn is_game_over(&self) -> bool {
+        // Game ends if Province pile is empty
+        if self.supply.get(&Card::Province).map_or(0, |&c| c) == 0 {
+            return true;
+        }
+
+        // Or if any 3 supply piles are empty
+        let empty_piles = self.supply.values().filter(|&&count| count == 0).count();
+        empty_piles >= 3
+    }
+
+    pub fn calculate_scores(&self) -> Vec<(String, i32)> {
+        self.players
+            .iter()
+            .map(|player| {
+                let score = player
+                    .deck
+                    .iter()
+                    .chain(player.hand.iter())
+                    .chain(player.discard.iter())
+                    .map(|card| card.victory_points())
+                    .sum();
+                (player.name.clone(), score)
+            })
+            .collect()
+    }
 }

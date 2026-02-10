@@ -3,11 +3,14 @@ import { GameContainer } from './game/GameContainer';
 import { TopBar } from './components/GameUI/TopBar';
 import { ActionLog } from './components/GameUI/ActionLog';
 import { TurnControls } from './components/GameUI/TurnControls';
+import { GameOverModal } from './components/GameUI/GameOverModal';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
 
 function App() {
   const setGameState = useGameStore((state) => state.setGameState);
+  const isGameOver = useGameStore((state) => state.isGameOver);
+  const finalScores = useGameStore((state) => state.finalScores);
 
   useEffect(() => {
     wsService.connect();
@@ -24,12 +27,20 @@ function App() {
     };
   }, [setGameState]);
 
+  const handleCloseGameOver = () => {
+    // Reset game over state when closing modal
+    useGameStore.setState({ isGameOver: false, finalScores: null });
+  };
+
   return (
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
       <TopBar />
       <ActionLog />
       <TurnControls />
       <GameContainer />
+      {isGameOver && finalScores && (
+        <GameOverModal scores={finalScores} onClose={handleCloseGameOver} />
+      )}
     </div>
   );
 }
