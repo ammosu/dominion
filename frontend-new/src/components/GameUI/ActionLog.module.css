@@ -1,0 +1,64 @@
+.actionLog {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 300px;
+  height: 400px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  font-weight: 600;
+  color: white;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  color: white;
+  font-size: 14px;
+}
+
+.logContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.logContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.logContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.logContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.logEntry {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.4;
+}
+
+.logEntry:last-child {
+  border-bottom: none;
+}
+
+.emptyLog {
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  padding: 20px;
+}
