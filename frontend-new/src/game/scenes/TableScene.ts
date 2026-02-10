@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { Card } from '../objects/Card';
 import { Hand } from '../objects/Hand';
+import { SupplyArea } from '../objects/SupplyArea';
 
 export class TableScene extends Phaser.Scene {
   private hand!: Hand;
+  private supplyArea!: SupplyArea;
 
   constructor() {
     super('TableScene');
@@ -24,6 +26,19 @@ export class TableScene extends Phaser.Scene {
     testCards.forEach((cardName) => {
       const card = new Card(this, 0, 0, cardName);
       this.hand.addCard(card);
+    });
+
+    // Create supply area
+    this.supplyArea = new SupplyArea(this);
+
+    // Listen to supply card events
+    this.events.on('supply-card-clicked', (cardName: string) => {
+      console.log('Supply card clicked:', cardName);
+      this.events.emit('buy-card-request', cardName);
+    });
+
+    this.events.on('supply-card-hovered', (cardName: string | null) => {
+      this.events.emit('supply-card-hover-changed', cardName);
     });
 
     // 啟用拖放
@@ -50,5 +65,17 @@ export class TableScene extends Phaser.Scene {
     this.events.on('card-hovered', (cardName: string | null) => {
       this.events.emit('card-hover-changed', cardName);
     });
+  }
+
+  // Add method to update supply
+  updateSupply(supply: Record<string, number>, costs: Record<string, number>) {
+    if (!this.supplyArea) {
+      this.supplyArea = new SupplyArea(this);
+    }
+    if (this.supplyArea.getPile(Object.keys(supply)[0])) {
+      this.supplyArea.updateSupply(supply);
+    } else {
+      this.supplyArea.setupSupply(supply, costs);
+    }
   }
 }

@@ -22,6 +22,15 @@ export function GameContainer() {
         scene.events.on('card-hover-changed', (cardName: string | null) => {
           setHoveredCard(cardName);
         });
+
+        scene.events.on('buy-card-request', (cardName: string) => {
+          console.log('Buy card request:', cardName);
+          wsService.send({ type: 'BuyCard', payload: { card: cardName } });
+        });
+
+        scene.events.on('supply-card-hover-changed', (cardName: string | null) => {
+          setHoveredCard(cardName);
+        });
       }
     }
 
@@ -32,6 +41,39 @@ export function GameContainer() {
       }
     };
   }, [setHoveredCard]);
+
+  // Mock supply data for testing
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene') as any;
+    if (scene && scene.updateSupply) {
+      scene.updateSupply(
+        {
+          Copper: 60,
+          Silver: 40,
+          Gold: 30,
+          Estate: 12,
+          Duchy: 12,
+          Province: 12,
+          Curse: 10,
+          Smithy: 10,
+          Village: 10,
+          Market: 10,
+        },
+        {
+          Copper: 0,
+          Silver: 3,
+          Gold: 6,
+          Estate: 2,
+          Duchy: 5,
+          Province: 8,
+          Curse: 0,
+          Smithy: 4,
+          Village: 3,
+          Market: 5,
+        }
+      );
+    }
+  }, []);
 
   return <div id="phaser-container" ref={containerRef} />;
 }
