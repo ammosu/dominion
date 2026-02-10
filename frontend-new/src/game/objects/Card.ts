@@ -22,6 +22,7 @@ export class Card extends Phaser.GameObjects.Container {
       color: '#000000',
       wordWrap: { width: 70 },
       align: 'center',
+      resolution: 1, // Set resolution to 1 for better performance (lower memory usage)
     });
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);
@@ -30,7 +31,7 @@ export class Card extends Phaser.GameObjects.Container {
 
     // 啟用拖放
     this.setSize(80, 120);
-    this.setInteractive({ draggable: true });
+    this.setInteractive({ draggable: true, pixelPerfect: false }); // Disable pixel-perfect collision for better performance
     this.setupDragHandlers();
 
     // 點擊事件

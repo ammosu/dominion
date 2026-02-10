@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'phaser': ['phaser'],
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   server: {
     port: 5173,
     proxy: {
