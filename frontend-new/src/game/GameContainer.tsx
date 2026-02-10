@@ -4,10 +4,12 @@ import { wsService } from '../services/websocket';
 import { useUIStore } from '../store/uiStore';
 import { useGameStore } from '../store/gameStore';
 import { getAllCardCosts } from '../utils/cardData';
+import { AITurnController } from './AITurnController';
 
 export function GameContainer() {
   const gameRef = useRef<PhaserGame | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const aiController = useRef(new AITurnController());
   const setHoveredCard = useUIStore((state) => state.setHoveredCard);
   const gameState = useGameStore((state) => state.gameState);
 
@@ -53,6 +55,13 @@ export function GameContainer() {
       scene.updateSupply(gameState.supply, costs);
     }
   }, [gameState?.supply]);
+
+  // Process AI turns automatically
+  useEffect(() => {
+    if (gameState) {
+      aiController.current.checkAndProcessAITurn(gameState);
+    }
+  }, [gameState?.current_player, gameState?.phase]);
 
   return <div id="phaser-container" ref={containerRef} />;
 }
