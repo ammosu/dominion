@@ -30,6 +30,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       color: '#000000',
       wordWrap: { width: 60 },
       align: 'center',
+      resolution: window.devicePixelRatio || 2,
     });
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);
@@ -40,6 +41,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
+      resolution: window.devicePixelRatio || 2,
     });
     this.countText.setOrigin(0.5);
     this.add(countBg);
@@ -51,6 +53,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       fontSize: '12px',
       color: '#000000',
       fontStyle: 'bold',
+      resolution: window.devicePixelRatio || 2,
     });
     costText.setOrigin(0.5);
     this.costBadge = scene.add.container(0, 0, [costBg, costText]);

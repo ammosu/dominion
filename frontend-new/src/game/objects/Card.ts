@@ -26,7 +26,7 @@ export class Card extends Phaser.GameObjects.Container {
       color: '#000000',
       wordWrap: { width: 70 },
       align: 'center',
-      resolution: 1,
+      resolution: window.devicePixelRatio || 2, // Use device pixel ratio for sharp text
     });
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);

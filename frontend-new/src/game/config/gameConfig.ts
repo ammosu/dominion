@@ -8,6 +8,11 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   height: 800,
   backgroundColor: '#2d4a3e',
   parent: 'phaser-container',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    resolution: window.devicePixelRatio || 2, // Support high-DPI displays
+  },
   scene: [Preloader, TableScene],
   physics: {
     default: 'arcade',
