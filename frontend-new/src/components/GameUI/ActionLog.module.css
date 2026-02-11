@@ -114,3 +114,62 @@
   font-style: italic;
   font-family: 'Cormorant Garamond', serif;
 }
+
+/* Responsive adjustments */
+@media (max-width: 1366px) {
+  .actionLog {
+    width: 240px;
+    right: 12px;
+  }
+
+  .actionLog.expanded {
+    height: 250px;
+    bottom: 12px;
+  }
+
+  .actionLog.minimized {
+    height: 38px;
+    bottom: 65px;
+  }
+
+  .header {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .logContent {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .actionLog {
+    width: 220px;
+    right: 8px;
+  }
+
+  .actionLog.expanded {
+    height: 220px;
+    bottom: 10px;
+  }
+
+  .actionLog.minimized {
+    height: 36px;
+    bottom: 60px;
+  }
+
+  .header {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .logContent {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .logEntry {
+    padding: 3px 0;
+  }
+}

@@ -199,3 +199,88 @@
 .cancelButton:active {
   transform: translateY(0);
 }
+
+/* Responsive adjustments */
+@media (max-width: 1366px) {
+  .turnControls {
+    bottom: 12px;
+    right: 12px;
+    gap: 7px;
+  }
+
+  .endPhaseButton {
+    padding: 9px 18px;
+    font-size: 12px;
+  }
+
+  .playAllTreasuresButton {
+    padding: 8px 15px;
+    font-size: 11px;
+  }
+
+  .soundButton {
+    padding: 6px 9px;
+    font-size: 15px;
+  }
+
+  .confirmationModal {
+    width: 340px;
+  }
+
+  .confirmationHeader {
+    padding: 14px 18px;
+    font-size: 14px;
+  }
+
+  .confirmationMessage {
+    padding: 20px 18px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .turnControls {
+    bottom: 10px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  .endPhaseButton {
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+
+  .playAllTreasuresButton {
+    padding: 7px 14px;
+    font-size: 10px;
+  }
+
+  .soundButton {
+    padding: 5px 8px;
+    font-size: 14px;
+  }
+
+  .confirmationModal {
+    width: 320px;
+  }
+
+  .confirmationHeader {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .confirmationMessage {
+    padding: 18px 16px;
+    font-size: 12px;
+  }
+
+  .confirmationButtons {
+    padding: 14px 16px;
+  }
+
+  .confirmButton,
+  .cancelButton {
+    padding: 9px 16px;
+    font-size: 12px;
+  }
+}

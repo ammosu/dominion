@@ -11,6 +11,25 @@
   gap: 8px;
 }
 
+/* Responsive adjustments */
+@media (max-width: 1366px) {
+  .sidebar {
+    width: 200px;
+    right: 12px;
+    top: 70px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 180px;
+    right: 8px;
+    top: 60px;
+    gap: 4px;
+  }
+}
+
 .sidebar::-webkit-scrollbar {
   width: 4px;
 }
@@ -61,6 +80,24 @@
 .playerCard.expanded {
   padding: 12px;
   cursor: default;
+}
+
+@media (max-width: 1366px) {
+  .playerCard.compact {
+    padding: 8px 10px;
+  }
+  .playerCard.expanded {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .playerCard.compact {
+    padding: 6px 8px;
+  }
+  .playerCard.expanded {
+    padding: 8px;
+  }
 }
 
 .playerCard.active {
