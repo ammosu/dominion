@@ -127,8 +127,11 @@ export class TableScene extends Phaser.Scene {
     // Create new cards from game state with current language
     handCards.forEach((cardName) => {
       const card = new Card(this, 0, 0, cardName, this.currentLang);
-      this.hand.addCard(card);
+      this.hand.addCardSilent(card);
     });
+
+    // Arrange all cards at once without animation (no fly-in from top-left)
+    this.hand.arrangeCards(false);
   }
 
   // Add method to update language for all visible cards

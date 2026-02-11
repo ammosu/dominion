@@ -18,6 +18,11 @@ export class Hand {
     this.arrangeCards();
   }
 
+  /** Add card without triggering arrange (for batch updates) */
+  addCardSilent(card: Card) {
+    this.cards.push(card);
+  }
+
   removeCard(card: Card) {
     const index = this.cards.indexOf(card);
     if (index !== -1) {
@@ -26,7 +31,7 @@ export class Hand {
     }
   }
 
-  arrangeCards() {
+  arrangeCards(animate: boolean = true) {
     const count = this.cards.length;
     if (count === 0) return;
 
@@ -38,15 +43,21 @@ export class Hand {
       const x = this.scene.cameras.main.width / 2 + (i - count / 2 + 0.5) * this.spacing;
       const y = this.baseY + Math.abs(angle) * this.arcHeight / this.maxRotation;
 
-      // 動畫移動到新位置
-      this.scene.tweens.add({
-        targets: card,
-        x: x,
-        y: y,
-        rotation: Phaser.Math.DegToRad(angle),
-        duration: 300,
-        ease: 'Cubic.easeOut',
-      });
+      if (animate) {
+        // 動畫移動到新位置
+        this.scene.tweens.add({
+          targets: card,
+          x: x,
+          y: y,
+          rotation: Phaser.Math.DegToRad(angle),
+          duration: 300,
+          ease: 'Cubic.easeOut',
+        });
+      } else {
+        // 直接設定位置（無動畫）
+        card.setPosition(x, y);
+        card.setRotation(Phaser.Math.DegToRad(angle));
+      }
 
       // 設定深度（中間的卡片在上面）
       card.setDepth(10 + Math.abs(i - count / 2));
