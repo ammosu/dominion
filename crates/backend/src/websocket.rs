@@ -81,10 +81,41 @@ async fn handle_socket(socket: WebSocket, _games: Games) {
                     ClientMessage::EndPhase => {
                         test_game.execute(shared::action::PlayerAction::EndPhase)
                     }
+                    ClientMessage::PlayAllTreasures => {
+                        test_game.execute(shared::action::PlayerAction::PlayAllTreasures)
+                    }
                     ClientMessage::PlayCellar { cards } => {
                         let card_enums: Result<Vec<Card>, _> = cards.iter().map(|s| parse_card(s)).collect();
                         if let Ok(discards) = card_enums {
                             test_game.execute(shared::action::PlayerAction::PlayCellar { discards })
+                        } else {
+                            Err(shared::action::ActionError::InvalidTarget)
+                        }
+                    }
+                    ClientMessage::PlayWorkshop { card } => {
+                        if let Ok(card_enum) = parse_card(&card) {
+                            test_game.execute(shared::action::PlayerAction::PlayWorkshop { gain: card_enum })
+                        } else {
+                            Err(shared::action::ActionError::InvalidTarget)
+                        }
+                    }
+                    ClientMessage::PlayMilitia => {
+                        test_game.execute(shared::action::PlayerAction::PlayMilitia)
+                    }
+                    ClientMessage::PlayMine { trash, gain } => {
+                        let trash_card = parse_card(&trash);
+                        let gain_card = parse_card(&gain);
+                        if let (Ok(t), Ok(g)) = (trash_card, gain_card) {
+                            test_game.execute(shared::action::PlayerAction::PlayMine { trash: t, gain: g })
+                        } else {
+                            Err(shared::action::ActionError::InvalidTarget)
+                        }
+                    }
+                    ClientMessage::PlayRemodel { trash, gain } => {
+                        let trash_card = parse_card(&trash);
+                        let gain_card = parse_card(&gain);
+                        if let (Ok(t), Ok(g)) = (trash_card, gain_card) {
+                            test_game.execute(shared::action::PlayerAction::PlayRemodel { trash: t, gain: g })
                         } else {
                             Err(shared::action::ActionError::InvalidTarget)
                         }

@@ -5,6 +5,8 @@ import { wsService } from '../../services/websocket';
 import { SoundManager } from '../../utils/SoundManager';
 import styles from './TurnControls.module.css';
 
+const TREASURES = ['Copper', 'Silver', 'Gold'];
+
 export function TurnControls() {
   const gameState = useGameStore((state) => state.gameState);
   const currentPlayer = useGameStore((state) => state.currentPlayer);
@@ -19,6 +21,10 @@ export function TurnControls() {
     wsService.send({ type: 'EndPhase' });
   };
 
+  const handlePlayAllTreasures = () => {
+    wsService.send({ type: 'PlayAllTreasures' });
+  };
+
   const toggleSound = () => {
     const newState = !soundEnabled;
     setSoundEnabled(newState);
@@ -26,17 +32,33 @@ export function TurnControls() {
   };
 
   const phaseButton = {
-    Action: { zh: '結束行動階段', en: 'End Action Phase' },
-    Buy: { zh: '結束購買階段', en: 'End Buy Phase' },
+    Action: { zh: '結束行動階段 ⏭', en: 'End Action Phase ⏭' },
+    Buy: { zh: '結束購買階段 ⏭', en: 'End Buy Phase ⏭' },
     Cleanup: { zh: '結束清理', en: 'End Cleanup' },
   };
+
+  const hasTreasuresInHand = currentPlayer.hand.some((c) => TREASURES.includes(c));
+  const showPlayAllTreasures = gameState.phase === 'Buy' && hasTreasuresInHand;
 
   return (
     <div className={styles.turnControls}>
       <button className={styles.soundButton} onClick={toggleSound}>
         {soundEnabled ? '🔊' : '🔇'}
       </button>
-      <button className={styles.endPhaseButton} onClick={handleEndPhase}>
+      {showPlayAllTreasures && (
+        <button
+          className={styles.playAllTreasuresButton}
+          onClick={handlePlayAllTreasures}
+          data-testid="play-all-treasures"
+        >
+          {language === 'zh' ? '💰 打出全部寶物' : '💰 Play All Treasures'}
+        </button>
+      )}
+      <button
+        className={styles.endPhaseButton}
+        onClick={handleEndPhase}
+        data-testid="end-phase"
+      >
         {phaseButton[gameState.phase][language]}
       </button>
     </div>

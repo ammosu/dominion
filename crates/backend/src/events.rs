@@ -6,9 +6,14 @@ use shared::game::GameState;
 pub enum ClientMessage {
     PlayCard { card: String },
     PlayTreasure { card: String },
+    PlayAllTreasures,
     BuyCard { card: String },
     EndPhase,
     PlayCellar { cards: Vec<String> },
+    PlayWorkshop { card: String },
+    PlayMilitia,
+    PlayMine { trash: String, gain: String },
+    PlayRemodel { trash: String, gain: String },
 }
 
 #[derive(Debug, Serialize, Deserialize)]

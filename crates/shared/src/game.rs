@@ -29,6 +29,7 @@ pub struct GameState {
     pub trash: Vec<Card>,
     pub game_over: bool,
     pub log: Vec<String>,
+    pub scores: Option<Vec<(String, i32)>>,
 }
 
 impl GameState {
@@ -77,6 +78,7 @@ impl GameState {
             trash: Vec::new(),
             game_over: false,
             log: vec!["Game started!".to_string()],
+            scores: None,
         }
     }
 

@@ -36,19 +36,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get().gameState;
     if (!state) return;
 
-    // Check if Province is empty
-    const provinceEmpty = state.supply['Province'] === 0;
-
-    // Check if 3 piles are empty
-    const emptyPiles = Object.values(state.supply).filter((count) => count === 0).length;
-
-    if (provinceEmpty || emptyPiles >= 3) {
-      // Calculate scores (frontend estimate)
-      // TODO: Get real scores from backend
-      const scores = state.players.map((player) => ({
-        name: player.name,
-        score: 0, // Backend should send this
-      }));
+    if (state.game_over && state.scores) {
+      const scores = state.scores.map(([name, score]) => ({ name, score }));
       set({ isGameOver: true, finalScores: scores });
     }
   },

@@ -21,7 +21,7 @@ export function DeckAreas() {
         <div className={styles.pile}>
           <div className={`${styles.card} ${styles.deck}`}>
             🃏
-            <div className={styles.count}>{currentPlayer.deck_size}</div>
+            <div className={styles.count}>{currentPlayer.deck.length}</div>
           </div>
           <div className={styles.label}>{text.deck[language]}</div>
         </div>
@@ -30,7 +30,7 @@ export function DeckAreas() {
         <div className={styles.pile}>
           <div className={`${styles.card} ${styles.discard}`}>
             🗑️
-            <div className={styles.count}>{currentPlayer.discard_size}</div>
+            <div className={styles.count}>{currentPlayer.discard.length}</div>
           </div>
           <div className={styles.label}>{text.discard[language]}</div>
         </div>

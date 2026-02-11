@@ -1,0 +1,175 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #1a1a2e;
+  border: 2px solid #e6c200;
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 400px;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #fff;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  text-align: center;
+  color: #e6c200;
+}
+
+.trashInfo {
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 12px;
+  background: rgba(255, 80, 80, 0.2);
+  border-radius: 6px;
+  color: #ff8888;
+  font-size: 14px;
+}
+
+.emptyMessage {
+  text-align: center;
+  padding: 24px;
+  color: #888;
+  font-size: 14px;
+}
+
+.cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.card {
+  width: 100px;
+  height: 140px;
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  background: #2a2a3e;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(230, 194, 0, 0.3);
+  border-color: #e6c200;
+}
+
+.card.selected {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+}
+
+.treasure {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, #2a2a1e, #3a3a1e);
+}
+
+.victory {
+  border-color: #4caf50;
+  background: linear-gradient(135deg, #1e2a1e, #1e3a1e);
+}
+
+.action {
+  border-color: #888;
+  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+}
+
+.curse {
+  border-color: #9c27b0;
+  background: linear-gradient(135deg, #2a1e2a, #3a1e3a);
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.cardCost {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffd700;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardDesc {
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cancelButton,
+.confirmButton {
+  padding: 8px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: opacity 0.15s;
+}
+
+.cancelButton {
+  background: #555;
+  color: #fff;
+}
+
+.cancelButton:hover {
+  background: #666;
+}
+
+.confirmButton {
+  background: #4caf50;
+  color: #fff;
+}
+
+.confirmButton:hover {
+  background: #5cbf60;
+}
+
+.confirmButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

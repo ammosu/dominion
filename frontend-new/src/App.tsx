@@ -8,6 +8,7 @@ import { DeckAreas } from './components/GameUI/DeckAreas';
 import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
+import { CardSelectionModal } from './components/GameUI/CardSelectionModal';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
@@ -50,6 +51,7 @@ function App() {
       <DeckAreas />
       <Toast />
       <GameContainer />
+      <CardSelectionModal />
       {isGameOver && finalScores && (
         <GameOverModal scores={finalScores} onClose={handleCloseGameOver} />
       )}

@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 
+export interface CardSelectionModalState {
+  mode: 'select-hand' | 'select-supply' | 'trash-and-gain';
+  title: { zh: string; en: string };
+  cards: string[];
+  minSelect: number;
+  maxSelect: number;
+  supplyCards?: string[];
+  maxGainCostOver?: number;
+  onConfirm: (selected: string[]) => void;
+  onTwoStep?: (trash: string, gain: string) => void;
+}
+
 interface UIStore {
   showRulesModal: boolean;
   setShowRulesModal: (show: boolean) => void;
@@ -21,6 +33,10 @@ interface UIStore {
 
   toast: { message: string; type: 'error' | 'success' | 'info' } | null;
   showToast: (message: string, type: 'error' | 'success' | 'info') => void;
+
+  cardSelectionModal: CardSelectionModalState | null;
+  openCardSelectionModal: (modal: CardSelectionModalState) => void;
+  closeCardSelectionModal: () => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -40,4 +56,8 @@ export const useUIStore = create<UIStore>((set) => ({
 
   toast: null,
   showToast: (message, type) => set({ toast: { message, type } }),
+
+  cardSelectionModal: null,
+  openCardSelectionModal: (modal) => set({ cardSelectionModal: modal }),
+  closeCardSelectionModal: () => set({ cardSelectionModal: null }),
 }));

@@ -1,52 +1,78 @@
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
+import { getCardName } from '../../utils/cardData';
 import styles from './PlayedCards.module.css';
+
+const TREASURES = ['Copper', 'Silver', 'Gold'];
 
 export function PlayedCards() {
   const gameState = useGameStore((state) => state.gameState);
   const language = useUIStore((state) => state.language);
+  const prevHandRef = useRef<string[]>([]);
+  const playedRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    if (!gameState) return;
+
+    const currentPlayer = gameState.players[gameState.current_player];
+
+    // Reset played cards when phase changes to Action (new turn)
+    if (gameState.phase === 'Action') {
+      playedRef.current = [];
+      prevHandRef.current = [...currentPlayer.hand];
+      return;
+    }
+
+    // During Buy phase, track treasures that left the hand
+    if (gameState.phase === 'Buy') {
+      const prevHand = prevHandRef.current;
+      const currentHand = currentPlayer.hand;
+
+      // Find cards that were in prev hand but not in current hand
+      const remaining = [...currentHand];
+      const newlyPlayed: string[] = [];
+
+      for (const card of prevHand) {
+        const idx = remaining.indexOf(card);
+        if (idx >= 0) {
+          remaining.splice(idx, 1);
+        } else if (TREASURES.includes(card)) {
+          newlyPlayed.push(card);
+        }
+      }
+
+      if (newlyPlayed.length > 0) {
+        playedRef.current = [...playedRef.current, ...newlyPlayed];
+      }
+      prevHandRef.current = [...currentHand];
+    }
+  }, [gameState?.players, gameState?.phase, gameState?.current_player]);
 
   if (!gameState || gameState.phase !== 'Buy') return null;
 
   const currentPlayer = gameState.players[gameState.current_player];
+  const played = playedRef.current;
 
-  // Calculate played treasures based on coins (simplified)
-  // In a real implementation, backend should track this
-  const playedTreasures: string[] = [];
-  let remainingCoins = currentPlayer.coins;
+  if (played.length === 0 && currentPlayer.coins === 0) return null;
 
-  // This is a rough estimate - ideally backend should send played cards
-  while (remainingCoins >= 3 && playedTreasures.length < 5) {
-    playedTreasures.push('Gold');
-    remainingCoins -= 3;
-  }
-  while (remainingCoins >= 2 && playedTreasures.length < 5) {
-    playedTreasures.push('Silver');
-    remainingCoins -= 2;
-  }
-  while (remainingCoins >= 1 && playedTreasures.length < 5) {
-    playedTreasures.push('Copper');
-    remainingCoins -= 1;
-  }
-
-  if (currentPlayer.coins === 0) return null;
+  const treasureEmoji: Record<string, string> = {
+    Copper: '🟤',
+    Silver: '⚪',
+    Gold: '🟡',
+  };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-testid="played-cards">
       <div className={styles.label}>
         {language === 'zh' ? '💎 已打出的寶物' : '💎 Played Treasures'}
       </div>
       <div className={styles.cards}>
-        {playedTreasures.map((card, index) => (
+        {played.map((card, index) => (
           <div key={index} className={styles.card}>
-            {card === 'Copper' && '🟤'}
-            {card === 'Silver' && '⚪'}
-            {card === 'Gold' && '🟡'}
+            {treasureEmoji[card] || '💎'}
             <span className={styles.cardName}>
-              {language === 'zh'
-                ? (card === 'Copper' ? '銅幣' : card === 'Silver' ? '銀幣' : '金幣')
-                : card
-              }
+              {getCardName(card, language)}
             </span>
           </div>
         ))}

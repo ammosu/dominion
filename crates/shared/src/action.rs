@@ -541,16 +541,11 @@ impl GameState {
             self.game_over = true;
             log.push("Game over!".to_string());
 
-            for player in &self.players {
-                let score: i32 = player
-                    .hand
-                    .iter()
-                    .chain(player.deck.iter())
-                    .chain(player.discard.iter())
-                    .map(|c| c.victory_points())
-                    .sum();
-                log.push(format!("{}: {} points", player.name, score));
+            let scores = self.calculate_scores();
+            for (name, score) in &scores {
+                log.push(format!("{}: {} points", name, score));
             }
+            self.scores = Some(scores);
         }
     }
 }

@@ -93,6 +93,41 @@ export const CARD_DATA: Record<string, CardData> = {
     desc: { en: 'Gain a card costing up to 4', zh: '獲得一張價值不超過 4 的牌' },
     tooltip: { en: 'Gain a card costing up to 4 coins.', zh: '獲得一張價值不超過 4 金幣的牌。' },
   },
+  Militia: {
+    name: { en: 'Militia', zh: '民兵' },
+    type: 'action',
+    cost: 4,
+    desc: { en: '+2 Coins', zh: '+2 金幣' },
+    tooltip: { en: '+2 Coins. Each other player discards down to 3 cards.', zh: '+2 金幣。其他玩家棄牌至 3 張。' },
+  },
+  Mine: {
+    name: { en: 'Mine', zh: '礦山' },
+    type: 'action',
+    cost: 5,
+    desc: { en: 'Upgrade a Treasure', zh: '升級寶物牌' },
+    tooltip: { en: 'Trash a Treasure from hand. Gain a Treasure costing up to 3 more to hand.', zh: '從手牌中移除一張寶物牌，獲得一張價值不超過多 3 的寶物牌到手牌。' },
+  },
+  Moat: {
+    name: { en: 'Moat', zh: '護城河' },
+    type: 'action',
+    cost: 2,
+    desc: { en: '+2 Cards', zh: '+2 張牌' },
+    tooltip: { en: 'Draw 2 cards. Reaction: Reveal to block attacks.', zh: '抽 2 張牌。反應：展示以阻擋攻擊。' },
+  },
+  Remodel: {
+    name: { en: 'Remodel', zh: '改造' },
+    type: 'action',
+    cost: 4,
+    desc: { en: 'Trash & Gain', zh: '移除並獲得' },
+    tooltip: { en: 'Trash a card from hand. Gain a card costing up to 2 more.', zh: '從手牌移除一張牌，獲得一張價值不超過多 2 的牌。' },
+  },
+  Woodcutter: {
+    name: { en: 'Woodcutter', zh: '樵夫' },
+    type: 'action',
+    cost: 3,
+    desc: { en: '+1 Buy, +2 Coins', zh: '+1 購買、+2 金幣' },
+    tooltip: { en: '+1 Buy, +2 Coins.', zh: '+1 購買、+2 金幣。' },
+  },
 };
 
 export function getCardCost(cardName: string): number {
