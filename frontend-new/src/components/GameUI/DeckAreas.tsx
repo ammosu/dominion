@@ -35,6 +35,15 @@ export function DeckAreas() {
     }
   };
 
+  const getTreasureIcon = (cardName: string): string => {
+    switch (cardName) {
+      case 'Gold': return '🪙';
+      case 'Silver': return '⚪';
+      case 'Copper': return '🟤';
+      default: return '';
+    }
+  };
+
   return (
     <>
       <div className={styles.container}>
@@ -90,7 +99,7 @@ export function DeckAreas() {
                     style={{ borderLeftColor: getCardTypeColor(cardName) }}
                   >
                     <span className={styles.discardCardName}>
-                      {getCardName(cardName, language)}
+                      {getTreasureIcon(cardName)} {getCardName(cardName, language)}
                     </span>
                     <span className={styles.discardCardCount}>×{count}</span>
                   </div>

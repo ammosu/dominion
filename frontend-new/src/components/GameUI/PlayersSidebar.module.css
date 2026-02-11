@@ -1,0 +1,276 @@
+.sidebar {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  width: 240px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(196, 164, 98, 0.2);
+  border-radius: 2px;
+}
+
+.sidebarHeader {
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #c4a462;
+  text-align: center;
+  padding: 8px;
+  background: linear-gradient(170deg, rgba(20, 15, 10, 0.85) 0%, rgba(14, 10, 6, 0.85) 100%);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.playersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playerCard {
+  background: linear-gradient(170deg, rgba(20, 15, 10, 0.92) 0%, rgba(14, 10, 6, 0.92) 100%);
+  border: 1px solid rgba(196, 164, 98, 0.25);
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.playerCard.active {
+  border-color: rgba(196, 164, 98, 0.6);
+  box-shadow: 0 0 16px rgba(196, 164, 98, 0.2), 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(170deg, rgba(30, 24, 16, 0.95) 0%, rgba(20, 15, 10, 0.95) 100%);
+}
+
+.playerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(196, 164, 98, 0.15);
+}
+
+.playerName {
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d0c0a0;
+}
+
+.scoreDisplay {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(196, 164, 98, 0.1);
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(196, 164, 98, 0.2);
+}
+
+.scoreLabel {
+  font-size: 10px;
+  color: #907850;
+  font-family: 'Noto Sans TC', serif;
+}
+
+.scoreValue {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #c4a462;
+}
+
+.playerStats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgba(196, 164, 98, 0.04);
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.statRow.clickable {
+  cursor: pointer;
+}
+
+.statRow.clickable:hover {
+  background: rgba(196, 164, 98, 0.12);
+}
+
+.statIcon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+}
+
+.statLabel {
+  font-family: 'Noto Sans TC', serif;
+  font-size: 11px;
+  color: #a09888;
+  flex: 1;
+}
+
+.statValue {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b89858;
+  min-width: 20px;
+  text-align: right;
+}
+
+.treasures {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 8px;
+  border-top: 1px solid rgba(196, 164, 98, 0.1);
+}
+
+.treasureItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.treasureIcon {
+  font-size: 20px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.treasureCount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c4a462;
+}
+
+/* Discard pile viewer */
+.discardOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  backdrop-filter: blur(2px);
+}
+
+.discardModal {
+  background: linear-gradient(170deg, #1e1810 0%, #14100a 100%);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 6px;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.discardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(196, 164, 98, 0.12);
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b89858;
+  letter-spacing: 0.5px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: #706050;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+
+.closeButton:hover {
+  color: #c4a462;
+}
+
+.discardContent {
+  padding: 8px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.discardContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.discardContent::-webkit-scrollbar-thumb {
+  background: rgba(196, 164, 98, 0.15);
+  border-radius: 2px;
+}
+
+.discardCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  background: rgba(196, 164, 98, 0.04);
+  border-radius: 3px;
+  border-left: 3px solid #a09888;
+  transition: background 0.1s;
+}
+
+.discardCard:hover {
+  background: rgba(196, 164, 98, 0.08);
+}
+
+.discardCardName {
+  font-family: 'Noto Sans TC', serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #d0c0a0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.discardCardCount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #907850;
+}
+
+.emptyDiscard {
+  text-align: center;
+  padding: 24px;
+  color: #504838;
+  font-style: italic;
+  font-size: 13px;
+}

@@ -11,6 +11,7 @@ import { GameOverModal } from './components/GameUI/GameOverModal';
 import { CardSelectionModal } from './components/GameUI/CardSelectionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
 import { StartScreen } from './components/GameUI/StartScreen';
+import { PlayersSidebar } from './components/GameUI/PlayersSidebar';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
 
@@ -50,6 +51,7 @@ function App() {
       <TurnControls />
       <PhaseInstructions />
       <DeckAreas />
+      <PlayersSidebar />
       <CardTooltip />
       <Toast />
       <GameContainer />
