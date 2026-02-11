@@ -1,0 +1,35 @@
+# Render Blueprint for Native Deployment (No Docker)
+# Recommended for Render free tier
+
+services:
+  # Backend Service (Rust)
+  - type: web
+    name: dominion-backend
+    runtime: rust
+    region: singapore
+    plan: free
+    buildCommand: cargo build --release
+    startCommand: ./target/release/backend
+    envVars:
+      - key: RUST_LOG
+        value: info
+      - key: PORT
+        generateValue: true
+    healthCheckPath: /api/health
+
+  # Frontend Service (Static Site with API Proxy)
+  - type: web
+    name: dominion-frontend
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: cd frontend-new && npm install && npm run build
+    startCommand: node frontend-new/server.js
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          name: dominion-backend
+          type: web
+          property: hostport
+      - key: PORT
+        generateValue: true

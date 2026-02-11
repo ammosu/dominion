@@ -9,7 +9,7 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 shared = { path = "../shared" }
-tower-http = { version = "0.6", features = ["fs"] }
+tower-http = { version = "0.6", features = ["fs", "cors"] }
 uuid = { version = "1", features = ["v4"] }
 tokio-tungstenite = "0.21"
 futures-util = "0.3"

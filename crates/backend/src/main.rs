@@ -16,6 +16,7 @@ use shared as shared;  // Make shared accessible as crate::shared in AI modules
 use shared::action::PlayerAction;
 use shared::game::{GameState, PlayerInfo};
 use tower_http::services::ServeDir;
+use tower_http::cors::{CorsLayer, Any};
 use uuid::Uuid;
 use ai::{simple::SimpleAi, AiPlayer};
 
@@ -168,6 +169,11 @@ async fn execute_ai_turn(
 async fn main() {
     let games: Games = Arc::new(Mutex::new(HashMap::new()));
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let api = Router::new()
         .route("/api/health", get(health_check))
         .route("/api/game/new", post(new_game))
@@ -175,11 +181,14 @@ async fn main() {
         .route("/api/game/{id}/action", post(game_action))
         .route("/api/game/{id}/ai-turn", post(execute_ai_turn))
         .route("/ws", get(websocket::websocket_handler))
+        .layer(cors)
         .with_state(games);
 
     let app = api.fallback_service(ServeDir::new("frontend"));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Server running on http://localhost:3000");
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    println!("Server running on {}", addr);
     axum::serve(listener, app).await.unwrap();
 }

@@ -1,0 +1,29 @@
+# Render Blueprint for Docker Deployment
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend Service (Rust WebSocket Server)
+  - type: web
+    name: dominion-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile.backend
+    region: singapore
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+    healthCheckPath: /api/health
+
+  # Frontend Service (React + Phaser + nginx)
+  - type: web
+    name: dominion-frontend
+    runtime: docker
+    dockerfilePath: ./Dockerfile.frontend
+    region: singapore
+    plan: free
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          name: dominion-backend
+          type: web
+          property: host
