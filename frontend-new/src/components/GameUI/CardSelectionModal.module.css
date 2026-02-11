@@ -4,47 +4,53 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(3px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 2px solid #e6c200;
-  border-radius: 12px;
+  background: linear-gradient(170deg, #1e1810 0%, #14100a 100%);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 6px;
   padding: 24px;
   min-width: 400px;
-  max-width: 700px;
+  max-width: 680px;
   max-height: 80vh;
   overflow-y: auto;
-  color: #fff;
+  color: #e8dcc8;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
 .title {
   margin: 0 0 8px 0;
-  font-size: 20px;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 18px;
   text-align: center;
-  color: #e6c200;
+  color: #c4a462;
+  letter-spacing: 0.5px;
 }
 
 .trashInfo {
   text-align: center;
-  padding: 8px;
+  padding: 8px 12px;
   margin-bottom: 12px;
-  background: rgba(255, 80, 80, 0.2);
-  border-radius: 6px;
-  color: #ff8888;
-  font-size: 14px;
+  background: rgba(180, 60, 60, 0.15);
+  border: 1px solid rgba(180, 60, 60, 0.2);
+  border-radius: 4px;
+  color: #d08888;
+  font-size: 13px;
 }
 
 .emptyMessage {
   text-align: center;
   padding: 24px;
-  color: #888;
-  font-size: 14px;
+  color: #706050;
+  font-size: 13px;
+  font-style: italic;
 }
 
 .cardGrid {
@@ -56,10 +62,10 @@
 }
 
 .card {
-  width: 100px;
-  height: 140px;
-  border: 2px solid #555;
-  border-radius: 8px;
+  width: 96px;
+  height: 130px;
+  border: 1px solid rgba(196, 164, 98, 0.2);
+  border-radius: 4px;
   padding: 8px;
   cursor: pointer;
   display: flex;
@@ -67,70 +73,74 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
-  background: #2a2a3e;
+  background: rgba(196, 164, 98, 0.04);
   position: relative;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(230, 194, 0, 0.3);
-  border-color: #e6c200;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(196, 164, 98, 0.15);
+  border-color: rgba(196, 164, 98, 0.5);
 }
 
 .card.selected {
-  border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.2);
-  box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+  border-color: rgba(76, 160, 90, 0.6);
+  background: rgba(76, 160, 90, 0.1);
+  box-shadow: 0 0 14px rgba(76, 160, 90, 0.2);
 }
 
 .treasure {
-  border-color: #ffd700;
-  background: linear-gradient(135deg, #2a2a1e, #3a3a1e);
+  border-color: rgba(196, 164, 98, 0.35);
+  background: rgba(196, 164, 98, 0.06);
 }
 
 .victory {
-  border-color: #4caf50;
-  background: linear-gradient(135deg, #1e2a1e, #1e3a1e);
+  border-color: rgba(76, 160, 90, 0.3);
+  background: rgba(76, 160, 90, 0.05);
 }
 
 .action {
-  border-color: #888;
-  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  border-color: rgba(140, 140, 140, 0.2);
+  background: rgba(140, 140, 140, 0.04);
 }
 
 .curse {
-  border-color: #9c27b0;
-  background: linear-gradient(135deg, #2a1e2a, #3a1e3a);
+  border-color: rgba(156, 39, 176, 0.3);
+  background: rgba(156, 39, 176, 0.05);
 }
 
 .cardName {
-  font-size: 13px;
-  font-weight: bold;
+  font-family: 'Noto Sans TC', serif;
+  font-size: 12px;
+  font-weight: 600;
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  color: #d8c8a8;
 }
 
 .cardCost {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #ffd700;
-  color: #000;
-  font-size: 12px;
-  font-weight: bold;
+  background: linear-gradient(135deg, #c4a462, #a08040);
+  color: #1a1208;
+  font-size: 11px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
 }
 
 .cardDesc {
   font-size: 10px;
-  color: #aaa;
+  color: #907850;
   text-align: center;
   margin-top: 4px;
+  line-height: 1.3;
 }
 
 .actions {
@@ -142,34 +152,38 @@
 
 .cancelButton,
 .confirmButton {
+  font-family: 'Noto Sans TC', serif;
   padding: 8px 24px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 4px;
+  font-size: 13px;
   cursor: pointer;
-  font-weight: bold;
-  transition: opacity 0.15s;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
 }
 
 .cancelButton {
-  background: #555;
-  color: #fff;
+  background: rgba(196, 164, 98, 0.08);
+  color: #a09070;
+  border: 1px solid rgba(196, 164, 98, 0.15);
 }
 
 .cancelButton:hover {
-  background: #666;
+  background: rgba(196, 164, 98, 0.15);
+  border-color: rgba(196, 164, 98, 0.3);
 }
 
 .confirmButton {
-  background: #4caf50;
-  color: #fff;
+  background: linear-gradient(180deg, #2a6038, #1d4d2a);
+  color: #c8e8d0;
+  border: 1px solid rgba(76, 160, 90, 0.3);
 }
 
 .confirmButton:hover {
-  background: #5cbf60;
+  background: linear-gradient(180deg, #327044, #245a32);
 }
 
 .confirmButton:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
 }

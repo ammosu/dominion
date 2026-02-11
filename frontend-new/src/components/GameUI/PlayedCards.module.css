@@ -1,20 +1,21 @@
 .container {
   position: fixed;
-  top: 70px;
+  top: 62px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(45, 74, 62, 0.95);
-  padding: 12px 20px;
-  border-radius: 8px;
-  border: 2px solid rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, rgba(20, 15, 10, 0.94) 0%, rgba(30, 22, 14, 0.92) 100%);
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(196, 164, 98, 0.25);
   z-index: 100;
-  animation: slideDown 0.3s ease-out;
+  animation: slideDown 0.25s ease-out;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateX(-50%) translateY(-12px);
   }
   to {
     opacity: 1;
@@ -23,16 +24,18 @@
 }
 
 .label {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
-  color: #FFD700;
-  margin-bottom: 8px;
+  color: #b89858;
+  margin-bottom: 6px;
   text-align: center;
+  font-family: 'Noto Sans TC', serif;
+  letter-spacing: 0.5px;
 }
 
 .cards {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -40,23 +43,18 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-  color: white;
-  animation: fadeIn 0.3s ease-out;
+  background: rgba(196, 164, 98, 0.08);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #d0c0a0;
+  border: 1px solid rgba(196, 164, 98, 0.1);
+  animation: fadeIn 0.25s ease-out;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .cardName {
@@ -64,18 +62,9 @@
 }
 
 .totalCoins {
-  font-size: 16px;
-  font-weight: bold;
-  color: #FFD700;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c4a462;
   margin-left: 4px;
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
+  font-family: 'Cormorant Garamond', serif;
 }

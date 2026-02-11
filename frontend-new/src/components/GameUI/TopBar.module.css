@@ -3,80 +3,91 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
+  height: 54px;
+  background: linear-gradient(180deg, rgba(18, 12, 8, 0.96) 0%, rgba(28, 20, 12, 0.93) 100%);
+  color: #e8dcc8;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 24px;
   z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Noto Sans TC', 'Cormorant Garamond', serif;
+  border-bottom: 1px solid rgba(196, 164, 98, 0.3);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
 }
 
 .playerInfo {
   display: flex;
-  gap: 20px;
+  gap: 14px;
   align-items: center;
 }
 
 .playerName {
-  font-size: 18px;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 16px;
   font-weight: 600;
+  color: #f0e6d0;
+  letter-spacing: 0.5px;
 }
 
 .phaseBadge {
-  background: #4CAF50;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
+  background: linear-gradient(135deg, rgba(46, 107, 62, 0.9), rgba(26, 77, 46, 0.9));
+  padding: 4px 14px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a8e0b8;
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  letter-spacing: 0.5px;
 }
 
 .counters {
   display: flex;
-  gap: 24px;
+  gap: 6px;
+  align-items: center;
 }
 
 .counter {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  padding: 4px 12px;
+  background: rgba(196, 164, 98, 0.08);
+  border: 1px solid rgba(196, 164, 98, 0.15);
+  border-radius: 3px;
   transition: all 0.3s ease;
+  color: #c8b888;
 }
 
 .counter.highlight {
-  background: #FFD700;
-  color: #000;
-  transform: scale(1.15);
-  animation: pulse 0.5s ease-in-out;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+  background: rgba(196, 164, 98, 0.25);
+  color: #ffd700;
+  transform: scale(1.06);
+  animation: coinPulse 0.5s ease-in-out;
+  box-shadow: 0 0 12px rgba(196, 164, 98, 0.3);
+  border-color: rgba(196, 164, 98, 0.5);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1.15);
-  }
-  50% {
-    transform: scale(1.25);
-  }
+@keyframes coinPulse {
+  0%, 100% { transform: scale(1.06); }
+  50% { transform: scale(1.14); }
 }
 
 .langButton {
-  font-size: 14px;
-  font-weight: 500;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: transparent;
+  color: #a09070;
+  border: 1px solid rgba(196, 164, 98, 0.2);
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 0.5px;
 }
 
 .langButton:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(196, 164, 98, 0.12);
+  border-color: rgba(196, 164, 98, 0.4);
+  color: #d0c0a0;
 }

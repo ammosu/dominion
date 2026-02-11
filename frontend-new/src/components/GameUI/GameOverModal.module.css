@@ -4,61 +4,77 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
+  background: linear-gradient(170deg, #1e1810 0%, #14100a 100%);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 6px;
   padding: 40px;
-  max-width: 500px;
+  max-width: 460px;
   width: 90%;
-  color: white;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #e8dcc8;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(196, 164, 98, 0.05);
 }
 
 .title {
-  font-size: 32px;
-  margin: 0 0 30px 0;
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  margin: 0 0 28px 0;
   text-align: center;
   font-weight: 700;
+  color: #c4a462;
+  letter-spacing: 3px;
 }
 
 .winner {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
 
 .crown {
-  font-size: 48px;
+  font-size: 44px;
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .winner h2 {
-  font-size: 28px;
-  margin: 10px 0;
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  margin: 8px 0;
+  color: #f0e6d0;
+  letter-spacing: 1px;
 }
 
 .winner p {
-  font-size: 20px;
-  margin: 5px 0;
+  font-size: 16px;
+  margin: 4px 0;
+  color: #a09070;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
 }
 
 .scores {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background: rgba(196, 164, 98, 0.05);
+  border: 1px solid rgba(196, 164, 98, 0.12);
+  border-radius: 4px;
+  padding: 18px;
+  margin-bottom: 24px;
 }
 
 .scores h3 {
-  margin: 0 0 15px 0;
-  font-size: 18px;
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+  color: #b89858;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .scoreRow {
@@ -66,7 +82,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(196, 164, 98, 0.08);
 }
 
 .scoreRow:last-child {
@@ -74,35 +90,42 @@
 }
 
 .rank {
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
   font-size: 18px;
-  min-width: 40px;
+  min-width: 36px;
+  color: #907850;
 }
 
 .playerName {
   flex: 1;
-  font-size: 18px;
+  font-size: 16px;
+  color: #d0c0a0;
 }
 
 .score {
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 22px;
+  color: #c4a462;
 }
 
 .closeButton {
   width: 100%;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
   padding: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  background: white;
-  color: #667eea;
-  border: none;
-  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #2a6038 0%, #1d4d2a 100%);
+  color: #c8e8d0;
+  border: 1px solid rgba(76, 160, 90, 0.3);
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 1.5px;
 }
 
 .closeButton:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+  background: linear-gradient(180deg, #327044 0%, #245a32 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }

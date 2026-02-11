@@ -4,83 +4,138 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #2d4a3e 0%, #1a2f26 100%);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(46, 36, 22, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(20, 40, 28, 0.3) 0%, transparent 60%),
+    linear-gradient(160deg, #1a1208 0%, #0e1a12 40%, #0a0e08 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 3000;
 }
 
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(196, 164, 98, 0.015) 2px,
+      rgba(196, 164, 98, 0.015) 4px
+    );
+  pointer-events: none;
+}
+
 .container {
   text-align: center;
-  color: white;
+  color: #e8dcc8;
+  position: relative;
 }
 
 .title {
-  font-size: 64px;
-  font-weight: 700;
-  margin-bottom: 60px;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  font-family: 'Cinzel', serif;
+  font-size: 72px;
+  font-weight: 900;
+  margin-bottom: 16px;
+  color: #c4a462;
+  text-shadow:
+    0 0 40px rgba(196, 164, 98, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+  letter-spacing: 6px;
+  line-height: 1;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196, 164, 98, 0.5), transparent);
+  margin: 24px auto 0;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   align-items: center;
+  margin-top: 40px;
 }
 
 .label {
-  font-size: 18px;
-  font-weight: 500;
+  font-family: 'Noto Sans TC', serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #907850;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .input {
-  padding: 12px 20px;
-  font-size: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  width: 300px;
+  font-family: 'Cormorant Garamond', serif;
+  padding: 12px 24px;
+  font-size: 20px;
+  border: 1px solid rgba(196, 164, 98, 0.25);
+  border-radius: 3px;
+  background: rgba(196, 164, 98, 0.06);
+  color: #e8dcc8;
+  width: 280px;
   text-align: center;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(196, 164, 98, 0.5);
+  background: rgba(196, 164, 98, 0.1);
+  box-shadow: 0 0 20px rgba(196, 164, 98, 0.08);
 }
 
 .startButton {
-  padding: 16px 48px;
-  font-size: 20px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  padding: 14px 48px;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #2a6038 0%, #1d4d2a 100%);
+  color: #c8e8d0;
+  border: 1px solid rgba(76, 160, 90, 0.35);
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  letter-spacing: 2px;
+  margin-top: 8px;
 }
 
 .startButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #327044 0%, #245a32 100%);
+}
+
+.startButton:active {
+  transform: translateY(0);
 }
 
 .langButton {
-  padding: 8px 16px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  padding: 6px 14px;
+  font-size: 11px;
+  background: transparent;
+  color: #806840;
+  border: 1px solid rgba(196, 164, 98, 0.15);
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 1px;
 }
 
 .langButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(196, 164, 98, 0.08);
+  border-color: rgba(196, 164, 98, 0.3);
+  color: #a08860;
 }
