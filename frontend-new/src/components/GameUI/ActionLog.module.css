@@ -1,9 +1,7 @@
 .actionLog {
   position: fixed;
-  bottom: 14px;
   right: 14px;
   width: 270px;
-  height: 370px;
   background: linear-gradient(170deg, rgba(20, 15, 10, 0.94) 0%, rgba(30, 24, 16, 0.92) 100%);
   border-radius: 4px;
   overflow: hidden;
@@ -12,6 +10,17 @@
   flex-direction: column;
   border: 1px solid rgba(196, 164, 98, 0.2);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(196, 164, 98, 0.08);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.actionLog.expanded {
+  height: 280px;
+  bottom: 14px;
+}
+
+.actionLog.minimized {
+  height: 42px;
+  bottom: 70px;
 }
 
 .header {
@@ -24,6 +33,42 @@
   border-bottom: 1px solid rgba(196, 164, 98, 0.12);
   letter-spacing: 1.5px;
   text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s ease;
+}
+
+.header:hover {
+  background: rgba(196, 164, 98, 0.12);
+}
+
+.headerTitle {
+  flex: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  background: rgba(196, 164, 98, 0.25);
+  border-radius: 9px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #d4b880;
+  margin-right: 8px;
+}
+
+.toggleIcon {
+  font-size: 10px;
+  color: #907850;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logContent {
