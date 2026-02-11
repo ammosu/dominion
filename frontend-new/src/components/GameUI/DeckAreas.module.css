@@ -39,6 +39,17 @@
   border-color: rgba(180, 60, 60, 0.3);
 }
 
+.card.clickable {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5);
+  border-color: rgba(180, 60, 60, 0.5);
+}
+
 .count {
   position: absolute;
   top: 6px;
@@ -62,19 +73,131 @@
   letter-spacing: 0.5px;
 }
 
+.viewHint {
+  font-size: 9px;
+  color: #706858;
+}
+
 .handIndicator {
   position: fixed;
-  bottom: 155px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(20, 15, 10, 0.88);
-  color: #c4a462;
-  padding: 6px 14px;
+  background: rgba(20, 15, 10, 0.75);
+  color: #a08858;
+  padding: 4px 12px;
   border-radius: 3px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(196, 164, 98, 0.2);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid rgba(196, 164, 98, 0.12);
   z-index: 50;
   font-family: 'Noto Sans TC', serif;
   letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* Discard pile viewer */
+.discardOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  backdrop-filter: blur(2px);
+}
+
+.discardModal {
+  background: linear-gradient(170deg, #1e1810 0%, #14100a 100%);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 6px;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.discardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(196, 164, 98, 0.12);
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b89858;
+  letter-spacing: 0.5px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: #706050;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+
+.closeButton:hover {
+  color: #c4a462;
+}
+
+.discardContent {
+  padding: 8px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.discardContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.discardContent::-webkit-scrollbar-thumb {
+  background: rgba(196, 164, 98, 0.15);
+  border-radius: 2px;
+}
+
+.discardCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  background: rgba(196, 164, 98, 0.04);
+  border-radius: 3px;
+  border-left: 3px solid #a09888;
+  transition: background 0.1s;
+}
+
+.discardCard:hover {
+  background: rgba(196, 164, 98, 0.08);
+}
+
+.discardCardName {
+  font-family: 'Noto Sans TC', serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #d0c0a0;
+}
+
+.discardCardCount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #907850;
+}
+
+.emptyDiscard {
+  text-align: center;
+  padding: 24px;
+  color: #504838;
+  font-style: italic;
+  font-size: 13px;
 }
