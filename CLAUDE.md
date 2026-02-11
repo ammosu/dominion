@@ -4,233 +4,153 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Dominion card game implementation with Rust backend (Axum + WebSocket) and React + Phaser 3 frontend. Players can play against AI opponents in real-time with a game-like interface.
+Dominion card game implementation with Rust backend (Axum + WebSocket) and React + Phaser 3 frontend. Players can play against AI opponents in real-time with a medieval-themed UI. Supports bilingual interface (繁體中文 / English).
 
 ## Development Commands
 
 ### Backend (Rust)
 ```bash
-# Build backend (release mode recommended for performance)
-~/.cargo/bin/cargo build --release
-
-# Run backend server (binds to localhost:3000)
-./target/release/backend
-
-# Run tests
-~/.cargo/bin/cargo test
-
-# Run specific crate tests
-~/.cargo/bin/cargo test -p shared
-~/.cargo/bin/cargo test -p backend
+~/.cargo/bin/cargo build --release        # Build (release mode)
+./target/release/backend                   # Run server on localhost:3000
+~/.cargo/bin/cargo test                    # Run all tests
+~/.cargo/bin/cargo test -p shared          # Test shared game logic only
+~/.cargo/bin/cargo test -p backend         # Test backend only
 ```
 
 ### Frontend (React + Phaser)
 ```bash
 cd frontend-new
-
-# Install dependencies (required after pulling)
-npm install
-
-# Start dev server (Vite on localhost:5173)
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm preview
+npm install              # Install dependencies
+npm run dev              # Dev server on localhost:5173
+npm run build            # Production build (tsc + vite)
+npm run preview          # Preview production build
 ```
 
-### Running the Full Stack
+### Docker
+```bash
+docker compose up -d     # Start both services
+docker compose down      # Stop services
+# Backend: localhost:3000, Frontend: localhost:8080
+```
+
+### Full Stack (Local Dev)
 ```bash
 # Terminal 1: Backend
 ./target/release/backend
-
 # Terminal 2: Frontend
 cd frontend-new && npm run dev
-
-# Access game at http://localhost:5173
+# Access at http://localhost:5173
 ```
 
 ## Architecture
 
-### Backend Architecture (Rust)
+### Backend (Rust — Cargo Workspace)
 
-**Cargo Workspace Structure:**
-- `crates/backend` - Axum web server with WebSocket handler
-- `crates/shared` - Game logic shared between backend and potentially frontend
+- `crates/backend` — Axum web server with WebSocket handler
+- `crates/shared` — Game logic (actions, cards, game state, player state)
 
-**Key Backend Modules:**
-- `crates/backend/src/websocket.rs` - WebSocket connection handler, processes `ClientMessage` enum and sends `GameStateUpdate` responses
-- `crates/backend/src/events.rs` - Defines `ClientMessage` (tagged enum) and `ServerMessage` structures for WebSocket communication
-- `crates/backend/src/ai/` - AI player implementations (SimpleAi)
-- `crates/shared/src/action.rs` - Core game action execution (`PlayerAction` enum, validation, state mutations)
-- `crates/shared/src/game.rs` - `GameState` struct, turn phases, supply management
-- `crates/shared/src/card.rs` - Card definitions and properties
-- `crates/shared/src/player.rs` - Player state (hand, deck, discard, resources)
+**Key modules:**
+- `websocket.rs` — WebSocket handler, processes `ClientMessage`, runs AI turn loop after each human action
+- `events.rs` — `ClientMessage` (tagged enum) and `ServerMessage` type definitions
+- `ai/simple.rs` — `SimpleAi` implementation (`decide_action()` for buy/play decisions)
+- `shared/action.rs` — `PlayerAction` enum, validation, state mutations via `GameState::execute()`
+- `shared/game.rs` — `GameState` struct, turn phases, supply management, game-over detection
 
-**WebSocket Message Flow:**
-1. Frontend sends `ClientMessage` (tagged enum format: `{ type: "BuyCard", card: "Silver" }`)
-2. Backend deserializes to Rust enum, validates, executes via `GameState::execute()`
-3. Backend serializes updated `GameState` to JSON and broadcasts `ServerMessage`
-4. Frontend updates Zustand store, triggers React re-renders and Phaser scene updates
+### Frontend (React + Phaser 3 Hybrid)
 
-**Critical Message Types:**
-- `PlayCard` - Play action cards in Action phase
-- `PlayTreasure` - Play treasure cards in Buy phase to gain coins
-- `BuyCard` - Purchase cards from supply in Buy phase
-- `EndPhase` - Progress to next phase (Action → Buy → Cleanup → next player's Action)
+Two rendering layers share state through Zustand:
+- **React Layer** — UI overlays: TopBar, ActionLog, TurnControls, Modals, Toast, DeckAreas
+- **Phaser Layer** — Game canvas: hand cards (draggable), supply area (clickable piles)
+- **Zustand Stores** — `gameStore` (game state from server), `uiStore` (language, toasts, modals)
 
-### Frontend Architecture (React + Phaser 3)
+**Key modules:**
+- `GameContainer.tsx` — React↔Phaser bridge; validates actions client-side, sends WebSocket messages, syncs state to Phaser scene via useEffect hooks
+- `scenes/TableScene.ts` — Main Phaser scene; `updateHand()`, `updateSupply()`, `updateLanguage()`
+- `objects/Card.ts` — Draggable card with hover/drag animations; stores `originalY` to prevent position drift
+- `objects/Hand.ts` — Fan-arranged hand; `addCardSilent()` + `arrangeCards(animate)` for batch updates without fly-in
+- `objects/SupplyPile.ts` — Clickable supply pile with hover lift; stores `originalY` for stable positioning
+- `services/websocket.ts` — WebSocket client with auto-reconnect; URL auto-detected from `window.location`
 
-**Hybrid Architecture:**
-- **React Layer** - UI components (TopBar, ActionLog, TurnControls, Toast notifications)
-- **Phaser Layer** - Game rendering (hand cards, supply area, animations)
-- **Zustand Store** - Central state management, bridges React and Phaser
+### Data Flow
 
-**Key Frontend Modules:**
-- `frontend-new/src/game/GameContainer.tsx` - Bridge between React and Phaser, handles WebSocket events, validates actions client-side before sending
-- `frontend-new/src/game/scenes/TableScene.ts` - Main Phaser scene, manages hand cards and supply area
-- `frontend-new/src/game/objects/` - Phaser game objects (Card, Hand, SupplyArea, SupplyPile)
-- `frontend-new/src/store/gameStore.ts` - Zustand store for game state
-- `frontend-new/src/store/uiStore.ts` - Zustand store for UI state (language, toast notifications, modals)
-- `frontend-new/src/services/websocket.ts` - WebSocket client wrapper
-- `frontend-new/src/utils/cardData.ts` - Card metadata (names, costs, translations)
+```
+User clicks card → Phaser emits event → GameContainer validates →
+  WebSocket send → Backend executes → AI turn loop runs →
+  GameStateUpdate response → Zustand store update →
+  React re-renders + Phaser scene.updateHand()/updateSupply()
+```
 
-**State Synchronization:**
-- WebSocket message → `gameStore.setGameState()` → triggers React useEffect hooks
-- React useEffect → calls Phaser scene methods (`updateHand()`, `updateSupply()`, `updateLanguage()`)
-- Phaser scene events → emit to GameContainer → send WebSocket messages
-
-**Client-Side Validation:**
-GameContainer validates all actions before sending to backend:
-- Buy phase required for buying/playing treasures
-- Action phase required for playing action cards
-- Sufficient resources (coins, buys, actions)
-- Card in hand, supply not empty
-- Shows Toast notifications for validation failures
-
-**AI Turn Automation:**
-`AITurnController` monitors game state, automatically sends `EndPhase` messages for AI players until turn switches to human player.
-
-### Game Flow
-
-**Turn Structure:**
-1. **Action Phase** - Play action cards (Village, Smithy, etc.) using available actions
-2. **Buy Phase** - Play treasures for coins, then buy cards from supply
-3. **Cleanup Phase** - Discard hand, draw 5 new cards, reset resources, advance to next player
-
-**Card Types:**
-- **Treasure** (Copper, Silver, Gold) - Play in Buy phase via `PlayTreasure` to add coins
-- **Victory** (Estate, Duchy, Province) - Provide victory points at game end
-- **Action** (Village, Smithy, Market, etc.) - Play in Action phase via `PlayCard`
-- **Curse** - Negative victory points
-
-**Starting Deck:**
-7 Copper + 3 Estate, shuffled, 5 cards drawn. Standard Dominion rules.
+Backend always responds with **full game state** (no deltas). Frontend replaces entire state on each message.
 
 ## Critical Implementation Details
 
 ### WebSocket Message Format
-Backend expects Rust tagged enum format (NOT nested payload):
+Backend uses Rust `#[serde(tag = "type")]` tagged enums. Frontend must send flat objects:
 ```typescript
-// ✅ Correct
-{ type: 'BuyCard', card: 'Silver' }
-
-// ❌ Wrong (old format)
-{ type: 'BuyCard', payload: { card: 'Silver' } }
+{ type: 'BuyCard', card: 'Silver' }     // ✅ Correct
+{ type: 'BuyCard', payload: { card: 'Silver' } }  // ❌ Wrong
 ```
 
 ### Card Action Routing
-- Treasure cards (Copper/Silver/Gold) → `PlayTreasure` action (adds coins in Buy phase)
-- Action cards (Village/Smithy/etc.) → `PlayCard` action (uses action in Action phase)
-- GameContainer automatically routes based on card type
+GameContainer routes card clicks by type:
+- Treasure cards (Copper/Silver/Gold) → `PlayTreasure` (Buy phase, adds coins)
+- Action cards → `PlayCard` (Action phase, uses an action)
+
+### Complex Action Cards
+Cards with multi-step UI (defined in `COMPLEX_ACTIONS` array in GameContainer):
+- **Cellar** — Modal to select hand cards to discard
+- **Workshop** — Modal to select supply card costing ≤4
+- **Mine** — Two-step: trash a treasure, then gain one costing ≤ (trashed cost + 3)
+- **Remodel** — Two-step: trash a card, then gain one costing ≤ (trashed cost + 2)
+- **Militia** — Auto-sends, no modal needed (opponents choose discards server-side)
+
+### AI Turn Loop (Server-Side)
+After each human action in `websocket.rs`, the backend automatically runs AI turns:
+1. Check if current player is AI (`player.is_ai`)
+2. Call `SimpleAi::decide_action()` in a loop (max 20 actions)
+3. If AI returns `None` or action errors, force `EndPhase`
+4. Loop until it's a human player's turn again
+5. Send final `GameStateUpdate` with all AI actions already applied
+
+The frontend `AITurnController` is now a no-op — all AI logic is server-side.
+
+### Phaser Object Patterns
+- **Position drift prevention**: Card and SupplyPile store `originalY` at creation; hover tweens use absolute positions (`y: this.originalY - 10`), never relative
+- **Batch hand updates**: `Hand.addCardSilent()` adds without animation; `Hand.arrangeCards(false)` positions instantly. Used by `TableScene.updateHand()` to avoid fly-in effects on state refresh
+- **Scene listener setup**: GameContainer uses `requestAnimationFrame` polling to wait for `scene.hand` to exist before attaching event listeners
 
 ### Language Support
-- All UI supports zh/en toggle via `uiStore.language`
-- Card names translated via `cardData.ts` `getCardName()`
-- Phaser objects have `updateLanguage()` method called when language changes
-- Toast notifications use current language
+- Toggle via `uiStore.language` ('zh' | 'en')
+- Card names: `getCardName(cardId, language)` from `cardData.ts`
+- Phaser objects: `updateLanguage()` method called when language changes
+- All React UI components read `language` from uiStore
 
-### AI Opponent Behavior
-- AI player names contain "Bot" or "AI"
-- AITurnController monitors `gameState.current_player`
-- Automatically sends `EndPhase` until player index changes
-- Backend AI (SimpleAi) makes actual card choices
+### WebSocket URL Auto-Detection
+`websocket.ts` derives URL from `window.location`:
+- Dev (Vite proxy): `ws://localhost:5173/ws` → proxied to backend:3000
+- Docker (nginx): `ws://localhost:8080/ws` → proxied to backend:3000
+- HTTPS: automatically uses `wss://`
 
-### Common Gotchas
+## Docker Deployment
+
+- `Dockerfile.backend` — Rust multi-stage: `rust:1.83-slim` builder → `debian:bookworm-slim` runtime
+- `Dockerfile.frontend` — `node:20-slim` builder → `nginx:alpine` runtime
+- `nginx.conf` — Proxies `/api/` and `/ws` to backend service, SPA fallback for all other routes, 24h WebSocket timeout
+- `docker-compose.yml` — Two services: `backend` (port 3000) and `frontend` (port 8080→80)
+
+## Common Gotchas
 
 **Backend:**
-- Must use `~/.cargo/bin/cargo` explicitly (cargo not in PATH)
-- WebSocket handler creates new game per connection (not persistent across connections)
-- `parse_card()` in websocket.rs must match all card names exactly
+- `~/.cargo/bin/cargo` may be needed if cargo is not in PATH
+- WebSocket handler creates a new game per connection (not persistent across reconnects)
+- `parse_card()` in websocket.rs must match all card name strings exactly
 
 **Frontend:**
-- Phaser canvas renders hand cards, not React components
-- Must call Phaser scene methods from React useEffect, not directly
-- Hand cards sync via `scene.updateHand(gameState.players[current_player].hand)`
-- Supply area updates via `scene.updateSupply(supply, costs)`
+- Hand cards are Phaser objects on canvas, NOT React components — click handling is via Phaser events
+- Must call Phaser scene methods from React useEffect, never directly
 - Toast notifications auto-dismiss after 3 seconds
 
 **Integration:**
-- Backend port 3000, frontend port 5173 (WebSocket connects to ws://localhost:3000/ws)
+- Backend validation is authoritative; client-side validation is for UX only
 - Frontend sends messages, backend always responds with full `GameStateUpdate`
-- Client-side validation prevents invalid actions from reaching backend
-- Backend validation is authoritative (client validation is UX, not security)
-
-## File Organization
-
-### Backend Structure
-```
-crates/
-├── backend/
-│   └── src/
-│       ├── main.rs          - Axum server setup, HTTP routes
-│       ├── websocket.rs     - WebSocket handler, message processing
-│       ├── events.rs        - Message type definitions
-│       └── ai/              - AI player implementations
-└── shared/
-    └── src/
-        ├── lib.rs           - Public exports
-        ├── game.rs          - GameState, turn management
-        ├── action.rs        - Action execution, validation
-        ├── card.rs          - Card definitions
-        └── player.rs        - Player state
-```
-
-### Frontend Structure
-```
-frontend-new/src/
-├── game/                    - Phaser layer
-│   ├── PhaserGame.ts        - Phaser instance wrapper
-│   ├── GameContainer.tsx    - React-Phaser bridge
-│   ├── AITurnController.ts  - AI turn automation
-│   ├── scenes/              - Phaser scenes
-│   ├── objects/             - Phaser game objects
-│   ├── animations/          - Animation utilities
-│   └── config/              - Phaser config
-├── components/GameUI/       - React UI components
-├── store/                   - Zustand stores
-├── services/                - WebSocket client
-├── utils/                   - Card data, sound manager
-└── types/                   - TypeScript definitions
-```
-
-## Testing & Debugging
-
-### Backend Debugging
-- Backend logs to stdout (check console for "Received: ..." messages)
-- Action errors logged to stderr with `ActionError` details
-- Test game state serialization: `cargo test test_gamestate_serialization -p shared`
-
-### Frontend Debugging
-- Browser console shows WebSocket messages and action requests
-- Toast notifications show validation failures
-- Phaser canvas events logged via `console.log()` in GameContainer
-- Use Playwright skill to inspect UI: `/init` then describe what you want to test
-
-### Common Issues
-- **Cards not clickable**: Check if Phaser scene `updateHand()` was called
-- **Purchase fails silently**: Check Toast notification (top-right), likely validation failure
-- **AI infinite loop**: AITurnController should check `currentPlayer` index change, not phase
-- **Language toggle not updating cards**: Phaser objects need `updateLanguage()` implementation
+- Both `Cargo.lock` and `package-lock.json` are committed for reproducible builds
