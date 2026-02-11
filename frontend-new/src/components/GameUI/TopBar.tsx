@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import styles from './TopBar.module.css';
@@ -8,9 +9,23 @@ export function TopBar() {
   const language = useUIStore((state) => state.language);
   const setLanguage = useUIStore((state) => state.setLanguage);
 
+  const [highlightCoins, setHighlightCoins] = useState(false);
+  const prevCoins = useRef(0);
+
   const toggleLanguage = () => {
     setLanguage(language === 'zh' ? 'en' : 'zh');
   };
+
+  // Highlight coins when they increase
+  useEffect(() => {
+    if (currentPlayer && currentPlayer.coins > prevCoins.current) {
+      setHighlightCoins(true);
+      setTimeout(() => setHighlightCoins(false), 500);
+    }
+    if (currentPlayer) {
+      prevCoins.current = currentPlayer.coins;
+    }
+  }, [currentPlayer?.coins]);
 
   if (!gameState || !currentPlayer) {
     return (
@@ -45,8 +60,8 @@ export function TopBar() {
         <span className={styles.counter}>
           {language === 'zh' ? '購買' : 'Buys'}: {currentPlayer.buys}
         </span>
-        <span className={styles.counter}>
-          {language === 'zh' ? '金幣' : 'Coins'}: {currentPlayer.coins}
+        <span className={`${styles.counter} ${highlightCoins ? styles.highlight : ''}`}>
+          💰 {language === 'zh' ? '金幣' : 'Coins'}: {currentPlayer.coins}
         </span>
         <button className={styles.langButton} onClick={toggleLanguage}>
           {language === 'zh' ? 'EN' : '中文'}

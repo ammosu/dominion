@@ -1,0 +1,81 @@
+.container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(45, 74, 62, 0.95);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  z-index: 100;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFD700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.cards {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: white;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cardName {
+  font-weight: 500;
+}
+
+.totalCoins {
+  font-size: 16px;
+  font-weight: bold;
+  color: #FFD700;
+  margin-left: 4px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

@@ -5,6 +5,7 @@ import { ActionLog } from './components/GameUI/ActionLog';
 import { TurnControls } from './components/GameUI/TurnControls';
 import { PhaseInstructions } from './components/GameUI/PhaseInstructions';
 import { DeckAreas } from './components/GameUI/DeckAreas';
+import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { StartScreen } from './components/GameUI/StartScreen';
@@ -42,6 +43,7 @@ function App() {
       {!gameStarted && <StartScreen onStart={() => setGameStarted(true)} />}
 
       <TopBar />
+      <PlayedCards />
       <ActionLog />
       <TurnControls />
       <PhaseInstructions />
