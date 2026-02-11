@@ -7,6 +7,7 @@ export class Card extends Phaser.GameObjects.Container {
   private cardText: Phaser.GameObjects.Text;
   private originalX: number = 0;
   private originalY: number = 0;
+  private isHovered: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
@@ -108,32 +109,39 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOver() {
-    // Store base position before hover
-    this.originalX = this.x;
-    this.originalY = this.y;
+    // Only store base position if not already hovering (prevents drift from rapid hovers)
+    if (!this.isHovered) {
+      this.originalX = this.x;
+      this.originalY = this.y;
+      this.isHovered = true;
 
-    // Hover 效果
-    this.scene.tweens.add({
-      targets: this,
-      y: this.originalY - 10,
-      duration: 150,
-      ease: 'Cubic.easeOut',
-    });
+      // Hover 效果
+      this.scene.tweens.add({
+        targets: this,
+        y: this.originalY - 10,
+        duration: 150,
+        ease: 'Cubic.easeOut',
+      });
 
-    // 通知 Scene
-    this.scene.events.emit('card-hovered', this.cardName);
+      // 通知 Scene
+      this.scene.events.emit('card-hovered', this.cardName);
+    }
   }
 
   private onPointerOut() {
     // 取消 Hover - return to stored position
-    this.scene.tweens.add({
-      targets: this,
-      y: this.originalY,
-      duration: 150,
-      ease: 'Cubic.easeOut',
-    });
+    if (this.isHovered) {
+      this.isHovered = false;
 
-    this.scene.events.emit('card-hovered', null);
+      this.scene.tweens.add({
+        targets: this,
+        y: this.originalY,
+        duration: 150,
+        ease: 'Cubic.easeOut',
+      });
+
+      this.scene.events.emit('card-hovered', null);
+    }
   }
 
   private getCardBgColor(cardName: string): number {
