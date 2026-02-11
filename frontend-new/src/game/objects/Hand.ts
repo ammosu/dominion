@@ -43,6 +43,9 @@ export class Hand {
       const x = this.scene.cameras.main.width / 2 + (i - count / 2 + 0.5) * this.spacing;
       const y = this.baseY + Math.abs(angle) * this.arcHeight / this.maxRotation;
 
+      // Always update the card's base position so it knows where to return
+      card.setBasePosition(x, y);
+
       if (animate) {
         // 動畫移動到新位置
         this.scene.tweens.add({

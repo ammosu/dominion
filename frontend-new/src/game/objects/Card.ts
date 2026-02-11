@@ -5,9 +5,10 @@ export class Card extends Phaser.GameObjects.Container {
   private cardName: string;
   private cardBg: Phaser.GameObjects.Rectangle;
   private cardText: Phaser.GameObjects.Text;
-  private originalX: number = 0;
-  private originalY: number = 0;
+  private baseX: number = 0; // True base position set by Hand
+  private baseY: number = 0; // True base position set by Hand
   private isHovered: boolean = false;
+  private isDragging: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
@@ -54,6 +55,12 @@ export class Card extends Phaser.GameObjects.Container {
     this.cardText.setText(translatedName);
   }
 
+  /** Set the true base position (called by Hand after arranging cards) */
+  setBasePosition(x: number, y: number) {
+    this.baseX = x;
+    this.baseY = y;
+  }
+
   private setupDragHandlers() {
     this.on('dragstart', this.onDragStart, this);
     this.on('drag', this.onDrag, this);
@@ -61,20 +68,22 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onDragStart() {
-    this.originalX = this.x;
-    this.originalY = this.y;
+    // Only set base position once at start of drag, not on every drag event
+    if (!this.isDragging) {
+      this.isDragging = true;
 
-    // 卡片浮起動畫
-    this.scene.tweens.add({
-      targets: this,
-      y: this.y - 20,
-      scale: 1.1,
-      duration: 200,
-      ease: 'Back.easeOut',
-    });
+      // 卡片浮起動畫
+      this.scene.tweens.add({
+        targets: this,
+        y: this.y - 20,
+        scale: 1.1,
+        duration: 200,
+        ease: 'Back.easeOut',
+      });
 
-    // 提升 z-index
-    this.setDepth(100);
+      // 提升 z-index
+      this.setDepth(100);
+    }
   }
 
   private onDrag(_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) {
@@ -83,6 +92,7 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onDragEnd(_pointer: Phaser.Input.Pointer, dropped: boolean) {
+    this.isDragging = false;
     if (!dropped) {
       // 返回原位
       this.returnToOriginalPosition();
@@ -92,8 +102,8 @@ export class Card extends Phaser.GameObjects.Container {
   returnToOriginalPosition() {
     this.scene.tweens.add({
       targets: this,
-      x: this.originalX,
-      y: this.originalY,
+      x: this.baseX,
+      y: this.baseY,
       scale: 1,
       duration: 300,
       ease: 'Cubic.easeOut',
@@ -109,16 +119,14 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOver() {
-    // Only store base position if not already hovering (prevents drift from rapid hovers)
-    if (!this.isHovered) {
-      this.originalX = this.x;
-      this.originalY = this.y;
+    // Only trigger hover effect if not already hovering or dragging
+    if (!this.isHovered && !this.isDragging) {
       this.isHovered = true;
 
-      // Hover 效果
+      // Hover 效果 - raise from base position
       this.scene.tweens.add({
         targets: this,
-        y: this.originalY - 10,
+        y: this.baseY - 10,
         duration: 150,
         ease: 'Cubic.easeOut',
       });
@@ -129,13 +137,13 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOut() {
-    // 取消 Hover - return to stored position
-    if (this.isHovered) {
+    // 取消 Hover - return to base position
+    if (this.isHovered && !this.isDragging) {
       this.isHovered = false;
 
       this.scene.tweens.add({
         targets: this,
-        y: this.originalY,
+        y: this.baseY,
         duration: 150,
         ease: 'Cubic.easeOut',
       });
