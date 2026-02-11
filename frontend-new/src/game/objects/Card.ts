@@ -108,10 +108,14 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOver() {
+    // Store base position before hover
+    this.originalX = this.x;
+    this.originalY = this.y;
+
     // Hover 效果
     this.scene.tweens.add({
       targets: this,
-      y: this.y - 10,
+      y: this.originalY - 10,
       duration: 150,
       ease: 'Cubic.easeOut',
     });
@@ -121,10 +125,10 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOut() {
-    // 取消 Hover
+    // 取消 Hover - return to stored position
     this.scene.tweens.add({
       targets: this,
-      y: this.y + 10,
+      y: this.originalY,
       duration: 150,
       ease: 'Cubic.easeOut',
     });

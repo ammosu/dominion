@@ -8,12 +8,14 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private cardText: Phaser.GameObjects.Text;
   private countText: Phaser.GameObjects.Text;
   private costBadge: Phaser.GameObjects.Container;
+  private originalY: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, count: number, cost: number, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
 
     this.cardName = cardName;
     this.cardCount = count;
+    this.originalY = y;
 
     // Card background with type-based color
     const bgColor = this.getCardBgColor(cardName);
@@ -70,7 +72,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.scene.tweens.add({
       targets: this,
       scale: 1.15,
-      y: this.y - 10,
+      y: this.originalY - 10,
       duration: 150,
       ease: 'Cubic.easeOut',
     });
@@ -83,12 +85,12 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.scene.tweens.add({
       targets: this,
       scale: 1,
-      y: this.y + 10,
+      y: this.originalY,
       duration: 150,
       ease: 'Cubic.easeOut',
     });
     // Remove highlight
-    this.cardBg.setStrokeStyle(0);
+    this.cardBg.setStrokeStyle(1, 0x999999);
     this.scene.events.emit('supply-card-hovered', null);
   }
 
