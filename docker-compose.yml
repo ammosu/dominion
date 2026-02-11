@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
     restart: unless-stopped
 
   frontend:
@@ -13,6 +15,9 @@ services:
       dockerfile: Dockerfile.frontend
     ports:
       - "8080:80"
+    environment:
+      - PORT=80
+      - BACKEND_URL=http://backend:3000
     depends_on:
       - backend
     restart: unless-stopped
