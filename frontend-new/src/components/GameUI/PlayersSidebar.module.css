@@ -43,9 +43,24 @@
   background: linear-gradient(170deg, rgba(20, 15, 10, 0.92) 0%, rgba(14, 10, 6, 0.92) 100%);
   border: 1px solid rgba(196, 164, 98, 0.25);
   border-radius: 6px;
-  padding: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.playerCard.compact {
+  padding: 10px 12px;
+}
+
+.playerCard.compact:hover {
+  border-color: rgba(196, 164, 98, 0.4);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.playerCard.expanded {
+  padding: 12px;
+  cursor: default;
 }
 
 .playerCard.active {

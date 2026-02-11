@@ -9,6 +9,7 @@ export function PlayersSidebar() {
   const gameState = useGameStore((state) => state.gameState);
   const language = useUIStore((state) => state.language);
   const [viewingDiscardPlayer, setViewingDiscardPlayer] = useState<number | null>(null);
+  const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null);
 
   if (!gameState || !gameState.players || gameState.players.length === 0) return null;
 
@@ -58,6 +59,7 @@ export function PlayersSidebar() {
 
   const renderPlayer = (player: Player, index: number) => {
     const isCurrentPlayer = index === currentPlayerIndex;
+    const isExpanded = expandedPlayer === index;
     const score = calculateScore(player);
 
     // Count treasures
@@ -69,7 +71,8 @@ export function PlayersSidebar() {
     return (
       <div
         key={index}
-        className={`${styles.playerCard} ${isCurrentPlayer ? styles.active : ''}`}
+        className={`${styles.playerCard} ${isCurrentPlayer ? styles.active : ''} ${isExpanded ? styles.expanded : styles.compact}`}
+        onClick={() => setExpandedPlayer(isExpanded ? null : index)}
       >
         <div className={styles.playerHeader}>
           <div className={styles.playerName}>
@@ -84,49 +87,56 @@ export function PlayersSidebar() {
           </div>
         </div>
 
-        <div className={styles.playerStats}>
-          <div className={styles.statRow}>
-            <span className={styles.statIcon}>🃏</span>
-            <span className={styles.statLabel}>
-              {language === 'zh' ? '牌庫' : 'Deck'}
-            </span>
-            <span className={styles.statValue}>{player.deck.length}</span>
-          </div>
+        {isExpanded && (
+          <>
+            <div className={styles.playerStats}>
+              <div className={styles.statRow}>
+                <span className={styles.statIcon}>🃏</span>
+                <span className={styles.statLabel}>
+                  {language === 'zh' ? '牌庫' : 'Deck'}
+                </span>
+                <span className={styles.statValue}>{player.deck.length}</span>
+              </div>
 
-          <div className={styles.statRow}>
-            <span className={styles.statIcon}>✋</span>
-            <span className={styles.statLabel}>
-              {language === 'zh' ? '手牌' : 'Hand'}
-            </span>
-            <span className={styles.statValue}>{player.hand.length}</span>
-          </div>
+              <div className={styles.statRow}>
+                <span className={styles.statIcon}>✋</span>
+                <span className={styles.statLabel}>
+                  {language === 'zh' ? '手牌' : 'Hand'}
+                </span>
+                <span className={styles.statValue}>{player.hand.length}</span>
+              </div>
 
-          <div
-            className={`${styles.statRow} ${styles.clickable}`}
-            onClick={() => setViewingDiscardPlayer(index)}
-          >
-            <span className={styles.statIcon}>🗑️</span>
-            <span className={styles.statLabel}>
-              {language === 'zh' ? '棄牌' : 'Discard'}
-            </span>
-            <span className={styles.statValue}>{player.discard.length}</span>
-          </div>
-        </div>
+              <div
+                className={`${styles.statRow} ${styles.clickable}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewingDiscardPlayer(index);
+                }}
+              >
+                <span className={styles.statIcon}>🗑️</span>
+                <span className={styles.statLabel}>
+                  {language === 'zh' ? '棄牌' : 'Discard'}
+                </span>
+                <span className={styles.statValue}>{player.discard.length}</span>
+              </div>
+            </div>
 
-        <div className={styles.treasures}>
-          <div className={styles.treasureItem}>
-            <span className={styles.treasureIcon}>🪙</span>
-            <span className={styles.treasureCount}>×{goldCount}</span>
-          </div>
-          <div className={styles.treasureItem}>
-            <span className={styles.treasureIcon}>⚪</span>
-            <span className={styles.treasureCount}>×{silverCount}</span>
-          </div>
-          <div className={styles.treasureItem}>
-            <span className={styles.treasureIcon}>🟤</span>
-            <span className={styles.treasureCount}>×{copperCount}</span>
-          </div>
-        </div>
+            <div className={styles.treasures}>
+              <div className={styles.treasureItem}>
+                <span className={styles.treasureIcon}>🪙</span>
+                <span className={styles.treasureCount}>×{goldCount}</span>
+              </div>
+              <div className={styles.treasureItem}>
+                <span className={styles.treasureIcon}>⚪</span>
+                <span className={styles.treasureCount}>×{silverCount}</span>
+              </div>
+              <div className={styles.treasureItem}>
+                <span className={styles.treasureIcon}>🟤</span>
+                <span className={styles.treasureCount}>×{copperCount}</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     );
   };
