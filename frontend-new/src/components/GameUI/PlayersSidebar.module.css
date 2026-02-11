@@ -9,6 +9,16 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Subtle atmospheric backdrop - blends with game background */
+  background: linear-gradient(
+    to bottom,
+    rgba(14, 24, 18, 0.15) 0%,
+    rgba(20, 15, 10, 0.08) 50%,
+    rgba(14, 24, 18, 0) 100%
+  );
+  padding: 12px 8px;
+  border-radius: 8px;
+  backdrop-filter: blur(1px);
 }
 
 /* Responsive adjustments */
@@ -18,6 +28,7 @@
     right: 12px;
     top: 70px;
     gap: 6px;
+    padding: 10px 6px;
   }
 }
 
@@ -27,6 +38,7 @@
     right: 8px;
     top: 60px;
     gap: 4px;
+    padding: 8px 4px;
   }
 }
 
@@ -46,10 +58,11 @@
   color: #c4a462;
   text-align: center;
   padding: 8px;
-  background: linear-gradient(170deg, rgba(20, 15, 10, 0.85) 0%, rgba(14, 10, 6, 0.85) 100%);
+  background: linear-gradient(170deg, rgba(20, 15, 10, 0.92) 0%, rgba(14, 10, 6, 0.92) 100%);
   border: 1px solid rgba(196, 164, 98, 0.3);
   border-radius: 4px;
   letter-spacing: 0.5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(196, 164, 98, 0.06);
 }
 
 .playersContainer {
@@ -59,12 +72,13 @@
 }
 
 .playerCard {
-  background: linear-gradient(170deg, rgba(20, 15, 10, 0.92) 0%, rgba(14, 10, 6, 0.92) 100%);
+  background: linear-gradient(170deg, rgba(20, 15, 10, 0.95) 0%, rgba(14, 10, 6, 0.95) 100%);
   border: 1px solid rgba(196, 164, 98, 0.25);
   border-radius: 6px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(196, 164, 98, 0.04);
   cursor: pointer;
+  backdrop-filter: blur(2px);
 }
 
 .playerCard.compact {
@@ -102,8 +116,10 @@
 
 .playerCard.active {
   border-color: rgba(196, 164, 98, 0.6);
-  box-shadow: 0 0 16px rgba(196, 164, 98, 0.2), 0 2px 8px rgba(0, 0, 0, 0.4);
-  background: linear-gradient(170deg, rgba(30, 24, 16, 0.95) 0%, rgba(20, 15, 10, 0.95) 100%);
+  box-shadow: 0 0 20px rgba(196, 164, 98, 0.25),
+              0 2px 12px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(196, 164, 98, 0.12);
+  background: linear-gradient(170deg, rgba(30, 24, 16, 0.98) 0%, rgba(20, 15, 10, 0.98) 100%);
 }
 
 .playerHeader {
