@@ -7,6 +7,8 @@ use axum::{
 };
 use futures_util::{SinkExt, StreamExt};
 
+use crate::ai::simple::SimpleAi;
+use crate::ai::AiPlayer;
 use crate::events::{ClientMessage, ServerMessage, ServerPayload};
 use crate::Games;
 use shared::card::Card;
@@ -122,21 +124,47 @@ async fn handle_socket(socket: WebSocket, _games: Games) {
                     }
                 };
 
-                // Send updated state
+                if let Err(e) = action_result {
+                    eprintln!("Action error: {}", e);
+                }
+
+                // Run AI turn if current player is AI
+                let ai = SimpleAi::new();
+                let max_ai_actions = 20;
+                let mut ai_actions = 0;
+
+                while !test_game.game_over && ai_actions < max_ai_actions {
+                    let current = test_game.current_player;
+                    if !test_game.players[current].is_ai {
+                        break;
+                    }
+
+                    if let Some(action) = ai.decide_action(&test_game, current) {
+                        println!("AI action: {:?}", action);
+                        if let Err(e) = test_game.execute(action) {
+                            eprintln!("AI action error: {}", e);
+                            // Force end phase on error to avoid infinite loop
+                            let _ = test_game.execute(shared::action::PlayerAction::EndPhase);
+                        }
+                        ai_actions += 1;
+                    } else {
+                        // AI has no action, end phase
+                        let _ = test_game.execute(shared::action::PlayerAction::EndPhase);
+                        ai_actions += 1;
+                    }
+                }
+
+                // Send updated state (after AI has finished)
                 let response = ServerMessage {
                     msg_type: "GameStateUpdate".to_string(),
                     payload: ServerPayload {
                         game_state: test_game.clone(),
-                        animation_hints: None, // TODO: Add animation hints
+                        animation_hints: None,
                     },
                 };
 
                 if let Ok(response_text) = serde_json::to_string(&response) {
                     let _ = sender.send(Message::Text(response_text.into())).await;
-                }
-
-                if let Err(e) = action_result {
-                    eprintln!("Action error: {}", e);
                 }
             }
         }
