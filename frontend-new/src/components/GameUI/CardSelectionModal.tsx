@@ -8,13 +8,13 @@ export function CardSelectionModal() {
   const closeModal = useUIStore((state) => state.closeCardSelectionModal);
   const language = useUIStore((state) => state.language);
 
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [step, setStep] = useState<number>(1);
   const [trashCard, setTrashCard] = useState<string | null>(null);
 
   if (!modal) return null;
 
-  const handleCardClick = (cardName: string) => {
+  const handleCardClick = (cardName: string, index: number) => {
     if (modal.mode === 'trash-and-gain') {
       if (step === 1) {
         setTrashCard(cardName);
@@ -28,17 +28,19 @@ export function CardSelectionModal() {
       return;
     }
 
-    // For select-hand / select-supply modes: toggle selection
-    const idx = selected.indexOf(cardName);
+    // For select-hand / select-supply modes: toggle selection by index
+    const idx = selectedIndices.indexOf(index);
     if (idx >= 0) {
-      setSelected(selected.filter((_, i) => i !== idx));
-    } else if (selected.length < modal.maxSelect) {
-      setSelected([...selected, cardName]);
+      setSelectedIndices(selectedIndices.filter((i) => i !== index));
+    } else if (selectedIndices.length < modal.maxSelect) {
+      setSelectedIndices([...selectedIndices, index]);
     }
   };
 
   const handleConfirm = () => {
-    modal.onConfirm(selected);
+    // Convert selected indices back to card names
+    const selectedCards = selectedIndices.map((i) => modal.cards[i]);
+    modal.onConfirm(selectedCards);
     resetAndClose();
   };
 
@@ -52,7 +54,7 @@ export function CardSelectionModal() {
   };
 
   const resetAndClose = () => {
-    setSelected([]);
+    setSelectedIndices([]);
     setStep(1);
     setTrashCard(null);
     closeModal();
@@ -81,7 +83,7 @@ export function CardSelectionModal() {
   };
 
   const cards = getAvailableCards();
-  const canConfirm = modal.mode !== 'trash-and-gain' && selected.length >= modal.minSelect;
+  const canConfirm = modal.mode !== 'trash-and-gain' && selectedIndices.length >= modal.minSelect;
 
   const getCardTypeClass = (cardName: string): string => {
     const data = CARD_DATA[cardName];
@@ -118,10 +120,10 @@ export function CardSelectionModal() {
               <div
                 key={`${cardName}-${index}`}
                 className={`${styles.card} ${getCardTypeClass(cardName)} ${
-                  selected.includes(cardName) ? styles.selected : ''
+                  selectedIndices.includes(index) ? styles.selected : ''
                 }`}
-                onClick={() => handleCardClick(cardName)}
-                data-testid={`modal-card-${cardName}`}
+                onClick={() => handleCardClick(cardName, index)}
+                data-testid={`modal-card-${cardName}-${index}`}
               >
                 <div className={styles.cardName}>{getCardName(cardName, language)}</div>
                 <div className={styles.cardCost}>{getCardCost(cardName)}</div>
@@ -154,7 +156,7 @@ export function CardSelectionModal() {
               data-testid="modal-confirm"
             >
               {language === 'zh' ? '確認' : 'Confirm'}
-              {modal.maxSelect > 1 && ` (${selected.length})`}
+              {modal.maxSelect > 1 && ` (${selectedIndices.length})`}
             </button>
           )}
         </div>
