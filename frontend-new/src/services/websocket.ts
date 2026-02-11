@@ -7,7 +7,11 @@ export class WebSocketService {
   private handlers: MessageHandler[] = [];
   private reconnectTimer: NodeJS.Timeout | null = null;
 
-  connect(url: string = 'ws://localhost:3000/ws') {
+  connect(url?: string) {
+    if (!url) {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      url = `${protocol}//${window.location.host}/ws`;
+    }
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {

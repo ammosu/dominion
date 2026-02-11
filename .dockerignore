@@ -1,0 +1,8 @@
+target/
+frontend-new/node_modules/
+frontend-new/dist/
+.git/
+.playwright-mcp/
+.worktrees/
+*.png
+docs/
