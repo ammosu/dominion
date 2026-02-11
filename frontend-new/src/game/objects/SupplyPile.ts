@@ -9,18 +9,21 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private countText: Phaser.GameObjects.Text;
   private costBadge: Phaser.GameObjects.Container;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, count: number, cost: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, count: number, cost: number, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
 
     this.cardName = cardName;
     this.cardCount = count;
 
-    // Card background
-    this.cardBg = scene.add.rectangle(0, 0, 70, 100, 0xffffff);
+    // Card background with type-based color
+    const bgColor = this.getCardBgColor(cardName);
+    this.cardBg = scene.add.rectangle(0, 0, 70, 100, bgColor);
+    this.cardBg.setStrokeStyle(1, 0x999999);
     this.add(this.cardBg);
 
-    // Card name
-    this.cardText = scene.add.text(0, -10, cardName, {
+    // Card name (use provided language)
+    const displayName = getCardName(cardName, lang);
+    this.cardText = scene.add.text(0, -10, displayName, {
       fontSize: '11px',
       color: '#000000',
       wordWrap: { width: 60 },
@@ -116,5 +119,14 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   updateLanguage(lang: 'en' | 'zh') {
     const translatedName = getCardName(this.cardName, lang);
     this.cardText.setText(translatedName);
+  }
+
+  private getCardBgColor(cardName: string): number {
+    const treasures = ['Copper', 'Silver', 'Gold'];
+    const victory = ['Estate', 'Duchy', 'Province'];
+    if (treasures.includes(cardName)) return 0xfff8dc;
+    if (victory.includes(cardName)) return 0xe8f5e9;
+    if (cardName === 'Curse') return 0xf3e5f5;
+    return 0xffffff;
   }
 }

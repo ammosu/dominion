@@ -8,22 +8,25 @@ export class Card extends Phaser.GameObjects.Container {
   private originalX: number = 0;
   private originalY: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, cardName: string) {
+  constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
 
     this.cardName = cardName;
 
-    // 臨時：使用簡單矩形代表卡片
-    this.cardBg = scene.add.rectangle(0, 0, 80, 120, 0xffffff);
+    // Card background with type-based color
+    const bgColor = this.getCardBgColor(cardName);
+    this.cardBg = scene.add.rectangle(0, 0, 80, 120, bgColor);
+    this.cardBg.setStrokeStyle(1, 0x999999);
     this.add(this.cardBg);
 
-    // 卡片名稱 (use English as default initially)
-    this.cardText = scene.add.text(0, 0, cardName, {
+    // Card name (use provided language)
+    const displayName = getCardName(cardName, lang);
+    this.cardText = scene.add.text(0, 0, displayName, {
       fontSize: '12px',
       color: '#000000',
       wordWrap: { width: 70 },
       align: 'center',
-      resolution: 1, // Set resolution to 1 for better performance (lower memory usage)
+      resolution: 1,
     });
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);
@@ -127,5 +130,14 @@ export class Card extends Phaser.GameObjects.Container {
     });
 
     this.scene.events.emit('card-hovered', null);
+  }
+
+  private getCardBgColor(cardName: string): number {
+    const treasures = ['Copper', 'Silver', 'Gold'];
+    const victory = ['Estate', 'Duchy', 'Province'];
+    if (treasures.includes(cardName)) return 0xfff8dc; // cream/gold tint
+    if (victory.includes(cardName)) return 0xe8f5e9; // light green
+    if (cardName === 'Curse') return 0xf3e5f5; // light purple
+    return 0xffffff; // white for action cards
   }
 }

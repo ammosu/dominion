@@ -13,7 +13,7 @@ export class SupplyArea {
     this.scene = scene;
   }
 
-  setupSupply(supply: Record<string, number>, costs: Record<string, number>) {
+  setupSupply(supply: Record<string, number>, costs: Record<string, number>, lang: 'en' | 'zh' = 'zh') {
     // Clear existing piles
     this.piles.forEach((pile) => pile.destroy());
     this.piles.clear();
@@ -47,7 +47,8 @@ export class SupplyArea {
           y,
           cardName,
           supply[cardName],
-          costs[cardName] || 0
+          costs[cardName] || 0,
+          lang
         );
         this.piles.set(cardName, pile);
       }

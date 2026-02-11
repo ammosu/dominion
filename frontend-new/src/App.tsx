@@ -9,6 +9,7 @@ import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { CardSelectionModal } from './components/GameUI/CardSelectionModal';
+import { CardTooltip } from './components/GameUI/CardTooltip';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
@@ -49,6 +50,7 @@ function App() {
       <TurnControls />
       <PhaseInstructions />
       <DeckAreas />
+      <CardTooltip />
       <Toast />
       <GameContainer />
       <CardSelectionModal />

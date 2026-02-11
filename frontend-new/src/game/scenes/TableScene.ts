@@ -8,6 +8,7 @@ import { SoundManager } from '../../utils/SoundManager';
 export class TableScene extends Phaser.Scene {
   private hand!: Hand;
   private supplyArea!: SupplyArea;
+  private currentLang: 'en' | 'zh' = 'zh';
 
   constructor() {
     super('TableScene');
@@ -110,7 +111,7 @@ export class TableScene extends Phaser.Scene {
     if (this.supplyArea.getPile(Object.keys(supply)[0])) {
       this.supplyArea.updateSupply(supply);
     } else {
-      this.supplyArea.setupSupply(supply, costs);
+      this.supplyArea.setupSupply(supply, costs, this.currentLang);
     }
   }
 
@@ -123,15 +124,17 @@ export class TableScene extends Phaser.Scene {
     // Clear existing cards
     this.hand.clear();
 
-    // Create new cards from game state
+    // Create new cards from game state with current language
     handCards.forEach((cardName) => {
-      const card = new Card(this, 0, 0, cardName);
+      const card = new Card(this, 0, 0, cardName, this.currentLang);
       this.hand.addCard(card);
     });
   }
 
   // Add method to update language for all visible cards
   updateLanguage(lang: 'en' | 'zh') {
+    this.currentLang = lang;
+
     // Update hand cards
     if (this.hand) {
       this.hand.getCards().forEach((card) => {
