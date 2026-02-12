@@ -114,7 +114,7 @@ impl GameState {
             return Err(ActionError::CardNotInHand);
         };
         player.hand.remove(pos);
-        player.discard.push(card);
+        player.in_play.push(card);  // Put in play area, not discard!
         player.actions -= 1;
         Ok(())
     }
@@ -431,7 +431,7 @@ impl GameState {
         };
 
         player.hand.remove(pos);
-        player.discard.push(card);
+        player.in_play.push(card);  // Put in play area, not discard!
         player.coins += card.treasure_value();
 
         let name = player.name.clone();
@@ -457,7 +457,7 @@ impl GameState {
         let mut total_coins = 0u32;
         for card in &treasures {
             total_coins += card.treasure_value();
-            player.discard.push(*card);
+            player.in_play.push(*card);  // Put in play area, not discard!
         }
         player.hand.retain(|c| c.card_type() != CardType::Treasure);
         player.coins += total_coins;
@@ -511,6 +511,8 @@ impl GameState {
             }
             TurnPhase::Buy => {
                 let player = &mut self.players[self.current_player];
+                // Move cards from in_play to discard (Cleanup phase)
+                player.discard.append(&mut player.in_play);
                 player.discard_hand();
                 player.draw_cards(5);
                 player.actions = 1;

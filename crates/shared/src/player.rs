@@ -8,6 +8,7 @@ pub struct Player {
     pub hand: Vec<Card>,
     pub deck: Vec<Card>,
     pub discard: Vec<Card>,
+    pub in_play: Vec<Card>,  // Cards played this turn (moved to discard at cleanup)
     pub actions: u32,
     pub buys: u32,
     pub coins: u32,
@@ -36,6 +37,7 @@ impl Player {
             hand,
             deck,
             discard: Vec::new(),
+            in_play: Vec::new(),
             actions: 1,
             buys: 1,
             coins: 0,
