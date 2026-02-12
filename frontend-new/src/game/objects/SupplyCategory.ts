@@ -24,19 +24,27 @@ export class SupplyCategory extends Phaser.GameObjects.Container {
 
     this.labelType = labelType;
 
-    const cardWidth = 85;
-    const cardHeight = 115;
-    const spacing = 95;
-    const rowSpacing = 125;
-    const padding = 20;
-    const labelHeight = 30;
-    const labelPadding = 8;
+    const cardWidth = 110;
+    const cardHeight = 90;
+    // Smaller cards for single-column layout (basic cards)
+    const cardScale = cardsPerRow === 1 ? 0.8 : 1.0;
+    const effectiveCardWidth = cardWidth * cardScale;
+    const effectiveCardHeight = cardHeight * cardScale;
 
-    // Calculate dimensions
+    const spacing = 120; // Horizontal spacing for wider cards
+    // Use tighter spacing for single-column vertical layout
+    const rowSpacing = cardsPerRow === 1 ? 75 : 100; // Vertical spacing between rows
+    const padding = 15; // Padding around the frame
+    const labelHeight = 20; // Label text height
+    const labelPadding = 8; // Space between label and cards
+    const cardTopMargin = cardsPerRow === 1 ? 32 : 40; // Extra space for cost badge
+    const cardBottomMargin = cardsPerRow === 1 ? 16 : 20; // Space for count badge
+
+    // Calculate dimensions using effective (scaled) card sizes
     const rows = Math.ceil(cards.length / cardsPerRow);
-    const bgWidth = (cardsPerRow - 1) * spacing + cardWidth + padding * 2;
-    // Height: labelHeight + labelPadding + first row cardHeight + additional rows spacing + bottom padding
-    const bgHeight = labelHeight + labelPadding + cardHeight + (rows - 1) * rowSpacing + padding;
+    const bgWidth = (cardsPerRow - 1) * spacing + effectiveCardWidth + padding * 2;
+    // Height: padding + labelHeight + labelPadding + cardTopMargin + cardHeight/2 + (rows-1)*rowSpacing + cardHeight/2 + cardBottomMargin + padding
+    const bgHeight = padding + labelHeight + labelPadding + cardTopMargin + effectiveCardHeight / 2 + (rows - 1) * rowSpacing + effectiveCardHeight / 2 + cardBottomMargin + padding;
 
     // Create background first (centered at 0,0 within this container)
     this.background = scene.add.rectangle(0, 0, bgWidth, bgHeight, bgColor, 0.15);
@@ -44,19 +52,9 @@ export class SupplyCategory extends Phaser.GameObjects.Container {
     this.background.setOrigin(0.5, 0); // Top-center origin
     this.add(this.background);
 
-    // Create label after background (so it renders on top)
-    this.label = scene.add.text(-bgWidth / 2 + padding, 8, labelText, {
-      fontSize: '15px',
-      fontFamily: 'Cinzel, "Noto Sans TC", serif',
-      color: '#FFD700', // Bright gold for visibility
-      fontStyle: 'bold',
-    });
-    this.label.setResolution(window.devicePixelRatio || 2);
-    this.label.setOrigin(0, 0);
-    this.add(this.label);
-
     // Layout cards (positioned relative to this container)
-    const cardsStartY = labelHeight + labelPadding;
+    // Cards start below label with enough space for cost badge
+    const cardsStartY = padding + labelHeight + labelPadding + cardTopMargin;
     const firstCardX = -(cardsPerRow - 1) * spacing / 2; // Center the row of cards
 
     cards.forEach((cardName, index) => {
@@ -75,11 +73,26 @@ export class SupplyCategory extends Phaser.GameObjects.Container {
           costs[cardName] || 0,
           lang
         );
-        pile.setDepth(10); // Ensure cards are above background
+        // Scale down basic cards (single column layout)
+        if (cardScale !== 1.0) {
+          pile.setScale(cardScale);
+          pile.setBaseScale(cardScale); // Store base scale for hover restoration
+        }
         this.piles.push(pile);
         this.add(pile);
       }
     });
+
+    // Create label last (so it renders on top of all cards)
+    this.label = scene.add.text(-bgWidth / 2 + padding, padding, labelText, {
+      fontSize: '14px',
+      fontFamily: 'Cinzel, "Noto Sans TC", serif',
+      color: '#FFD700', // Bright gold for visibility
+      fontStyle: 'bold',
+    });
+    this.label.setResolution(window.devicePixelRatio || 2);
+    this.label.setOrigin(0, 0);
+    this.add(this.label);
 
     scene.add.existing(this);
   }

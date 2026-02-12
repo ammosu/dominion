@@ -5,9 +5,9 @@ import { SupplyCategory } from './SupplyCategory';
 export class SupplyArea {
   private scene: Phaser.Scene;
   private categories: SupplyCategory[] = [];
-  private baseX: number = 270; // Center position for categories
-  private baseY: number = 75; // Adjusted to avoid TopBar
-  private categorySpacing: number = 20; // Space between categories
+  private leftSidebarX: number = 120; // Left sidebar for basic cards
+  private centerX: number = 640; // Center for action cards (half of 1280)
+  private topY: number = 80; // Top position to avoid TopBar
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -25,55 +25,35 @@ export class SupplyArea {
       (card) => !treasures.includes(card) && !victory.includes(card)
     );
 
-    let currentY = this.baseY;
-
-    // Create Treasures category
-    const treasuresLabel = lang === 'zh' ? '寶物牌' : 'TREASURES';
-    const treasuresCategory = new SupplyCategory(
+    // LEFT SIDEBAR: Basic cards (Treasures + Victory) in vertical single column
+    const basicCards = [...treasures, ...victory];
+    const basicLabel = lang === 'zh' ? '基本牌' : 'BASIC CARDS';
+    const basicCategory = new SupplyCategory(
       this.scene,
-      this.baseX,
-      currentY,
-      treasures,
+      this.leftSidebarX,
+      this.topY,
+      basicCards,
       supply,
       costs,
-      3, // cards per row
-      treasuresLabel,
-      'treasures',
+      1, // 1 card per row (vertical stack)
+      basicLabel,
+      'treasures', // Use treasures type for coloring
       0xfff8dc, // Cream color
       lang
     );
-    this.categories.push(treasuresCategory);
-    currentY += treasuresCategory.getBounds().height + this.categorySpacing;
+    this.categories.push(basicCategory);
 
-    // Create Victory & Curse category
-    const victoryLabel = lang === 'zh' ? '勝利 / 詛咒' : 'VICTORY / CURSE';
-    const victoryCategory = new SupplyCategory(
-      this.scene,
-      this.baseX,
-      currentY,
-      victory,
-      supply,
-      costs,
-      4, // cards per row
-      victoryLabel,
-      'victory',
-      0xe8f5e9, // Light green
-      lang
-    );
-    this.categories.push(victoryCategory);
-    currentY += victoryCategory.getBounds().height + this.categorySpacing;
-
-    // Create Actions category
+    // CENTER: Action cards in horizontal rows
     if (actions.length > 0) {
-      const actionsLabel = lang === 'zh' ? '行動牌' : 'ACTIONS';
+      const actionsLabel = lang === 'zh' ? '王國牌' : 'KINGDOM CARDS';
       const actionsCategory = new SupplyCategory(
         this.scene,
-        this.baseX,
-        currentY,
+        this.centerX,
+        this.topY,
         actions,
         supply,
         costs,
-        5, // cards per row
+        5, // 5 cards per row (horizontal layout)
         actionsLabel,
         'actions',
         0xffffff, // White

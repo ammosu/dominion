@@ -9,6 +9,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private countText: Phaser.GameObjects.Text;
   private costBadge: Phaser.GameObjects.Container;
   private originalY: number;
+  private baseScale: number = 1.0; // Store the base scale for proper restoration
 
   constructor(scene: Phaser.Scene, x: number, y: number, cardName: string, count: number, cost: number, lang: 'en' | 'zh' = 'zh') {
     super(scene, x, y);
@@ -17,18 +18,18 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.cardCount = count;
     this.originalY = y;
 
-    // Card background with type-based color
+    // Card background with type-based color (flatter, more square shape)
     const bgColor = this.getCardBgColor(cardName);
-    this.cardBg = scene.add.rectangle(0, 0, 85, 115, bgColor);
+    this.cardBg = scene.add.rectangle(0, 0, 110, 90, bgColor);
     this.cardBg.setStrokeStyle(2, 0x999999);
     this.add(this.cardBg);
 
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);
-    this.cardText = scene.add.text(0, -5, displayName, {
-      fontSize: '13px',
+    this.cardText = scene.add.text(0, 0, displayName, {
+      fontSize: '12px',
       color: '#000000',
-      wordWrap: { width: 75 },
+      wordWrap: { width: 95 },
       align: 'center',
       resolution: window.devicePixelRatio || 2,
       fontStyle: 'bold',
@@ -36,10 +37,10 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);
 
-    // Count badge (larger and more visible)
-    const countBg = scene.add.circle(0, 38, 17, 0x333333, 0.9);
-    this.countText = scene.add.text(0, 38, count.toString(), {
-      fontSize: '16px',
+    // Count badge (bottom center)
+    const countBg = scene.add.circle(0, 32, 15, 0x333333, 0.9);
+    this.countText = scene.add.text(0, 32, count.toString(), {
+      fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: window.devicePixelRatio || 2,
@@ -49,11 +50,11 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.add(countBg);
     this.add(this.countText);
 
-    // Cost badge (larger and positioned at top-left for clarity)
-    const costBg = scene.add.circle(-32, -48, 14, 0xFFD700, 1);
+    // Cost badge (top-left corner)
+    const costBg = scene.add.circle(-43, -35, 13, 0xFFD700, 1);
     costBg.setStrokeStyle(1, 0x000000, 0.3);
-    const costText = scene.add.text(-32, -48, cost.toString(), {
-      fontSize: '14px',
+    const costText = scene.add.text(-43, -35, cost.toString(), {
+      fontSize: '13px',
       color: '#000000',
       fontStyle: 'bold',
       resolution: window.devicePixelRatio || 2,
@@ -66,7 +67,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     scene.add.existing(this);
 
     // Interactive
-    this.setSize(85, 115);
+    this.setSize(110, 90);
     this.setInteractive({ useHandCursor: true });
 
     // Hover effect
@@ -78,7 +79,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private onPointerOver() {
     this.scene.tweens.add({
       targets: this,
-      scale: 1.15,
+      scale: 1.15, // All cards scale to same size on hover for clarity
       y: this.originalY - 10,
       duration: 150,
       ease: 'Cubic.easeOut',
@@ -91,7 +92,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private onPointerOut() {
     this.scene.tweens.add({
       targets: this,
-      scale: 1,
+      scale: this.baseScale, // Restore to base scale
       y: this.originalY,
       duration: 150,
       ease: 'Cubic.easeOut',
@@ -128,6 +129,10 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   updateLanguage(lang: 'en' | 'zh') {
     const translatedName = getCardName(this.cardName, lang);
     this.cardText.setText(translatedName);
+  }
+
+  setBaseScale(scale: number) {
+    this.baseScale = scale;
   }
 
   private getCardBgColor(cardName: string): number {

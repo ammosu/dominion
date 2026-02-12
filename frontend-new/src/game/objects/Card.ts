@@ -7,6 +7,7 @@ export class Card extends Phaser.GameObjects.Container {
   private cardText: Phaser.GameObjects.Text;
   private baseX: number = 0; // True base position set by Hand
   private baseY: number = 0; // True base position set by Hand
+  private baseRotation: number = 0; // True base rotation set by Hand
   private isHovered: boolean = false;
   private isDragging: boolean = false;
 
@@ -61,6 +62,11 @@ export class Card extends Phaser.GameObjects.Container {
     this.baseY = y;
   }
 
+  /** Set the true base rotation (called by Hand after arranging cards) */
+  setBaseRotation(rotation: number) {
+    this.baseRotation = rotation;
+  }
+
   private setupDragHandlers() {
     this.on('dragstart', this.onDragStart, this);
     this.on('drag', this.onDrag, this);
@@ -72,10 +78,11 @@ export class Card extends Phaser.GameObjects.Container {
     if (!this.isDragging) {
       this.isDragging = true;
 
-      // 卡片浮起動畫
+      // 卡片浮起動畫 - straighten when dragging
       this.scene.tweens.add({
         targets: this,
         y: this.y - 20,
+        rotation: 0, // Straighten for dragging
         scale: 1.1,
         duration: 200,
         ease: 'Back.easeOut',
@@ -104,6 +111,7 @@ export class Card extends Phaser.GameObjects.Container {
       targets: this,
       x: this.baseX,
       y: this.baseY,
+      rotation: this.baseRotation, // Restore rotation
       scale: 1,
       duration: 300,
       ease: 'Cubic.easeOut',
@@ -123,13 +131,18 @@ export class Card extends Phaser.GameObjects.Container {
     if (!this.isHovered && !this.isDragging) {
       this.isHovered = true;
 
-      // Hover 效果 - raise from base position
+      // Hover 效果 - straighten rotation, lift up, and scale
       this.scene.tweens.add({
         targets: this,
-        y: this.baseY - 10,
-        duration: 150,
+        y: this.baseY - 40, // Lift more for better visibility
+        rotation: 0, // Straighten the card
+        scale: 1.1, // Slightly enlarge
+        duration: 200,
         ease: 'Cubic.easeOut',
       });
+
+      // Bring to front
+      this.setDepth(50);
 
       // 通知 Scene
       this.scene.events.emit('card-hovered', this.cardName);
@@ -137,16 +150,21 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private onPointerOut() {
-    // 取消 Hover - return to base position
+    // 取消 Hover - return to base position and rotation
     if (this.isHovered && !this.isDragging) {
       this.isHovered = false;
 
       this.scene.tweens.add({
         targets: this,
         y: this.baseY,
-        duration: 150,
+        rotation: this.baseRotation, // Restore original rotation
+        scale: 1.0, // Restore original scale
+        duration: 200,
         ease: 'Cubic.easeOut',
       });
+
+      // Restore original depth
+      this.setDepth(10);
 
       this.scene.events.emit('card-hovered', null);
     }

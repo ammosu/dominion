@@ -4,10 +4,10 @@ import { Card } from './Card';
 export class Hand {
   private scene: Phaser.Scene;
   private cards: Card[] = [];
-  private baseY: number = 650;
+  private baseY: number = 680; // Move closer to bottom for better feel
   private spacing: number = 100;
-  private arcHeight: number = 30;
-  private maxRotation: number = 15;
+  private arcHeight: number = 40; // More pronounced arc
+  private maxRotation: number = 20; // Stronger fan rotation
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -39,12 +39,14 @@ export class Hand {
       // 計算扇形排列
       const t = count > 1 ? i / (count - 1) : 0.5;
       const angle = (t - 0.5) * 2 * this.maxRotation;
+      const angleRad = Phaser.Math.DegToRad(angle);
 
       const x = this.scene.cameras.main.width / 2 + (i - count / 2 + 0.5) * this.spacing;
       const y = this.baseY + Math.abs(angle) * this.arcHeight / this.maxRotation;
 
-      // Always update the card's base position so it knows where to return
+      // Always update the card's base position and rotation so it knows where to return
       card.setBasePosition(x, y);
+      card.setBaseRotation(angleRad);
 
       if (animate) {
         // 動畫移動到新位置
@@ -52,14 +54,14 @@ export class Hand {
           targets: card,
           x: x,
           y: y,
-          rotation: Phaser.Math.DegToRad(angle),
+          rotation: angleRad,
           duration: 300,
           ease: 'Cubic.easeOut',
         });
       } else {
         // 直接設定位置（無動畫）
         card.setPosition(x, y);
-        card.setRotation(Phaser.Math.DegToRad(angle));
+        card.setRotation(angleRad);
       }
 
       // 設定深度（中間的卡片在上面）
