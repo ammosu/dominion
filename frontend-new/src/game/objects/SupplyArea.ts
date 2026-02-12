@@ -106,12 +106,16 @@ export class SupplyArea {
     // Layout Treasures
     const treasureStartY = currentY + labelHeight + labelPadding;
     const treasureRows = 1;
-    const treasureBgWidth = 3 * this.spacing + padding * 2;
+    const treasureCardsPerRow = 3;
+    // Width: span from first to last card + card width + padding on both sides
+    const treasureBgWidth = (treasureCardsPerRow - 1) * this.spacing + this.cardWidth + padding * 2;
     const treasureBgHeight = labelHeight + treasureRows * this.cardHeight + padding + labelPadding;
+    // Center X: middle of the card range
+    const treasureCenterX = this.baseX + (treasureCardsPerRow - 1) * this.spacing / 2;
 
     // Create background first
     createCategoryBackground(
-      this.baseX + treasureBgWidth / 2 - padding,
+      treasureCenterX,
       currentY + treasureBgHeight / 2,
       treasureBgWidth,
       treasureBgHeight,
@@ -121,23 +125,25 @@ export class SupplyArea {
     // Create label on top of background
     createCategoryLabel(
       lang === 'zh' ? '寶物牌' : 'TREASURES',
-      this.baseX,
+      treasureCenterX - treasureBgWidth / 2 + padding,
       currentY + 8,
       'treasures'
     );
 
-    const treasureMaxY = layoutCards(treasures, treasureStartY, 3);
+    const treasureMaxY = layoutCards(treasures, treasureStartY, treasureCardsPerRow);
     currentY = currentY + treasureBgHeight + this.categorySpacing;
 
     // Layout Victory & Curse
     const victoryStartY = currentY + labelHeight + labelPadding;
     const victoryRows = 1;
-    const victoryBgWidth = 4 * this.spacing + padding * 2;
+    const victoryCardsPerRow = 4;
+    const victoryBgWidth = (victoryCardsPerRow - 1) * this.spacing + this.cardWidth + padding * 2;
     const victoryBgHeight = labelHeight + victoryRows * this.cardHeight + padding + labelPadding;
+    const victoryCenterX = this.baseX + (victoryCardsPerRow - 1) * this.spacing / 2;
 
     // Create background first
     createCategoryBackground(
-      this.baseX + victoryBgWidth / 2 - padding,
+      victoryCenterX,
       currentY + victoryBgHeight / 2,
       victoryBgWidth,
       victoryBgHeight,
@@ -147,24 +153,26 @@ export class SupplyArea {
     // Create label on top of background
     createCategoryLabel(
       lang === 'zh' ? '勝利 / 詛咒' : 'VICTORY / CURSE',
-      this.baseX,
+      victoryCenterX - victoryBgWidth / 2 + padding,
       currentY + 8,
       'victory'
     );
 
-    const victoryMaxY = layoutCards(victory, victoryStartY, 4);
+    const victoryMaxY = layoutCards(victory, victoryStartY, victoryCardsPerRow);
     currentY = currentY + victoryBgHeight + this.categorySpacing;
 
     // Layout Actions
     if (actions.length > 0) {
       const actionStartY = currentY + labelHeight + labelPadding;
-      const actionRows = Math.ceil(actions.length / 5);
-      const actionBgWidth = 5 * this.spacing + padding * 2;
-      const actionBgHeight = labelHeight + actionRows * this.rowSpacing + padding + labelPadding;
+      const actionCardsPerRow = 5;
+      const actionRows = Math.ceil(actions.length / actionCardsPerRow);
+      const actionBgWidth = (actionCardsPerRow - 1) * this.spacing + this.cardWidth + padding * 2;
+      const actionBgHeight = labelHeight + (actionRows - 1) * this.rowSpacing + this.cardHeight + padding + labelPadding;
+      const actionCenterX = this.baseX + (actionCardsPerRow - 1) * this.spacing / 2;
 
       // Create background first
       createCategoryBackground(
-        this.baseX + actionBgWidth / 2 - padding,
+        actionCenterX,
         currentY + actionBgHeight / 2,
         actionBgWidth,
         actionBgHeight,
@@ -174,12 +182,12 @@ export class SupplyArea {
       // Create label on top of background
       createCategoryLabel(
         lang === 'zh' ? '行動牌' : 'ACTIONS',
-        this.baseX,
+        actionCenterX - actionBgWidth / 2 + padding,
         currentY + 8,
         'actions'
       );
 
-      layoutCards(actions, actionStartY, 5);
+      layoutCards(actions, actionStartY, actionCardsPerRow);
     }
   }
 
