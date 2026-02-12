@@ -6,6 +6,7 @@ export class SupplyArea {
   private piles: Map<string, SupplyPile> = new Map();
   private categoryLabels: Phaser.GameObjects.Text[] = [];
   private categoryBackgrounds: Phaser.GameObjects.Rectangle[] = [];
+  private categoryLabelTypes: ('treasures' | 'victory' | 'actions')[] = []; // Track label types for language updates
   private baseX: number = 80;
   private baseY: number = 75; // Adjusted to avoid TopBar
   private cardWidth: number = 85;
@@ -26,6 +27,7 @@ export class SupplyArea {
     this.categoryLabels = [];
     this.categoryBackgrounds.forEach((bg) => bg.destroy());
     this.categoryBackgrounds = [];
+    this.categoryLabelTypes = [];
 
     // Organize cards by type
     const treasures = ['Copper', 'Silver', 'Gold'];
@@ -52,7 +54,12 @@ export class SupplyArea {
     };
 
     // Helper function to create category label
-    const createCategoryLabel = (text: string, x: number, y: number) => {
+    const createCategoryLabel = (
+      text: string,
+      x: number,
+      y: number,
+      type: 'treasures' | 'victory' | 'actions'
+    ) => {
       const label = this.scene.add.text(x, y, text, {
         fontSize: '14px',
         fontFamily: 'Cinzel, "Noto Sans TC", serif',
@@ -62,6 +69,7 @@ export class SupplyArea {
       label.setResolution(window.devicePixelRatio || 2);
       label.setDepth(1000); // Ensure labels are on top
       this.categoryLabels.push(label);
+      this.categoryLabelTypes.push(type);
       return label;
     };
 
@@ -114,7 +122,8 @@ export class SupplyArea {
     createCategoryLabel(
       lang === 'zh' ? '寶物牌' : 'TREASURES',
       this.baseX,
-      currentY + 8
+      currentY + 8,
+      'treasures'
     );
 
     const treasureMaxY = layoutCards(treasures, treasureStartY, 3);
@@ -139,7 +148,8 @@ export class SupplyArea {
     createCategoryLabel(
       lang === 'zh' ? '勝利 / 詛咒' : 'VICTORY / CURSE',
       this.baseX,
-      currentY + 8
+      currentY + 8,
+      'victory'
     );
 
     const victoryMaxY = layoutCards(victory, victoryStartY, 4);
@@ -165,7 +175,8 @@ export class SupplyArea {
       createCategoryLabel(
         lang === 'zh' ? '行動牌' : 'ACTIONS',
         this.baseX,
-        currentY + 8
+        currentY + 8,
+        'actions'
       );
 
       layoutCards(actions, actionStartY, 5);
@@ -191,6 +202,7 @@ export class SupplyArea {
     this.categoryLabels = [];
     this.categoryBackgrounds.forEach((bg) => bg.destroy());
     this.categoryBackgrounds = [];
+    this.categoryLabelTypes = [];
   }
 
   updateLanguage(lang: 'en' | 'zh') {
@@ -198,7 +210,18 @@ export class SupplyArea {
       pile.updateLanguage(lang);
     });
 
-    // Recreate labels with new language
-    // (Note: In a real implementation, we'd store category info and just update text)
+    // Update category labels with new language
+    this.categoryLabels.forEach((label, index) => {
+      const type = this.categoryLabelTypes[index];
+      let text = '';
+      if (type === 'treasures') {
+        text = lang === 'zh' ? '寶物牌' : 'TREASURES';
+      } else if (type === 'victory') {
+        text = lang === 'zh' ? '勝利 / 詛咒' : 'VICTORY / CURSE';
+      } else if (type === 'actions') {
+        text = lang === 'zh' ? '行動牌' : 'ACTIONS';
+      }
+      label.setText(text);
+    });
   }
 }
