@@ -1,26 +1,38 @@
 use axum::{
     extract::{
         ws::{Message, WebSocket},
-        State, WebSocketUpgrade,
+        State, WebSocketUpgrade, Query,
     },
     response::Response,
 };
+use serde::Deserialize;
 use futures_util::{SinkExt, StreamExt};
 
-use crate::ai::simple::SimpleAi;
-use crate::ai::AiPlayer;
+use crate::ai::{simple::SimpleAi, medium::MediumAi};
 use crate::events::{ClientMessage, ServerMessage, ServerPayload};
 use crate::Games;
 use shared::card::Card;
 
-pub async fn websocket_handler(
-    ws: WebSocketUpgrade,
-    State(games): State<Games>,
-) -> Response {
-    ws.on_upgrade(move |socket| handle_socket(socket, games))
+#[derive(Deserialize)]
+pub struct WsQuery {
+    #[serde(default = "default_difficulty")]
+    difficulty: String,
 }
 
-async fn handle_socket(socket: WebSocket, _games: Games) {
+fn default_difficulty() -> String {
+    "medium".to_string()
+}
+
+pub async fn websocket_handler(
+    ws: WebSocketUpgrade,
+    Query(query): Query<WsQuery>,
+    State(games): State<Games>,
+) -> Response {
+    ws.on_upgrade(move |socket| handle_socket(socket, games, query.difficulty))
+}
+
+async fn handle_socket(socket: WebSocket, _games: Games, difficulty: String) {
+    println!("WebSocket connected with AI difficulty: {}", difficulty);
     let (mut sender, mut receiver) = socket.split();
     let _game_id = uuid::Uuid::new_v4().to_string();
 
@@ -129,7 +141,16 @@ async fn handle_socket(socket: WebSocket, _games: Games) {
                 }
 
                 // Run AI turn if current player is AI
-                let ai = SimpleAi::new();
+                // Select AI based on difficulty parameter
+                let medium_ai = MediumAi::new();
+                let simple_ai = SimpleAi::new();
+
+                let ai: &dyn crate::ai::AiPlayer = if difficulty == "simple" {
+                    &simple_ai
+                } else {
+                    &medium_ai  // Default to medium
+                };
+
                 let max_ai_actions = 20;
                 let mut ai_actions = 0;
 

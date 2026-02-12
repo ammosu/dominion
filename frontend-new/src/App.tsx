@@ -22,7 +22,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
-    wsService.connect();
+    // WebSocket connection is now established in StartScreen after user selects AI difficulty
     const unsubscribe = wsService.onMessage((msg) => {
       console.log('Received message:', msg);
       if (msg.type === 'GameStateUpdate' && msg.payload.game_state) {

@@ -1,6 +1,7 @@
 use crate::shared::{action::PlayerAction, game::GameState};
 
 pub mod simple;
+pub mod medium;
 
 /// Trait for AI player decision making
 pub trait AiPlayer: Send + Sync {

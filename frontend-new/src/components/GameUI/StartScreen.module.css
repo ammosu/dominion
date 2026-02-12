@@ -95,6 +95,33 @@
   box-shadow: 0 0 20px rgba(196, 164, 98, 0.08);
 }
 
+.select {
+  font-family: 'Cormorant Garamond', serif;
+  padding: 12px 24px;
+  font-size: 20px;
+  border: 1px solid rgba(196, 164, 98, 0.25);
+  border-radius: 3px;
+  background: rgba(196, 164, 98, 0.06);
+  color: #e8dcc8;
+  width: 280px;
+  text-align: center;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: rgba(196, 164, 98, 0.5);
+  background: rgba(196, 164, 98, 0.1);
+  box-shadow: 0 0 20px rgba(196, 164, 98, 0.08);
+}
+
+.select option {
+  background: #1a1208;
+  color: #e8dcc8;
+}
+
 .startButton {
   font-family: 'Cinzel', 'Noto Sans TC', serif;
   padding: 14px 48px;
