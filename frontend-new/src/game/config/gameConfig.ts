@@ -11,7 +11,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    resolution: window.devicePixelRatio || 2, // Support high-DPI displays
   },
   scene: [Preloader, TableScene],
   physics: {
