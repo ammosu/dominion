@@ -19,41 +19,45 @@ export class SupplyPile extends Phaser.GameObjects.Container {
 
     // Card background with type-based color
     const bgColor = this.getCardBgColor(cardName);
-    this.cardBg = scene.add.rectangle(0, 0, 70, 100, bgColor);
-    this.cardBg.setStrokeStyle(1, 0x999999);
+    this.cardBg = scene.add.rectangle(0, 0, 85, 115, bgColor);
+    this.cardBg.setStrokeStyle(2, 0x999999);
     this.add(this.cardBg);
 
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);
-    this.cardText = scene.add.text(0, -10, displayName, {
-      fontSize: '11px',
+    this.cardText = scene.add.text(0, -5, displayName, {
+      fontSize: '13px',
       color: '#000000',
-      wordWrap: { width: 60 },
+      wordWrap: { width: 75 },
       align: 'center',
       resolution: window.devicePixelRatio || 2,
+      fontStyle: 'bold',
     });
     this.cardText.setOrigin(0.5);
     this.add(this.cardText);
 
-    // Count badge
-    const countBg = scene.add.circle(0, 30, 15, 0x333333, 0.8);
-    this.countText = scene.add.text(0, 30, count.toString(), {
-      fontSize: '14px',
+    // Count badge (larger and more visible)
+    const countBg = scene.add.circle(0, 38, 17, 0x333333, 0.9);
+    this.countText = scene.add.text(0, 38, count.toString(), {
+      fontSize: '16px',
       color: '#ffffff',
       fontStyle: 'bold',
       resolution: window.devicePixelRatio || 2,
+      fontFamily: '"Cormorant Garamond", serif',
     });
     this.countText.setOrigin(0.5);
     this.add(countBg);
     this.add(this.countText);
 
-    // Cost badge
-    const costBg = scene.add.circle(25, -35, 12, 0xFFD700, 1);
-    const costText = scene.add.text(25, -35, cost.toString(), {
-      fontSize: '12px',
+    // Cost badge (larger and positioned at top-left for clarity)
+    const costBg = scene.add.circle(-32, -48, 14, 0xFFD700, 1);
+    costBg.setStrokeStyle(1, 0x000000, 0.3);
+    const costText = scene.add.text(-32, -48, cost.toString(), {
+      fontSize: '14px',
       color: '#000000',
       fontStyle: 'bold',
       resolution: window.devicePixelRatio || 2,
+      fontFamily: '"Cormorant Garamond", serif',
     });
     costText.setOrigin(0.5);
     this.costBadge = scene.add.container(0, 0, [costBg, costText]);
@@ -62,7 +66,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     scene.add.existing(this);
 
     // Interactive
-    this.setSize(70, 100);
+    this.setSize(85, 115);
     this.setInteractive({ useHandCursor: true });
 
     // Hover effect
