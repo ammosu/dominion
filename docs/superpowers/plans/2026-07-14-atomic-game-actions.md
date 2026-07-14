@@ -73,11 +73,11 @@ mod tests {
 
     #[test]
     fn valid_remodel_moves_all_cards_and_consumes_one_action() {
-        let mut game = game_with_hand(vec![Card::Remodel, Card::Copper]);
+        let mut game = game_with_hand(vec![Card::Remodel, Card::Estate]);
         let silver_before = game.supply[&Card::Silver];
 
         let result = game.execute(PlayerAction::PlayRemodel {
-            trash: Card::Copper,
+            trash: Card::Estate,
             gain: Card::Silver,
         });
 
@@ -85,7 +85,7 @@ mod tests {
         assert!(game.players[0].hand.is_empty());
         assert_eq!(game.players[0].in_play, vec![Card::Remodel]);
         assert_eq!(game.players[0].discard, vec![Card::Silver]);
-        assert_eq!(game.trash, vec![Card::Copper]);
+        assert_eq!(game.trash, vec![Card::Estate]);
         assert_eq!(game.players[0].actions, 0);
         assert_eq!(game.supply[&Card::Silver], silver_before - 1);
         assert_eq!(game.log.len(), 1);
