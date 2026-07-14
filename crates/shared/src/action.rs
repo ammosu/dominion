@@ -53,12 +53,18 @@ impl GameState {
             return Err(ActionError::GameOver);
         }
 
-        // Capture state before executing action
+        let mut next_state = self.clone();
+        let entries = next_state.execute_in_place(action)?;
+        *self = next_state;
+        Ok(entries)
+    }
+
+    fn execute_in_place(&mut self, action: PlayerAction) -> ActionResult {
         let is_ai = self.players[self.current_player].is_ai;
         let old_phase = self.phase.clone();
         let old_player = self.current_player;
 
-        let result = match action {
+        let entries = match action {
             PlayerAction::PlayCard { card } => self.play_action_card(card),
             PlayerAction::PlayCellar { discards } => self.play_cellar(discards),
             PlayerAction::PlayWorkshop { gain } => self.play_workshop(gain),
@@ -69,32 +75,29 @@ impl GameState {
             PlayerAction::PlayAllTreasures => self.play_all_treasures(),
             PlayerAction::BuyCard { card } => self.buy_card(card),
             PlayerAction::EndPhase => self.end_phase(),
-        };
+        }?;
 
-        if let Ok(ref entries) = result {
-            // Add [AI] prefix to log entries if current player is AI
-            let prefixed_entries: Vec<String> = entries
-                .iter()
-                .map(|entry| {
-                    if is_ai {
-                        format!("[AI] {}", entry)
-                    } else {
-                        entry.clone()
-                    }
-                })
-                .collect();
-            self.log.extend(prefixed_entries);
+        let prefixed_entries: Vec<String> = entries
+            .iter()
+            .map(|entry| {
+                if is_ai {
+                    format!("[AI] {entry}")
+                } else {
+                    entry.clone()
+                }
+            })
+            .collect();
+        self.log.extend(prefixed_entries);
 
-            // If turn changed (Buy phase -> Action phase with new player), add turn announcement
-            if matches!(old_phase, TurnPhase::Buy)
-                && matches!(self.phase, TurnPhase::Action)
-                && old_player != self.current_player {
-                let next_name = &self.players[self.current_player].name;
-                self.log.push(format!("{}'s turn", next_name));
-            }
+        if matches!(old_phase, TurnPhase::Buy)
+            && matches!(self.phase, TurnPhase::Action)
+            && old_player != self.current_player
+        {
+            let next_name = &self.players[self.current_player].name;
+            self.log.push(format!("{next_name}'s turn"));
         }
 
-        result
+        Ok(entries)
     }
 
     fn require_action_phase(&self) -> Result<(), ActionError> {
@@ -378,9 +381,10 @@ impl GameState {
         if !player.hand.contains(&Card::Remodel) {
             return Err(ActionError::CardNotInHand);
         }
-        if !player.hand.contains(&trash) || trash == Card::Remodel {
-            // Verify trash card is in hand and is not the Remodel itself
-            // (unless they have two Remodels — check after removing Remodel)
+        let matching_cards = player.hand.iter().filter(|&&card| card == trash).count();
+        let required_matches = if trash == Card::Remodel { 2 } else { 1 };
+        if matching_cards < required_matches {
+            return Err(ActionError::CardNotInHand);
         }
 
         // Gain card must cost up to 2 more than trashed card
@@ -549,5 +553,112 @@ impl GameState {
             }
             self.scores = Some(scores);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::game::PlayerInfo;
+
+    fn game_with_hand(hand: Vec<Card>) -> GameState {
+        let mut game = GameState::new(vec![
+            PlayerInfo {
+                name: "Alice".to_string(),
+                is_ai: false,
+            },
+            PlayerInfo {
+                name: "Bot".to_string(),
+                is_ai: true,
+            },
+        ]);
+
+        let player = &mut game.players[0];
+        player.hand = hand;
+        player.deck.clear();
+        player.discard.clear();
+        player.in_play.clear();
+        player.actions = 1;
+        player.buys = 1;
+        player.coins = 0;
+
+        game.current_player = 0;
+        game.phase = TurnPhase::Action;
+        game.trash.clear();
+        game.game_over = false;
+        game.log.clear();
+        game.scores = None;
+        game
+    }
+
+    #[test]
+    fn valid_remodel_moves_all_cards_and_consumes_one_action() {
+        let mut game = game_with_hand(vec![Card::Remodel, Card::Estate]);
+        let silver_before = game.supply[&Card::Silver];
+
+        let result = game.execute(PlayerAction::PlayRemodel {
+            trash: Card::Estate,
+            gain: Card::Silver,
+        });
+
+        assert!(result.is_ok());
+        assert!(game.players[0].hand.is_empty());
+        assert_eq!(game.players[0].in_play, vec![Card::Remodel]);
+        assert_eq!(game.players[0].discard, vec![Card::Silver]);
+        assert_eq!(game.trash, vec![Card::Estate]);
+        assert_eq!(game.players[0].actions, 0);
+        assert_eq!(game.supply[&Card::Silver], silver_before - 1);
+        assert_eq!(game.log.len(), 1);
+    }
+
+    #[test]
+    fn two_remodels_allow_playing_one_and_trashing_the_other() {
+        let mut game = game_with_hand(vec![Card::Remodel, Card::Remodel]);
+
+        let result = game.execute(PlayerAction::PlayRemodel {
+            trash: Card::Remodel,
+            gain: Card::Silver,
+        });
+
+        assert!(result.is_ok());
+        assert!(game.players[0].hand.is_empty());
+        assert_eq!(game.players[0].in_play, vec![Card::Remodel]);
+        assert_eq!(game.trash, vec![Card::Remodel]);
+        assert_eq!(game.players[0].discard, vec![Card::Silver]);
+        assert_eq!(game.players[0].actions, 0);
+    }
+
+    #[test]
+    fn failed_remodel_is_atomic_when_target_is_missing() {
+        let mut game = game_with_hand(vec![Card::Remodel, Card::Copper]);
+        let before = serde_json::to_value(&game).expect("serialize state before action");
+
+        let result = game.execute(PlayerAction::PlayRemodel {
+            trash: Card::Estate,
+            gain: Card::Silver,
+        });
+
+        assert!(matches!(result, Err(ActionError::CardNotInHand)));
+        assert_eq!(
+            serde_json::to_value(&game).expect("serialize state after action"),
+            before
+        );
+    }
+
+    #[test]
+    fn single_remodel_cannot_trash_itself_and_state_is_unchanged() {
+        let mut game = game_with_hand(vec![Card::Remodel]);
+        let before = serde_json::to_value(&game).expect("serialize state before action");
+
+        let result = game.execute(PlayerAction::PlayRemodel {
+            trash: Card::Remodel,
+            gain: Card::Silver,
+        });
+
+        assert!(matches!(result, Err(ActionError::CardNotInHand)));
+        assert_eq!(
+            serde_json::to_value(&game).expect("serialize state after action"),
+            before
+        );
     }
 }
