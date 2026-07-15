@@ -6,7 +6,7 @@
 
 **Architecture:** Optional artwork paths live in `CARD_DATA`, the Phaser preloader turns configured paths into deterministic texture keys, and a focused `CardArtwork` container owns cover cropping and presentation. Phaser and React consume the same public WebP files while preserving code-rendered bilingual labels and falling back to the current type-colored cards when artwork is absent or fails to load.
 
-**Tech Stack:** React 18, TypeScript 5.9, Phaser 3.90, Vite 5, CSS Modules, Vitest 2.1.9, built-in image generation, macOS `sips`
+**Tech Stack:** React 18, TypeScript 5.9, Phaser 3.90, Vite 5, CSS Modules, Vitest 2.1.9, built-in image generation, Python 3 + Pillow WebP support
 
 ## Global Constraints
 
@@ -435,25 +435,44 @@ Inspect the generated image at full resolution. Accept it only if the coins rema
 Set `GENERATED_IMAGE_PATH` to the exact saved path returned by the built-in image tool, then run:
 
 ```bash
-SOURCE_WIDTH=$(sips -g pixelWidth "$GENERATED_IMAGE_PATH" | awk '/pixelWidth/{print $2}')
-SOURCE_HEIGHT=$(sips -g pixelHeight "$GENERATED_IMAGE_PATH" | awk '/pixelHeight/{print $2}')
-test "$((SOURCE_WIDTH * 3))" -eq "$((SOURCE_HEIGHT * 2))"
-mkdir -p frontend-new/public/assets/cards
-sips --resampleHeightWidth 1152 768 \
-  -s format webp \
-  -s formatOptions 80 \
-  "$GENERATED_IMAGE_PATH" \
-  --out frontend-new/public/assets/cards/copper.webp
+python3 - "$GENERATED_IMAGE_PATH" frontend-new/public/assets/cards/copper.webp <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+source_path = Path(sys.argv[1])
+output_path = Path(sys.argv[2])
+max_bytes = 358400
+
+with Image.open(source_path) as source:
+    width, height = source.size
+    if width * 3 != height * 2:
+        raise ValueError(f"source must be exact 2:3 portrait, got {width}x{height}")
+    image = source.convert("RGB").resize((768, 1152), Image.Resampling.LANCZOS)
+
+output_path.parent.mkdir(parents=True, exist_ok=True)
+quality = 80
+image.save(output_path, "WEBP", quality=quality, method=6)
+if output_path.stat().st_size > max_bytes:
+    quality = 72
+    image.save(output_path, "WEBP", quality=quality, method=6)
+
+with Image.open(output_path) as output:
+    assert output.size == (768, 1152), f"unexpected output size: {output.size}"
+
+size_bytes = output_path.stat().st_size
+if size_bytes > max_bytes:
+    raise ValueError(f"output exceeds {max_bytes} bytes: {size_bytes}")
+
+print(f"path: {output_path}")
+print("dimensions: 768x1152")
+print(f"bytes: {size_bytes}")
+print(f"quality: {quality}")
+PY
 ```
 
-Validate:
-
-```bash
-sips -g pixelWidth -g pixelHeight frontend-new/public/assets/cards/copper.webp
-test "$(stat -f%z frontend-new/public/assets/cards/copper.webp)" -le 358400
-```
-
-Expected: width `768`, height `1152`, and size at most `358400` bytes. If the size is larger, rerun conversion with `formatOptions 72` and validate again.
+Expected: Pillow validates the exact 2:3 source, writes `768 × 1152` WebP at quality 80, automatically retries at quality 72 only when needed, and prints a final size no larger than `358400` bytes.
 
 - [ ] **Step 5: Configure Copper and record the final prompt**
 
@@ -573,19 +592,44 @@ Inspect at full resolution. Accept only if the manor remains complete in a cente
 Set `GENERATED_IMAGE_PATH` from the tool result and run:
 
 ```bash
-SOURCE_WIDTH=$(sips -g pixelWidth "$GENERATED_IMAGE_PATH" | awk '/pixelWidth/{print $2}')
-SOURCE_HEIGHT=$(sips -g pixelHeight "$GENERATED_IMAGE_PATH" | awk '/pixelHeight/{print $2}')
-test "$((SOURCE_WIDTH * 3))" -eq "$((SOURCE_HEIGHT * 2))"
-sips --resampleHeightWidth 1152 768 \
-  -s format webp \
-  -s formatOptions 80 \
-  "$GENERATED_IMAGE_PATH" \
-  --out frontend-new/public/assets/cards/estate.webp
-sips -g pixelWidth -g pixelHeight frontend-new/public/assets/cards/estate.webp
-test "$(stat -f%z frontend-new/public/assets/cards/estate.webp)" -le 358400
+python3 - "$GENERATED_IMAGE_PATH" frontend-new/public/assets/cards/estate.webp <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+source_path = Path(sys.argv[1])
+output_path = Path(sys.argv[2])
+max_bytes = 358400
+
+with Image.open(source_path) as source:
+    width, height = source.size
+    if width * 3 != height * 2:
+        raise ValueError(f"source must be exact 2:3 portrait, got {width}x{height}")
+    image = source.convert("RGB").resize((768, 1152), Image.Resampling.LANCZOS)
+
+output_path.parent.mkdir(parents=True, exist_ok=True)
+quality = 80
+image.save(output_path, "WEBP", quality=quality, method=6)
+if output_path.stat().st_size > max_bytes:
+    quality = 72
+    image.save(output_path, "WEBP", quality=quality, method=6)
+
+with Image.open(output_path) as output:
+    assert output.size == (768, 1152), f"unexpected output size: {output.size}"
+
+size_bytes = output_path.stat().st_size
+if size_bytes > max_bytes:
+    raise ValueError(f"output exceeds {max_bytes} bytes: {size_bytes}")
+
+print(f"path: {output_path}")
+print("dimensions: 768x1152")
+print(f"bytes: {size_bytes}")
+print(f"quality: {quality}")
+PY
 ```
 
-Expected: `768 × 1152` and at most `350 KiB`; retry conversion at quality 72 if necessary.
+Expected: Pillow validates the exact 2:3 source, writes `768 × 1152` WebP at quality 80, automatically retries at quality 72 only when needed, and prints a final size no larger than `358400` bytes.
 
 - [ ] **Step 5: Configure Estate and append its final prompt record**
 
@@ -694,19 +738,44 @@ Inspect at full resolution. Accept only if the action remains clear at thumbnail
 Set `GENERATED_IMAGE_PATH` from the tool result and run:
 
 ```bash
-SOURCE_WIDTH=$(sips -g pixelWidth "$GENERATED_IMAGE_PATH" | awk '/pixelWidth/{print $2}')
-SOURCE_HEIGHT=$(sips -g pixelHeight "$GENERATED_IMAGE_PATH" | awk '/pixelHeight/{print $2}')
-test "$((SOURCE_WIDTH * 3))" -eq "$((SOURCE_HEIGHT * 2))"
-sips --resampleHeightWidth 1152 768 \
-  -s format webp \
-  -s formatOptions 80 \
-  "$GENERATED_IMAGE_PATH" \
-  --out frontend-new/public/assets/cards/smithy.webp
-sips -g pixelWidth -g pixelHeight frontend-new/public/assets/cards/smithy.webp
-test "$(stat -f%z frontend-new/public/assets/cards/smithy.webp)" -le 358400
+python3 - "$GENERATED_IMAGE_PATH" frontend-new/public/assets/cards/smithy.webp <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+source_path = Path(sys.argv[1])
+output_path = Path(sys.argv[2])
+max_bytes = 358400
+
+with Image.open(source_path) as source:
+    width, height = source.size
+    if width * 3 != height * 2:
+        raise ValueError(f"source must be exact 2:3 portrait, got {width}x{height}")
+    image = source.convert("RGB").resize((768, 1152), Image.Resampling.LANCZOS)
+
+output_path.parent.mkdir(parents=True, exist_ok=True)
+quality = 80
+image.save(output_path, "WEBP", quality=quality, method=6)
+if output_path.stat().st_size > max_bytes:
+    quality = 72
+    image.save(output_path, "WEBP", quality=quality, method=6)
+
+with Image.open(output_path) as output:
+    assert output.size == (768, 1152), f"unexpected output size: {output.size}"
+
+size_bytes = output_path.stat().st_size
+if size_bytes > max_bytes:
+    raise ValueError(f"output exceeds {max_bytes} bytes: {size_bytes}")
+
+print(f"path: {output_path}")
+print("dimensions: 768x1152")
+print(f"bytes: {size_bytes}")
+print(f"quality: {quality}")
+PY
 ```
 
-Expected: `768 × 1152` and at most `350 KiB`; retry conversion at quality 72 if necessary.
+Expected: Pillow validates the exact 2:3 source, writes `768 × 1152` WebP at quality 80, automatically retries at quality 72 only when needed, and prints a final size no larger than `358400` bytes.
 
 - [ ] **Step 5: Configure Smithy and append its final prompt record**
 
