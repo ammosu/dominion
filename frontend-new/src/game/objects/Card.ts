@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { getCardName } from '../../utils/cardData';
+import { CardArtwork } from './CardArtwork';
 
 export class Card extends Phaser.GameObjects.Container {
   private cardName: string;
   private cardBg: Phaser.GameObjects.Rectangle;
+  private artwork?: CardArtwork;
   private cardText: Phaser.GameObjects.Text;
   private baseX: number = 0; // True base position set by Hand
   private baseY: number = 0; // True base position set by Hand
@@ -21,6 +23,11 @@ export class Card extends Phaser.GameObjects.Container {
     this.cardBg = scene.add.rectangle(0, 0, 80, 120, bgColor);
     this.cardBg.setStrokeStyle(1, 0x999999);
     this.add(this.cardBg);
+
+    this.artwork = CardArtwork.create(scene, cardName, 80, 120);
+    if (this.artwork) {
+      this.add(this.artwork);
+    }
 
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);

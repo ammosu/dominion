@@ -2,6 +2,7 @@ export interface CardData {
   name: { en: string; zh: string };
   type: 'treasure' | 'victory' | 'action' | 'curse';
   cost: number;
+  art?: string;
   desc?: { en: string; zh: string };
   tooltip?: { en: string; zh: string };
   coins?: number;
@@ -144,4 +145,26 @@ export function getAllCardCosts(supply: Record<string, number>): Record<string, 
 
 export function getCardName(cardName: string, lang: 'en' | 'zh'): string {
   return CARD_DATA[cardName]?.name[lang] || cardName;
+}
+
+export interface ConfiguredCardArt {
+  cardName: string;
+  path: string;
+  textureKey: string;
+}
+
+export function getCardArtPath(cardName: string): string | undefined {
+  return CARD_DATA[cardName]?.art;
+}
+
+export function getCardTextureKey(cardName: string): string {
+  return `card-art-${cardName.toLowerCase()}`;
+}
+
+export function getConfiguredCardArt(): ConfiguredCardArt[] {
+  return Object.entries(CARD_DATA).flatMap(([cardName, data]) =>
+    data.art
+      ? [{ cardName, path: data.art, textureKey: getCardTextureKey(cardName) }]
+      : [],
+  );
 }

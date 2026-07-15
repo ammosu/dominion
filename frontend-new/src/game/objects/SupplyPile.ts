@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 import { getCardName } from '../../utils/cardData';
+import { CardArtwork } from './CardArtwork';
 
 export class SupplyPile extends Phaser.GameObjects.Container {
   private cardName: string;
   private cardCount: number;
   private cardBg: Phaser.GameObjects.Rectangle;
+  private artwork?: CardArtwork;
   private cardText: Phaser.GameObjects.Text;
   private countText: Phaser.GameObjects.Text;
   private costBadge: Phaser.GameObjects.Container;
@@ -23,6 +25,11 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.cardBg = scene.add.rectangle(0, 0, 110, 90, bgColor);
     this.cardBg.setStrokeStyle(2, 0x999999);
     this.add(this.cardBg);
+
+    this.artwork = CardArtwork.create(scene, cardName, 110, 90);
+    if (this.artwork) {
+      this.add(this.artwork);
+    }
 
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);

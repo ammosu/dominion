@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { getConfiguredCardArt } from '../../utils/cardData';
 
 export class Preloader extends Phaser.Scene {
   constructor() {
@@ -34,7 +35,13 @@ export class Preloader extends Phaser.Scene {
       loadingText.destroy();
     });
 
-    // TODO: 之後載入卡片資源
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.warn(`Card artwork failed to load: ${file.key}`);
+    });
+
+    getConfiguredCardArt().forEach(({ textureKey, path }) => {
+      this.load.image(textureKey, path);
+    });
   }
 
   create() {
