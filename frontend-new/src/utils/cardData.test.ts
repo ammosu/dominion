@@ -17,33 +17,36 @@ describe('card artwork metadata', () => {
     expect(getCardTextureKey('Smithy')).toBe('card-art-smithy');
   });
 
-  it('returns no path for a card without configured artwork', () => {
-    expect(getCardArtPath('Village')).toBeUndefined();
+  it('returns no path for an unknown card', () => {
+    expect(getCardArtPath('Unknown')).toBeUndefined();
   });
 
-  it('configures only the accepted pilot assets', () => {
+  it('configures artwork for the complete base set', () => {
     expect(getConfiguredCardArt().map(({ cardName }) => cardName)).toEqual([
       'Copper',
+      'Silver',
+      'Gold',
       'Estate',
+      'Duchy',
+      'Province',
+      'Curse',
+      'Cellar',
+      'Market',
       'Smithy',
+      'Village',
+      'Workshop',
+      'Militia',
+      'Mine',
+      'Moat',
+      'Remodel',
+      'Woodcutter',
     ]);
   });
 
-  it('maps Copper to an existing public WebP', () => {
-    const path = getCardArtPath('Copper');
-    expect(path).toBe('/assets/cards/copper.webp');
-    expect(publicAssetExists(path!)).toBe(true);
-  });
-
-  it('maps Estate to an existing public WebP', () => {
-    const path = getCardArtPath('Estate');
-    expect(path).toBe('/assets/cards/estate.webp');
-    expect(publicAssetExists(path!)).toBe(true);
-  });
-
-  it('maps Smithy to an existing public WebP', () => {
-    const path = getCardArtPath('Smithy');
-    expect(path).toBe('/assets/cards/smithy.webp');
-    expect(publicAssetExists(path!)).toBe(true);
+  it('maps every configured artwork path to an existing public WebP', () => {
+    getConfiguredCardArt().forEach(({ cardName, path }) => {
+      expect(path).toBe(`/assets/cards/${cardName.toLowerCase()}.webp`);
+      expect(publicAssetExists(path)).toBe(true);
+    });
   });
 });
