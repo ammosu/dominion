@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useUIStore } from '../../store/uiStore';
-import { getCardName, getCardCost, CARD_DATA } from '../../utils/cardData';
+import {
+  CARD_DATA,
+  getCardArtPath,
+  getCardCost,
+  getCardName,
+} from '../../utils/cardData';
 import styles from './CardSelectionModal.module.css';
 
 export function CardSelectionModal() {
@@ -116,24 +121,32 @@ export function CardSelectionModal() {
           </div>
         ) : (
           <div className={styles.cardGrid}>
-            {cards.map((cardName, index) => (
-              <div
-                key={`${cardName}-${index}`}
-                className={`${styles.card} ${getCardTypeClass(cardName)} ${
-                  selectedIndices.includes(index) ? styles.selected : ''
-                }`}
-                onClick={() => handleCardClick(cardName, index)}
-                data-testid={`modal-card-${cardName}-${index}`}
-              >
-                <div className={styles.cardName}>{getCardName(cardName, language)}</div>
-                <div className={styles.cardCost}>{getCardCost(cardName)}</div>
-                {CARD_DATA[cardName]?.tooltip && (
-                  <div className={styles.cardDesc}>
-                    {CARD_DATA[cardName].tooltip![language]}
-                  </div>
-                )}
-              </div>
-            ))}
+            {cards.map((cardName, index) => {
+              const artworkPath = getCardArtPath(cardName);
+              const backgroundImage = artworkPath
+                ? `linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.12) 42%, rgba(0, 0, 0, 0.82)), url("${artworkPath}")`
+                : undefined;
+
+              return (
+                <div
+                  key={`${cardName}-${index}`}
+                  className={`${styles.card} ${getCardTypeClass(cardName)} ${
+                    artworkPath ? styles.withArtwork : ''
+                  } ${selectedIndices.includes(index) ? styles.selected : ''}`}
+                  onClick={() => handleCardClick(cardName, index)}
+                  style={backgroundImage ? { backgroundImage } : undefined}
+                  data-testid={`modal-card-${cardName}-${index}`}
+                >
+                  <div className={styles.cardName}>{getCardName(cardName, language)}</div>
+                  <div className={styles.cardCost}>{getCardCost(cardName)}</div>
+                  {CARD_DATA[cardName]?.tooltip && (
+                    <div className={styles.cardDesc}>
+                      {CARD_DATA[cardName].tooltip![language]}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
