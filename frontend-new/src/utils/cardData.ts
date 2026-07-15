@@ -14,6 +14,7 @@ export const CARD_DATA: Record<string, CardData> = {
     name: { en: 'Copper', zh: '銅幣' },
     type: 'treasure',
     cost: 0,
+    art: '/assets/cards/copper.webp',
     coins: 1,
     tooltip: { en: 'Worth 1 coin', zh: '價值 1 金幣' },
   },
