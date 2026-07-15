@@ -79,6 +79,7 @@ export const CARD_DATA: Record<string, CardData> = {
     name: { en: 'Smithy', zh: '鐵匠' },
     type: 'action',
     cost: 4,
+    art: '/assets/cards/smithy.webp',
     desc: { en: '+3 Cards', zh: '+3 張牌' },
     tooltip: { en: 'Draw 3 cards from your deck.', zh: '從你的牌庫抽 3 張牌。' },
   },

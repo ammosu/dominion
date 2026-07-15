@@ -25,6 +25,7 @@ describe('card artwork metadata', () => {
     expect(getConfiguredCardArt().map(({ cardName }) => cardName)).toEqual([
       'Copper',
       'Estate',
+      'Smithy',
     ]);
   });
 
@@ -37,6 +38,12 @@ describe('card artwork metadata', () => {
   it('maps Estate to an existing public WebP', () => {
     const path = getCardArtPath('Estate');
     expect(path).toBe('/assets/cards/estate.webp');
+    expect(publicAssetExists(path!)).toBe(true);
+  });
+
+  it('maps Smithy to an existing public WebP', () => {
+    const path = getCardArtPath('Smithy');
+    expect(path).toBe('/assets/cards/smithy.webp');
     expect(publicAssetExists(path!)).toBe(true);
   });
 });

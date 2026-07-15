@@ -13,3 +13,9 @@ An original realistic medieval oil painting of worn copper coins and an aged lea
 Use case: historical-scene
 
 An original realistic medieval oil painting of a modest stone manor, timber outbuilding, hedged fields, and dirt road in a rural landscape. Portrait 2:3, the manor centered for landscape cropping, quiet dark sky and foreground, soft late-afternoon light, gray stone and muted green-ochre palette. No frame, text, numbers, heraldry, logo, watermark, fantasy grandeur, modern architecture, or imitation of existing board-game art.
+
+## Smithy
+
+Use case: historical-scene
+
+An original realistic medieval oil painting of a blacksmith striking hot iron on an anvil inside a practical stone forge. Portrait 2:3, smith and anvil centered for landscape cropping, quiet dark rafters and floor, warm forge light against cool smoky shadows, ember orange and iron-gray palette. No frame, text, numbers, logo, watermark, modern tools, fantasy armor, magical runes, or imitation of existing board-game art.
