@@ -5,6 +5,7 @@ import { CardArtwork } from './CardArtwork';
 export class Card extends Phaser.GameObjects.Container {
   private cardName: string;
   private cardBg: Phaser.GameObjects.Rectangle;
+  private cardBorder: Phaser.GameObjects.Rectangle;
   private artwork?: CardArtwork;
   private cardText: Phaser.GameObjects.Text;
   private baseX: number = 0; // True base position set by Hand
@@ -29,16 +30,23 @@ export class Card extends Phaser.GameObjects.Container {
       this.add(this.artwork);
     }
 
+    this.cardBorder = scene.add.rectangle(0, 0, 80, 120, 0x000000, 0);
+    this.cardBorder.setStrokeStyle(1, 0x999999);
+    this.add(this.cardBorder);
+
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);
-    this.cardText = scene.add.text(0, 0, displayName, {
+    this.cardText = scene.add.text(0, this.artwork ? -47 : 0, displayName, {
       fontSize: '12px',
-      color: '#000000',
+      color: this.artwork ? '#fff1d2' : '#000000',
       wordWrap: { width: 70 },
       align: 'center',
       resolution: window.devicePixelRatio || 2, // Use device pixel ratio for sharp text
     });
     this.cardText.setOrigin(0.5);
+    if (this.artwork) {
+      this.cardText.setShadow(0, 2, '#000000', 4, true, true);
+    }
     this.add(this.cardText);
 
     scene.add.existing(this);
@@ -84,6 +92,7 @@ export class Card extends Phaser.GameObjects.Container {
     // Only set base position once at start of drag, not on every drag event
     if (!this.isDragging) {
       this.isDragging = true;
+      this.artwork?.setHovered(false);
 
       // 卡片浮起動畫 - straighten when dragging
       this.scene.tweens.add({
@@ -137,6 +146,8 @@ export class Card extends Phaser.GameObjects.Container {
     // Only trigger hover effect if not already hovering or dragging
     if (!this.isHovered && !this.isDragging) {
       this.isHovered = true;
+      this.artwork?.setHovered(true);
+      this.cardBorder.setStrokeStyle(2, 0xffd27a);
 
       // Hover 效果 - straighten rotation, lift up, and scale
       this.scene.tweens.add({
@@ -160,6 +171,8 @@ export class Card extends Phaser.GameObjects.Container {
     // 取消 Hover - return to base position and rotation
     if (this.isHovered && !this.isDragging) {
       this.isHovered = false;
+      this.artwork?.setHovered(false);
+      this.cardBorder.setStrokeStyle(1, 0x999999);
 
       this.scene.tweens.add({
         targets: this,

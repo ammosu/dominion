@@ -41,3 +41,17 @@ export function calculateCoverCrop(
     height,
   };
 }
+
+export function calculateHoverCrop(base: CoverCrop): CoverCrop {
+  const width = base.width * 0.98;
+  const height = base.height * 0.98;
+  const horizontalInset = base.width - width;
+  const verticalInset = base.height - height;
+
+  return {
+    x: base.x + horizontalInset * 0.75,
+    y: base.y + verticalInset * 0.25,
+    width,
+    height,
+  };
+}

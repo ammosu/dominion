@@ -6,6 +6,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   private cardName: string;
   private cardCount: number;
   private cardBg: Phaser.GameObjects.Rectangle;
+  private cardBorder: Phaser.GameObjects.Rectangle;
   private artwork?: CardArtwork;
   private cardText: Phaser.GameObjects.Text;
   private countText: Phaser.GameObjects.Text;
@@ -31,17 +32,24 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       this.add(this.artwork);
     }
 
+    this.cardBorder = scene.add.rectangle(0, 0, 110, 90, 0x000000, 0);
+    this.cardBorder.setStrokeStyle(2, 0x999999);
+    this.add(this.cardBorder);
+
     // Card name (use provided language)
     const displayName = getCardName(cardName, lang);
-    this.cardText = scene.add.text(0, 0, displayName, {
+    this.cardText = scene.add.text(0, this.artwork ? -31 : 0, displayName, {
       fontSize: '12px',
-      color: '#000000',
+      color: this.artwork ? '#fff1d2' : '#000000',
       wordWrap: { width: 95 },
       align: 'center',
       resolution: window.devicePixelRatio || 2,
       fontStyle: 'bold',
     });
     this.cardText.setOrigin(0.5);
+    if (this.artwork) {
+      this.cardText.setShadow(0, 2, '#000000', 4, true, true);
+    }
     this.add(this.cardText);
 
     // Count badge (bottom center)
@@ -84,6 +92,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
   }
 
   private onPointerOver() {
+    this.artwork?.setHovered(true);
     this.scene.tweens.add({
       targets: this,
       scale: 1.15, // All cards scale to same size on hover for clarity
@@ -92,11 +101,12 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       ease: 'Cubic.easeOut',
     });
     // Highlight the card
-    this.cardBg.setStrokeStyle(3, 0xFFD700);
+    this.cardBorder.setStrokeStyle(3, 0xFFD700);
     this.scene.events.emit('supply-card-hovered', this.cardName);
   }
 
   private onPointerOut() {
+    this.artwork?.setHovered(false);
     this.scene.tweens.add({
       targets: this,
       scale: this.baseScale, // Restore to base scale
@@ -105,7 +115,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
       ease: 'Cubic.easeOut',
     });
     // Remove highlight
-    this.cardBg.setStrokeStyle(1, 0x999999);
+    this.cardBorder.setStrokeStyle(2, 0x999999);
     this.scene.events.emit('supply-card-hovered', null);
   }
 
