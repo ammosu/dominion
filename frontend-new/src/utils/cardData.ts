@@ -36,6 +36,7 @@ export const CARD_DATA: Record<string, CardData> = {
     name: { en: 'Estate', zh: '莊園' },
     type: 'victory',
     cost: 2,
+    art: '/assets/cards/estate.webp',
     vp: 1,
     tooltip: { en: 'Worth 1 victory point', zh: '價值 1 分' },
   },

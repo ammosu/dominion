@@ -24,12 +24,19 @@ describe('card artwork metadata', () => {
   it('configures only the accepted pilot assets', () => {
     expect(getConfiguredCardArt().map(({ cardName }) => cardName)).toEqual([
       'Copper',
+      'Estate',
     ]);
   });
 
   it('maps Copper to an existing public WebP', () => {
     const path = getCardArtPath('Copper');
     expect(path).toBe('/assets/cards/copper.webp');
+    expect(publicAssetExists(path!)).toBe(true);
+  });
+
+  it('maps Estate to an existing public WebP', () => {
+    const path = getCardArtPath('Estate');
+    expect(path).toBe('/assets/cards/estate.webp');
     expect(publicAssetExists(path!)).toBe(true);
   });
 });
