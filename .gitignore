@@ -2,3 +2,4 @@
 .playwright-mcp/
 *.png
 .worktrees/
+tools/card-art/raw/
