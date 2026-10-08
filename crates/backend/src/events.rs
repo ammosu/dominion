@@ -1,97 +1,87 @@
 use serde::{Deserialize, Serialize};
+use shared::action::PlayerAction;
+use shared::card::Card;
 use shared::game::GameState;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ClientMessage {
-    PlayCard { card: String },
-    PlayTreasure { card: String },
+    PlayCard { card: Card },
+    PlayTreasure { card: Card },
     PlayAllTreasures,
-    BuyCard { card: String },
+    BuyCard { card: Card },
     EndPhase,
-    PlayCellar { cards: Vec<String> },
-    PlayWorkshop { card: String },
-    PlayMilitia,
-    PlayMine { trash: String, gain: String },
-    PlayRemodel { trash: String, gain: String },
+    /// Answer the pending decision addressed to this player.
+    Resolve { cards: Vec<Card> },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AnimationHint {
-    #[serde(rename = "type")]
-    pub hint_type: String,
-    pub from: String,
-    pub to: String,
-    pub card: String,
+impl From<ClientMessage> for PlayerAction {
+    fn from(message: ClientMessage) -> Self {
+        match message {
+            ClientMessage::PlayCard { card } => PlayerAction::PlayCard { card },
+            ClientMessage::PlayTreasure { card } => PlayerAction::PlayTreasure { card },
+            ClientMessage::PlayAllTreasures => PlayerAction::PlayAllTreasures,
+            ClientMessage::BuyCard { card } => PlayerAction::BuyCard { card },
+            ClientMessage::EndPhase => PlayerAction::EndPhase,
+            ClientMessage::Resolve { cards } => PlayerAction::Resolve { cards },
+        }
+    }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct ServerMessage {
     #[serde(rename = "type")]
-    pub msg_type: String,
+    pub msg_type: &'static str,
     pub payload: ServerPayload,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct ServerPayload {
     pub game_state: GameState,
-    pub animation_hints: Option<AnimationHint>,
+    /// Index of the player this connection controls.
+    pub viewer: usize,
+    /// Why the last client message was rejected, if it was.
+    pub error: Option<String>,
+}
+
+impl ServerMessage {
+    pub fn state_update(game_state: GameState, viewer: usize, error: Option<String>) -> Self {
+        ServerMessage {
+            msg_type: "GameStateUpdate",
+            payload: ServerPayload { game_state, viewer, error },
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use shared::card::recommended_kingdom;
     use shared::game::PlayerInfo;
 
     #[test]
-    fn test_server_message_serialization() {
+    fn server_message_has_flat_type_and_payload() {
         let players = vec![
-            PlayerInfo {
-                name: "Alice".to_string(),
-                is_ai: false,
-            },
-            PlayerInfo {
-                name: "Bot".to_string(),
-                is_ai: true,
-            },
+            PlayerInfo { name: "Alice".to_string(), is_ai: false },
+            PlayerInfo { name: "Bot".to_string(), is_ai: true },
         ];
+        let game_state = GameState::new(players, &recommended_kingdom("first-game").unwrap());
+        let value = serde_json::to_value(ServerMessage::state_update(game_state, 0, None)).unwrap();
 
-        let game_state = GameState::new(players);
-
-        let message = ServerMessage {
-            msg_type: "GameStateUpdate".to_string(),
-            payload: ServerPayload {
-                game_state,
-                animation_hints: None,
-            },
-        };
-
-        let json = serde_json::to_string(&message).unwrap();
-        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-
-        // Verify message structure
-        assert!(value.get("type").is_some(), "type field should exist");
         assert_eq!(value["type"], "GameStateUpdate");
+        assert_eq!(value["payload"]["viewer"], 0);
+        assert!(value["payload"]["error"].is_null());
+        assert!(value["payload"]["game_state"]["supply"].is_object());
+        assert!(value["payload"]["game_state"]["trash"].is_array());
+    }
 
-        assert!(value.get("payload").is_some(), "payload field should exist");
-        let payload = &value["payload"];
-
-        assert!(payload.get("game_state").is_some(), "game_state field should exist");
-        let game_state = &payload["game_state"];
-
-        // Verify supply and trash in game_state
-        assert!(game_state.get("supply").is_some(), "supply field should exist in game_state");
-        assert!(game_state["supply"].is_object(), "supply should be an object");
-
-        assert!(game_state.get("trash").is_some(), "trash field should exist in game_state");
-        assert!(game_state["trash"].is_array(), "trash should be an array");
-
-        let supply = game_state["supply"].as_object().unwrap();
-        assert!(supply.len() > 0, "supply should have entries");
-
-        println!("✓ ServerMessage serialization verified");
-        println!("  - Full WebSocket message structure is correct");
-        println!("  - game_state.supply has {} entries", supply.len());
-        println!("  - game_state.trash is an array");
+    #[test]
+    fn client_messages_parse_flat_objects_and_card_ids() {
+        let msg: ClientMessage = serde_json::from_str(r#"{"type":"BuyCard","card":"CouncilRoom"}"#).unwrap();
+        assert!(matches!(msg, ClientMessage::BuyCard { card: Card::CouncilRoom }));
+        let msg: ClientMessage =
+            serde_json::from_str(r#"{"type":"Resolve","cards":["Estate","Copper"]}"#).unwrap();
+        assert!(matches!(msg, ClientMessage::Resolve { cards } if cards == vec![Card::Estate, Card::Copper]));
+        assert!(serde_json::from_str::<ClientMessage>(r#"{"type":"BuyCard","card":"Woodcutter"}"#).is_err());
     }
 }

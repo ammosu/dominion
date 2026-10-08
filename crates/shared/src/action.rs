@@ -1,664 +1,781 @@
 use serde::{Deserialize, Serialize};
 
-use crate::card::{Card, CardType};
-use crate::game::{GameState, TurnPhase};
+use crate::card::Card;
+use crate::decision::{Decision, Effect, GainDestination, Purpose};
+use crate::game::{GameState, TurnPhase, TurnState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "action")]
 pub enum PlayerAction {
     PlayCard { card: Card },
-    PlayCellar { discards: Vec<Card> },
-    PlayWorkshop { gain: Card },
-    PlayMilitia,
-    PlayMine { trash: Card, gain: Card },
-    PlayRemodel { trash: Card, gain: Card },
     PlayTreasure { card: Card },
     PlayAllTreasures,
     BuyCard { card: Card },
     EndPhase,
+    /// Answer the pending decision with a selection from its options.
+    Resolve { cards: Vec<Card> },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ActionError {
     WrongPhase,
+    NotYourTurn,
     CardNotInHand,
     NotEnoughActions,
     NotEnoughBuys,
     NotEnoughCoins,
     SupplyEmpty,
+    NotInSupply,
     InvalidTarget,
+    InvalidChoice,
+    DecisionPending,
+    NoDecisionPending,
+    TreasureAfterBuy,
     GameOver,
 }
 
 impl std::fmt::Display for ActionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            ActionError::WrongPhase => "Cannot do that in the current phase",
+            ActionError::NotYourTurn => "It is not your turn to act",
+            ActionError::CardNotInHand => "Card is not in your hand",
+            ActionError::NotEnoughActions => "Not enough actions",
+            ActionError::NotEnoughBuys => "Not enough buys",
+            ActionError::NotEnoughCoins => "Not enough coins",
+            ActionError::SupplyEmpty => "Supply pile is empty",
+            ActionError::NotInSupply => "That card is not in the Supply",
+            ActionError::InvalidTarget => "Invalid target for this card",
+            ActionError::InvalidChoice => "Invalid choice",
+            ActionError::DecisionPending => "A choice must be made first",
+            ActionError::NoDecisionPending => "There is nothing to choose",
+            ActionError::TreasureAfterBuy => "Cannot play Treasures after buying",
+            ActionError::GameOver => "The game is over",
+        };
+        f.write_str(message)
+    }
+}
+
+impl std::fmt::Display for Card {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ActionError::WrongPhase => write!(f, "Cannot do that in the current phase"),
-            ActionError::CardNotInHand => write!(f, "Card is not in your hand"),
-            ActionError::NotEnoughActions => write!(f, "Not enough actions"),
-            ActionError::NotEnoughBuys => write!(f, "Not enough buys"),
-            ActionError::NotEnoughCoins => write!(f, "Not enough coins"),
-            ActionError::SupplyEmpty => write!(f, "Supply pile is empty"),
-            ActionError::InvalidTarget => write!(f, "Invalid target for this card"),
-            ActionError::GameOver => write!(f, "The game is over"),
+            Card::CouncilRoom => f.write_str("Council Room"),
+            Card::ThroneRoom => f.write_str("Throne Room"),
+            other => write!(f, "{other:?}"),
         }
     }
 }
 
+/// On success, the log entries the action produced.
 pub type ActionResult = Result<Vec<String>, ActionError>;
 
+fn join_cards(cards: &[Card]) -> String {
+    cards.iter().map(Card::to_string).collect::<Vec<_>>().join(", ")
+}
+
+fn remove_one(cards: &mut Vec<Card>, card: Card) -> bool {
+    match cards.iter().position(|c| *c == card) {
+        Some(pos) => {
+            cards.remove(pos);
+            true
+        }
+        None => false,
+    }
+}
+
 impl GameState {
-    pub fn execute(&mut self, action: PlayerAction) -> ActionResult {
+    /// Applies `action` on behalf of player `actor`. Either the whole action
+    /// (including any effects it triggers) succeeds, or the state is untouched.
+    pub fn execute(&mut self, actor: usize, action: PlayerAction) -> ActionResult {
         if self.game_over {
             return Err(ActionError::GameOver);
         }
 
         let mut next_state = self.clone();
-        let entries = next_state.execute_in_place(action)?;
+        let log_start = next_state.log.len();
+        next_state.execute_in_place(actor, action)?;
+        let entries = next_state.log[log_start..].to_vec();
         *self = next_state;
         Ok(entries)
     }
 
-    fn execute_in_place(&mut self, action: PlayerAction) -> ActionResult {
-        let is_ai = self.players[self.current_player].is_ai;
-        let old_phase = self.phase.clone();
-        let old_player = self.current_player;
+    /// The player who must act next: the owner of a pending decision, or else
+    /// the current player.
+    pub fn acting_player(&self) -> usize {
+        self.pending_decision
+            .as_ref()
+            .map_or(self.current_player, |d| d.player)
+    }
 
-        let entries = match action {
+    fn execute_in_place(&mut self, actor: usize, action: PlayerAction) -> Result<(), ActionError> {
+        if actor != self.acting_player() {
+            return Err(ActionError::NotYourTurn);
+        }
+
+        if let Some(decision) = self.pending_decision.take() {
+            let PlayerAction::Resolve { cards } = action else {
+                return Err(ActionError::DecisionPending);
+            };
+            if !decision.accepts(&cards) {
+                return Err(ActionError::InvalidChoice);
+            }
+            self.apply_answer(decision, cards);
+            self.run_effects();
+            return Ok(());
+        }
+
+        match action {
             PlayerAction::PlayCard { card } => self.play_action_card(card),
-            PlayerAction::PlayCellar { discards } => self.play_cellar(discards),
-            PlayerAction::PlayWorkshop { gain } => self.play_workshop(gain),
-            PlayerAction::PlayMilitia => self.play_militia(),
-            PlayerAction::PlayMine { trash, gain } => self.play_mine(trash, gain),
-            PlayerAction::PlayRemodel { trash, gain } => self.play_remodel(trash, gain),
-            PlayerAction::PlayTreasure { card } => self.play_treasure(card),
+            PlayerAction::PlayTreasure { card } => self.play_treasure_from_hand(card),
             PlayerAction::PlayAllTreasures => self.play_all_treasures(),
             PlayerAction::BuyCard { card } => self.buy_card(card),
-            PlayerAction::EndPhase => self.end_phase(),
-        }?;
-
-        let prefixed_entries: Vec<String> = entries
-            .iter()
-            .map(|entry| {
-                if is_ai {
-                    format!("[AI] {entry}")
-                } else {
-                    entry.clone()
-                }
-            })
-            .collect();
-        self.log.extend(prefixed_entries);
-
-        if matches!(old_phase, TurnPhase::Buy)
-            && matches!(self.phase, TurnPhase::Action)
-            && old_player != self.current_player
-        {
-            let next_name = &self.players[self.current_player].name;
-            self.log.push(format!("{next_name}'s turn"));
+            PlayerAction::EndPhase => {
+                self.end_phase();
+                Ok(())
+            }
+            PlayerAction::Resolve { .. } => Err(ActionError::NoDecisionPending),
         }
-
-        Ok(entries)
     }
 
-    fn require_action_phase(&self) -> Result<(), ActionError> {
-        if !matches!(self.phase, TurnPhase::Action) {
+    // ----- logging & small helpers -------------------------------------
+
+    fn note(&mut self, player: usize, message: impl Into<String>) {
+        let p = &self.players[player];
+        let prefix = if p.is_ai { "[AI] " } else { "" };
+        self.log.push(format!("{prefix}{} {}", p.name, message.into()));
+    }
+
+    fn other_players(&self, player: usize) -> impl Iterator<Item = usize> {
+        let n = self.players.len();
+        (1..n).map(move |offset| (player + offset) % n)
+    }
+
+    fn decide(&mut self, player: usize, source: Card, purpose: Purpose, options: Vec<Card>, min: usize, max: usize) {
+        self.pending_decision = Some(Decision {
+            player,
+            source,
+            purpose,
+            options,
+            min,
+            max,
+        });
+    }
+
+    fn draw(&mut self, player: usize, n: usize) {
+        let drawn = self.players[player].draw_cards(n);
+        if drawn > 0 {
+            self.note(player, format!("draws {drawn} card(s)"));
+        }
+    }
+
+    /// Gains `card` from the Supply. Returns false if the pile is empty.
+    fn gain(&mut self, player: usize, card: Card, destination: GainDestination) -> bool {
+        match self.supply.get_mut(&card) {
+            Some(count) if *count > 0 => *count -= 1,
+            _ => return false,
+        }
+        let p = &mut self.players[player];
+        match destination {
+            GainDestination::Discard => p.discard.push(card),
+            GainDestination::Hand => p.hand.push(card),
+            GainDestination::DeckTop => p.deck.push(card),
+        }
+        let suffix = match destination {
+            GainDestination::Discard => "",
+            GainDestination::Hand => " to hand",
+            GainDestination::DeckTop => " onto deck",
+        };
+        self.note(player, format!("gains {card}{suffix}"));
+        true
+    }
+
+    fn offer_gain(&mut self, player: usize, source: Card, max_cost: u32, treasure_only: bool, destination: GainDestination) {
+        let mut options: Vec<Card> = self
+            .supply
+            .iter()
+            .filter(|(card, &count)| count > 0 && card.cost() <= max_cost && (!treasure_only || card.is_treasure()))
+            .map(|(card, _)| *card)
+            .collect();
+        if options.is_empty() {
+            self.note(player, "has nothing to gain");
+            return;
+        }
+        options.sort_by_key(|card| (card.cost(), *card));
+        self.decide(player, source, Purpose::Gain { max_cost, destination }, options, 1, 1);
+    }
+
+    fn push_attacks(&mut self, card: Card) {
+        let targets: Vec<usize> = self.other_players(self.current_player).collect();
+        // Stack: push in reverse so the next player in turn order goes first.
+        for target in targets.into_iter().rev() {
+            self.effects.push(Effect::Attack { card, target });
+        }
+    }
+
+    // ----- turn actions --------------------------------------------------
+
+    fn play_action_card(&mut self, card: Card) -> Result<(), ActionError> {
+        if self.phase != TurnPhase::Action {
             return Err(ActionError::WrongPhase);
         }
-        if self.players[self.current_player].actions == 0 {
+        if !card.is_action() {
+            return Err(ActionError::InvalidTarget);
+        }
+        let p = self.current_player;
+        if self.players[p].actions == 0 {
             return Err(ActionError::NotEnoughActions);
         }
+        if !self.players[p].remove_from_hand(card) {
+            return Err(ActionError::CardNotInHand);
+        }
+        self.players[p].actions -= 1;
+        self.players[p].in_play.push(card);
+        self.note(p, format!("plays {card}"));
+        self.effects.push(Effect::Play(card));
+        self.run_effects();
         Ok(())
     }
 
-    fn remove_action_from_hand(&mut self, card: Card) -> Result<(), ActionError> {
-        let player = &mut self.players[self.current_player];
-        let pos = player.hand.iter().position(|c| *c == card);
-        let Some(pos) = pos else {
-            return Err(ActionError::CardNotInHand);
-        };
-        player.hand.remove(pos);
-        player.in_play.push(card);  // Put in play area, not discard!
-        player.actions -= 1;
+    fn play_treasure(&mut self, card: Card) -> u32 {
+        let p = self.current_player;
+        let mut coins = card.treasure_value();
+        if card == Card::Silver && !self.turn.silver_played {
+            self.turn.silver_played = true;
+            coins += self.turn.merchants_played;
+        }
+        let player = &mut self.players[p];
+        player.in_play.push(card);
+        player.coins += coins;
+        coins
+    }
+
+    fn check_can_play_treasure(&self) -> Result<(), ActionError> {
+        if self.phase != TurnPhase::Buy {
+            return Err(ActionError::WrongPhase);
+        }
+        if self.turn.has_bought {
+            return Err(ActionError::TreasureAfterBuy);
+        }
         Ok(())
     }
 
-    fn play_action_card(&mut self, card: Card) -> ActionResult {
-        self.require_action_phase()?;
-
-        if card.card_type() != CardType::Action {
+    fn play_treasure_from_hand(&mut self, card: Card) -> Result<(), ActionError> {
+        self.check_can_play_treasure()?;
+        if !card.is_treasure() {
             return Err(ActionError::InvalidTarget);
         }
-
-        // Cards with special parameters have their own endpoints
-        if matches!(
-            card,
-            Card::Cellar | Card::Workshop | Card::Militia | Card::Mine | Card::Remodel
-        ) {
-            return Err(ActionError::InvalidTarget);
+        let p = self.current_player;
+        if !self.players[p].remove_from_hand(card) {
+            return Err(ActionError::CardNotInHand);
         }
-
-        self.remove_action_from_hand(card)?;
-
-        let name = self.players[self.current_player].name.clone();
-        let mut log = Vec::new();
-
-        match card {
-            Card::Smithy => {
-                self.players[self.current_player].draw_cards(3);
-                log.push(format!("{name} played Smithy, drew 3 cards"));
-            }
-            Card::Village => {
-                self.players[self.current_player].actions += 2;
-                self.players[self.current_player].draw_cards(1);
-                log.push(format!("{name} played Village, +2 actions, drew 1 card"));
-            }
-            Card::Market => {
-                self.players[self.current_player].actions += 1;
-                self.players[self.current_player].buys += 1;
-                self.players[self.current_player].coins += 1;
-                self.players[self.current_player].draw_cards(1);
-                log.push(format!(
-                    "{name} played Market, +1 action, +1 buy, +1 coin, drew 1 card"
-                ));
-            }
-            Card::Moat => {
-                self.players[self.current_player].draw_cards(2);
-                log.push(format!("{name} played Moat, drew 2 cards"));
-            }
-            Card::Woodcutter => {
-                self.players[self.current_player].buys += 1;
-                self.players[self.current_player].coins += 2;
-                log.push(format!("{name} played Woodcutter, +1 buy, +2 coins"));
-            }
-            _ => {}
-        }
-
-        Ok(log)
+        let coins = self.play_treasure(card);
+        self.note(p, format!("plays {card} for +{coins} coin(s)"));
+        Ok(())
     }
 
-    fn play_cellar(&mut self, discards: Vec<Card>) -> ActionResult {
-        self.require_action_phase()?;
-
-        let player = &self.players[self.current_player];
-
-        // Verify Cellar is in hand
-        let cellar_pos = player.hand.iter().position(|c| *c == Card::Cellar);
-        let Some(cellar_pos) = cellar_pos else {
-            return Err(ActionError::CardNotInHand);
-        };
-
-        // Verify all discards are in hand (excluding the Cellar itself)
-        let mut hand_copy = player.hand.clone();
-        hand_copy.remove(cellar_pos);
-        for &discard_card in &discards {
-            let pos = hand_copy.iter().position(|c| *c == discard_card);
-            let Some(pos) = pos else {
-                return Err(ActionError::CardNotInHand);
-            };
-            hand_copy.remove(pos);
-        }
-
-        // Cellar gives +1 Action, so net effect on actions is 0
-        let player = &mut self.players[self.current_player];
-        player.hand.remove(cellar_pos);
-        player.discard.push(Card::Cellar);
-        // Cellar: +1 Action (so we don't decrement — spend 1, gain 1)
-
-        // Discard selected cards
-        let num_discarded = discards.len();
-        for discard_card in discards {
-            let pos = player.hand.iter().position(|c| *c == discard_card).unwrap();
-            player.hand.remove(pos);
-            player.discard.push(discard_card);
-        }
-
-        // Draw that many
-        player.draw_cards(num_discarded);
-
-        let name = self.players[self.current_player].name.clone();
-        Ok(vec![format!(
-            "{name} played Cellar, discarded {num_discarded}, drew {num_discarded}"
-        )])
+    fn play_all_treasures(&mut self) -> Result<(), ActionError> {
+        self.check_can_play_treasure()?;
+        let p = self.current_player;
+        let (treasures, rest): (Vec<Card>, Vec<Card>) =
+            self.players[p].hand.iter().copied().partition(Card::is_treasure);
+        self.players[p].hand = rest;
+        let total: u32 = treasures.iter().map(|&card| self.play_treasure(card)).sum();
+        self.note(p, format!("plays all treasures for +{total} coin(s)"));
+        Ok(())
     }
 
-    fn play_workshop(&mut self, gain: Card) -> ActionResult {
-        self.require_action_phase()?;
-
-        // Verify Workshop is in hand
-        let player = &self.players[self.current_player];
-        if !player.hand.contains(&Card::Workshop) {
-            return Err(ActionError::CardNotInHand);
-        }
-
-        if gain.cost() > 4 {
-            return Err(ActionError::InvalidTarget);
-        }
-
-        let supply_count = self.supply.get(&gain).copied().unwrap_or(0);
-        if supply_count == 0 {
-            return Err(ActionError::SupplyEmpty);
-        }
-
-        self.remove_action_from_hand(Card::Workshop)?;
-
-        // Gain the card to discard pile
-        self.players[self.current_player].discard.push(gain);
-        *self.supply.get_mut(&gain).unwrap() -= 1;
-
-        let name = self.players[self.current_player].name.clone();
-        Ok(vec![format!("{name} played Workshop, gained {gain:?}")])
-    }
-
-    fn play_militia(&mut self) -> ActionResult {
-        self.require_action_phase()?;
-
-        let player = &self.players[self.current_player];
-        if !player.hand.contains(&Card::Militia) {
-            return Err(ActionError::CardNotInHand);
-        }
-
-        self.remove_action_from_hand(Card::Militia)?;
-        self.players[self.current_player].coins += 2;
-
-        let name = self.players[self.current_player].name.clone();
-        let mut log = vec![format!("{name} played Militia, +2 coins")];
-
-        // Attack each other player
-        let num_players = self.players.len();
-        for i in 0..num_players {
-            if i == self.current_player {
-                continue;
-            }
-
-            let other = &self.players[i];
-
-            // Check if they have Moat in hand (auto-reveal)
-            if other.hand.contains(&Card::Moat) {
-                log.push(format!("{} reveals Moat, unaffected", other.name));
-                continue;
-            }
-
-            if other.hand.len() <= 3 {
-                continue; // Already at 3 or fewer
-            }
-
-            let other_name = other.name.clone();
-            let discard_count = other.hand.len() - 3;
-
-            // Auto-discard: sort by "discard priority" (lowest value first)
-            let mut indices_with_priority: Vec<(usize, u32)> = self.players[i]
-                .hand
-                .iter()
-                .enumerate()
-                .map(|(idx, card)| {
-                    let priority = match card.card_type() {
-                        CardType::Curse => 0,   // Discard first
-                        CardType::Treasure => card.treasure_value() + 10, // Keep treasures
-                        CardType::Victory => card.victory_points() as u32 + 5, // Mid priority
-                        CardType::Action => card.cost() + 20,  // Keep actions
-                    };
-                    (idx, priority)
-                })
-                .collect();
-
-            // Sort by priority ascending (lowest priority = discard first)
-            indices_with_priority.sort_by_key(|&(_, p)| p);
-
-            // Take the first `discard_count` indices to discard
-            let mut to_discard: Vec<usize> =
-                indices_with_priority[..discard_count].iter().map(|&(i, _)| i).collect();
-            // Sort indices descending so removal doesn't shift earlier indices
-            to_discard.sort_unstable_by(|a, b| b.cmp(a));
-
-            let mut discarded_names = Vec::new();
-            for idx in to_discard {
-                let card = self.players[i].hand.remove(idx);
-                discarded_names.push(format!("{card:?}"));
-                self.players[i].discard.push(card);
-            }
-
-            log.push(format!(
-                "{other_name} discards {}",
-                discarded_names.join(", ")
-            ));
-        }
-
-        Ok(log)
-    }
-
-    fn play_mine(&mut self, trash: Card, gain: Card) -> ActionResult {
-        self.require_action_phase()?;
-
-        let player = &self.players[self.current_player];
-        if !player.hand.contains(&Card::Mine) {
-            return Err(ActionError::CardNotInHand);
-        }
-
-        // Must trash a Treasure from hand
-        if trash.card_type() != CardType::Treasure {
-            return Err(ActionError::InvalidTarget);
-        }
-        if !player.hand.contains(&trash) {
-            return Err(ActionError::CardNotInHand);
-        }
-
-        // Must gain a Treasure costing up to 3 more
-        if gain.card_type() != CardType::Treasure {
-            return Err(ActionError::InvalidTarget);
-        }
-        if gain.cost() > trash.cost() + 3 {
-            return Err(ActionError::InvalidTarget);
-        }
-
-        let supply_count = self.supply.get(&gain).copied().unwrap_or(0);
-        if supply_count == 0 {
-            return Err(ActionError::SupplyEmpty);
-        }
-
-        // Remove Mine from hand (discard it, costs 1 action)
-        self.remove_action_from_hand(Card::Mine)?;
-
-        // Trash the treasure
-        let player = &mut self.players[self.current_player];
-        let pos = player.hand.iter().position(|c| *c == trash).unwrap();
-        player.hand.remove(pos);
-        self.trash.push(trash);
-
-        // Gain the new treasure TO HAND (not discard!)
-        self.players[self.current_player].hand.push(gain);
-        *self.supply.get_mut(&gain).unwrap() -= 1;
-
-        let name = self.players[self.current_player].name.clone();
-        Ok(vec![format!(
-            "{name} played Mine, trashed {trash:?}, gained {gain:?} to hand"
-        )])
-    }
-
-    fn play_remodel(&mut self, trash: Card, gain: Card) -> ActionResult {
-        self.require_action_phase()?;
-
-        let player = &self.players[self.current_player];
-        if !player.hand.contains(&Card::Remodel) {
-            return Err(ActionError::CardNotInHand);
-        }
-        let matching_cards = player.hand.iter().filter(|&&card| card == trash).count();
-        let required_matches = if trash == Card::Remodel { 2 } else { 1 };
-        if matching_cards < required_matches {
-            return Err(ActionError::CardNotInHand);
-        }
-
-        // Gain card must cost up to 2 more than trashed card
-        if gain.cost() > trash.cost() + 2 {
-            return Err(ActionError::InvalidTarget);
-        }
-
-        let supply_count = self.supply.get(&gain).copied().unwrap_or(0);
-        if supply_count == 0 {
-            return Err(ActionError::SupplyEmpty);
-        }
-
-        // Remove Remodel from hand
-        self.remove_action_from_hand(Card::Remodel)?;
-
-        // Trash the chosen card from hand
-        let player = &mut self.players[self.current_player];
-        let pos = player.hand.iter().position(|c| *c == trash);
-        let Some(pos) = pos else {
-            return Err(ActionError::CardNotInHand);
-        };
-        player.hand.remove(pos);
-        self.trash.push(trash);
-
-        // Gain the new card to discard
-        self.players[self.current_player].discard.push(gain);
-        *self.supply.get_mut(&gain).unwrap() -= 1;
-
-        let name = self.players[self.current_player].name.clone();
-        Ok(vec![format!(
-            "{name} played Remodel, trashed {trash:?}, gained {gain:?}"
-        )])
-    }
-
-    fn play_treasure(&mut self, card: Card) -> ActionResult {
-        if !matches!(self.phase, TurnPhase::Buy) {
+    fn buy_card(&mut self, card: Card) -> Result<(), ActionError> {
+        if self.phase != TurnPhase::Buy {
             return Err(ActionError::WrongPhase);
         }
-
-        if card.card_type() != CardType::Treasure {
-            return Err(ActionError::InvalidTarget);
-        }
-
-        let player = &mut self.players[self.current_player];
-        let pos = player.hand.iter().position(|c| *c == card);
-        let Some(pos) = pos else {
-            return Err(ActionError::CardNotInHand);
+        let p = self.current_player;
+        let Some(&count) = self.supply.get(&card) else {
+            return Err(ActionError::NotInSupply);
         };
-
-        player.hand.remove(pos);
-        player.in_play.push(card);  // Put in play area, not discard!
-        player.coins += card.treasure_value();
-
-        let name = player.name.clone();
-        Ok(vec![format!(
-            "{name} played {card:?} for +{} coin(s)",
-            card.treasure_value()
-        )])
-    }
-
-    fn play_all_treasures(&mut self) -> ActionResult {
-        if !matches!(self.phase, TurnPhase::Buy) {
-            return Err(ActionError::WrongPhase);
-        }
-
-        let player = &mut self.players[self.current_player];
-        let treasures: Vec<Card> = player
-            .hand
-            .iter()
-            .filter(|c| c.card_type() == CardType::Treasure)
-            .copied()
-            .collect();
-
-        let mut total_coins = 0u32;
-        for card in &treasures {
-            total_coins += card.treasure_value();
-            player.in_play.push(*card);  // Put in play area, not discard!
-        }
-        player.hand.retain(|c| c.card_type() != CardType::Treasure);
-        player.coins += total_coins;
-
-        let name = player.name.clone();
-        Ok(vec![format!(
-            "{name} played all treasures for +{total_coins} coin(s)"
-        )])
-    }
-
-    fn buy_card(&mut self, card: Card) -> ActionResult {
-        if !matches!(self.phase, TurnPhase::Buy) {
-            return Err(ActionError::WrongPhase);
-        }
-
-        let player = &self.players[self.current_player];
-        if player.buys == 0 {
+        if self.players[p].buys == 0 {
             return Err(ActionError::NotEnoughBuys);
         }
-        if player.coins < card.cost() {
+        if self.players[p].coins < card.cost() {
             return Err(ActionError::NotEnoughCoins);
         }
-
-        let supply_count = self.supply.get(&card).copied().unwrap_or(0);
-        if supply_count == 0 {
+        if count == 0 {
             return Err(ActionError::SupplyEmpty);
         }
 
-        let player = &mut self.players[self.current_player];
-        player.coins -= card.cost();
-        player.buys -= 1;
-        player.discard.push(card);
-        *self.supply.get_mut(&card).unwrap() -= 1;
-
-        let name = player.name.clone();
-        let mut log = vec![format!("{name} bought {card:?}")];
-
-        self.check_game_over(&mut log);
-
-        Ok(log)
+        self.players[p].coins -= card.cost();
+        self.players[p].buys -= 1;
+        self.turn.has_bought = true;
+        self.note(p, format!("buys {card}"));
+        self.gain(p, card, GainDestination::Discard);
+        Ok(())
     }
 
-    fn end_phase(&mut self) -> ActionResult {
-        let name = self.players[self.current_player].name.clone();
-        let mut log = Vec::new();
-
+    fn end_phase(&mut self) {
+        let p = self.current_player;
         match self.phase {
             TurnPhase::Action => {
                 self.phase = TurnPhase::Buy;
-                log.push(format!("{name} ended Action phase"));
+                self.note(p, "ends Action phase");
             }
-            TurnPhase::Buy => {
-                let player = &mut self.players[self.current_player];
-                // Move cards from in_play to discard (Cleanup phase)
-                player.discard.append(&mut player.in_play);
-                player.discard_hand();
-                player.draw_cards(5);
-                player.actions = 1;
-                player.buys = 1;
-                player.coins = 0;
-
-                log.push(format!("{name} ended turn"));
-
-                self.current_player = (self.current_player + 1) % self.players.len();
-                self.phase = TurnPhase::Action;
-
-                // Note: The "{name}'s turn" message is now added in execute()
-                // after AI prefix handling, so it doesn't get the [AI] prefix
-            }
-            TurnPhase::Cleanup => {
-                self.phase = TurnPhase::Action;
-            }
+            TurnPhase::Buy => self.cleanup(),
         }
-
-        Ok(log)
     }
 
-    fn check_game_over(&mut self, log: &mut Vec<String>) {
-        let provinces_gone = self.supply.get(&Card::Province).copied().unwrap_or(0) == 0;
-        let empty_piles = self.supply.values().filter(|&&count| count == 0).count();
+    /// Clean-up: discard everything, draw 5, then check for game end before
+    /// passing the turn (the game only ends at the end of a turn).
+    fn cleanup(&mut self) {
+        let p = self.current_player;
+        let player = &mut self.players[p];
+        let mut in_play = std::mem::take(&mut player.in_play);
+        player.discard.append(&mut in_play);
+        player.discard_hand();
+        player.draw_cards(5);
+        player.actions = 1;
+        player.buys = 1;
+        player.coins = 0;
+        player.turns_taken += 1;
+        self.turn = TurnState::default();
+        self.note(p, "ends turn");
 
-        if provinces_gone || empty_piles >= 3 {
-            self.game_over = true;
-            log.push("Game over!".to_string());
+        if self.is_game_over() {
+            self.finish_game();
+            return;
+        }
 
-            let scores = self.calculate_scores();
-            for (name, score) in &scores {
-                log.push(format!("{}: {} points", name, score));
+        self.current_player = (p + 1) % self.players.len();
+        self.phase = TurnPhase::Action;
+        let next_name = self.players[self.current_player].name.clone();
+        self.log.push(format!("{next_name}'s turn"));
+    }
+
+    fn finish_game(&mut self) {
+        self.game_over = true;
+        self.log.push("Game over!".to_string());
+        let scores = self.calculate_scores();
+        for (name, score) in &scores {
+            self.log.push(format!("{name}: {score} points"));
+        }
+        self.scores = Some(scores);
+        self.winners = self.determine_winners();
+        self.log.push(format!("Winner: {}", self.winners.join(", ")));
+    }
+
+    // ----- effect engine -------------------------------------------------
+
+    fn run_effects(&mut self) {
+        while self.pending_decision.is_none() {
+            let Some(effect) = self.effects.pop() else {
+                break;
+            };
+            match effect {
+                Effect::Play(card) => self.resolve_card(card),
+                Effect::Attack { card, target } => self.resolve_attack(card, target),
+                Effect::LibraryDraw => self.library_draw(),
+                Effect::LibraryDiscardSetAside => {
+                    let p = self.current_player;
+                    let player = &mut self.players[p];
+                    let mut set_aside = std::mem::take(&mut player.set_aside);
+                    player.discard.append(&mut set_aside);
+                }
+                Effect::ArtisanTopdeck => {
+                    let p = self.current_player;
+                    let hand = self.players[p].hand.clone();
+                    if !hand.is_empty() {
+                        self.decide(p, Card::Artisan, Purpose::TopdeckFromHand, hand, 1, 1);
+                    }
+                }
             }
-            self.scores = Some(scores);
+        }
+    }
+
+    /// Follows the instructions on `card` for the current player.
+    fn resolve_card(&mut self, card: Card) {
+        let p = self.current_player;
+        match card {
+            Card::Artisan => {
+                self.effects.push(Effect::ArtisanTopdeck);
+                self.offer_gain(p, card, 5, false, GainDestination::Hand);
+            }
+            Card::Bandit => {
+                self.gain(p, Card::Gold, GainDestination::Discard);
+                self.push_attacks(card);
+            }
+            Card::Bureaucrat => {
+                self.gain(p, Card::Silver, GainDestination::DeckTop);
+                self.push_attacks(card);
+            }
+            Card::Cellar => {
+                self.players[p].actions += 1;
+                let hand = self.players[p].hand.clone();
+                if !hand.is_empty() {
+                    let max = hand.len();
+                    self.decide(p, card, Purpose::DiscardToDraw, hand, 0, max);
+                }
+            }
+            Card::Chapel => {
+                let hand = self.players[p].hand.clone();
+                if !hand.is_empty() {
+                    let max = hand.len().min(4);
+                    self.decide(p, card, Purpose::TrashFromHand, hand, 0, max);
+                }
+            }
+            Card::CouncilRoom => {
+                self.draw(p, 4);
+                self.players[p].buys += 1;
+                let others: Vec<usize> = self.other_players(p).collect();
+                for other in others {
+                    self.draw(other, 1);
+                }
+            }
+            Card::Festival => {
+                let player = &mut self.players[p];
+                player.actions += 2;
+                player.buys += 1;
+                player.coins += 2;
+            }
+            Card::Harbinger => {
+                self.draw(p, 1);
+                self.players[p].actions += 1;
+                let discard = self.players[p].discard.clone();
+                if !discard.is_empty() {
+                    self.decide(p, card, Purpose::TopdeckFromDiscard, discard, 0, 1);
+                }
+            }
+            Card::Laboratory => {
+                self.draw(p, 2);
+                self.players[p].actions += 1;
+            }
+            Card::Library => {
+                // Stack order: draw first, then discard what was set aside.
+                self.effects.push(Effect::LibraryDiscardSetAside);
+                self.effects.push(Effect::LibraryDraw);
+            }
+            Card::Market => {
+                self.draw(p, 1);
+                let player = &mut self.players[p];
+                player.actions += 1;
+                player.buys += 1;
+                player.coins += 1;
+            }
+            Card::Merchant => {
+                self.draw(p, 1);
+                self.players[p].actions += 1;
+                self.turn.merchants_played += 1;
+            }
+            Card::Militia => {
+                self.players[p].coins += 2;
+                self.push_attacks(card);
+            }
+            Card::Mine => {
+                let treasures: Vec<Card> =
+                    self.players[p].hand.iter().copied().filter(Card::is_treasure).collect();
+                if !treasures.is_empty() {
+                    self.decide(p, card, Purpose::TrashTreasureToMine, treasures, 0, 1);
+                }
+            }
+            Card::Moat => self.draw(p, 2),
+            Card::Moneylender => {
+                if self.players[p].hand.contains(&Card::Copper) {
+                    self.decide(p, card, Purpose::TrashCopper, vec![Card::Copper], 0, 1);
+                }
+            }
+            Card::Poacher => {
+                self.draw(p, 1);
+                let player = &mut self.players[p];
+                player.actions += 1;
+                player.coins += 1;
+                let to_discard = self.empty_piles().min(self.players[p].hand.len());
+                if to_discard > 0 {
+                    let hand = self.players[p].hand.clone();
+                    self.decide(p, card, Purpose::DiscardPerEmptyPile, hand, to_discard, to_discard);
+                }
+            }
+            Card::Remodel => {
+                let hand = self.players[p].hand.clone();
+                if !hand.is_empty() {
+                    self.decide(p, card, Purpose::TrashToRemodel, hand, 1, 1);
+                }
+            }
+            Card::Sentry => {
+                self.draw(p, 1);
+                self.players[p].actions += 1;
+                let looked = self.players[p].reveal_top(2);
+                if !looked.is_empty() {
+                    let max = looked.len();
+                    self.decide(p, card, Purpose::SentryTrash, looked, 0, max);
+                }
+            }
+            Card::Smithy => self.draw(p, 3),
+            Card::ThroneRoom => {
+                let actions: Vec<Card> =
+                    self.players[p].hand.iter().copied().filter(Card::is_action).collect();
+                if !actions.is_empty() {
+                    self.decide(p, card, Purpose::PlayTwice, actions, 0, 1);
+                }
+            }
+            Card::Vassal => {
+                self.players[p].coins += 2;
+                if let Some(top) = self.players[p].take_top_card() {
+                    self.players[p].discard.push(top);
+                    self.note(p, format!("discards {top}"));
+                    if top.is_action() {
+                        self.decide(p, card, Purpose::PlayDiscarded, vec![top], 0, 1);
+                    }
+                }
+            }
+            Card::Village => {
+                self.draw(p, 1);
+                self.players[p].actions += 2;
+            }
+            Card::Witch => {
+                self.draw(p, 2);
+                self.push_attacks(card);
+            }
+            Card::Workshop => self.offer_gain(p, card, 4, false, GainDestination::Discard),
+            // Non-Action cards have no on-play instructions.
+            _ => {}
+        }
+    }
+
+    fn resolve_attack(&mut self, card: Card, target: usize) {
+        // Moat is always revealed when held: it has no downside in this set.
+        if self.players[target].hand.contains(&Card::Moat) {
+            self.note(target, "reveals Moat and is unaffected");
+            return;
+        }
+
+        match card {
+            Card::Militia => {
+                let hand = self.players[target].hand.clone();
+                if hand.len() > 3 {
+                    let count = hand.len() - 3;
+                    self.decide(target, card, Purpose::DiscardDownTo { keep: 3 }, hand, count, count);
+                }
+            }
+            Card::Witch => {
+                if !self.gain(target, Card::Curse, GainDestination::Discard) {
+                    self.note(target, "gains no Curse (pile empty)");
+                }
+            }
+            Card::Bureaucrat => {
+                let mut victories: Vec<Card> =
+                    self.players[target].hand.iter().copied().filter(Card::is_victory).collect();
+                victories.sort();
+                victories.dedup();
+                match victories.as_slice() {
+                    [] => {
+                        let hand = join_cards(&self.players[target].hand);
+                        self.note(target, format!("reveals a hand with no Victory cards: {hand}"));
+                    }
+                    [only] => self.topdeck_from_hand(target, *only),
+                    _ => self.decide(target, card, Purpose::TopdeckVictory, victories, 1, 1),
+                }
+            }
+            Card::Bandit => {
+                let revealed = self.players[target].reveal_top(2);
+                if revealed.is_empty() {
+                    return;
+                }
+                self.note(target, format!("reveals {}", join_cards(&revealed)));
+                let mut candidates: Vec<Card> = revealed
+                    .iter()
+                    .copied()
+                    .filter(|c| c.is_treasure() && *c != Card::Copper)
+                    .collect();
+                candidates.sort();
+                candidates.dedup();
+                match candidates.as_slice() {
+                    [] => self.trash_revealed(target, revealed, None),
+                    [only] => self.trash_revealed(target, revealed, Some(*only)),
+                    _ => self.decide(
+                        target,
+                        card,
+                        Purpose::TrashRevealedTreasure { revealed },
+                        candidates,
+                        1,
+                        1,
+                    ),
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn topdeck_from_hand(&mut self, player: usize, card: Card) {
+        if self.players[player].remove_from_hand(card) {
+            self.players[player].deck.push(card);
+            self.note(player, format!("puts {card} onto their deck"));
+        }
+    }
+
+    fn trash_revealed(&mut self, player: usize, mut revealed: Vec<Card>, trashed: Option<Card>) {
+        if let Some(card) = trashed {
+            if remove_one(&mut revealed, card) {
+                self.trash.push(card);
+                self.note(player, format!("trashes {card}"));
+            }
+        }
+        if !revealed.is_empty() {
+            self.note(player, format!("discards {}", join_cards(&revealed)));
+            self.players[player].discard.append(&mut revealed);
+        }
+    }
+
+    fn library_draw(&mut self) {
+        let p = self.current_player;
+        while self.players[p].hand.len() < 7 {
+            let Some(card) = self.players[p].draw_one() else {
+                break;
+            };
+            if card.is_action() {
+                self.effects.push(Effect::LibraryDraw);
+                self.decide(p, Card::Library, Purpose::SetAside, vec![card], 0, 1);
+                return;
+            }
+        }
+        self.note(p, format!("draws up to {} cards", self.players[p].hand.len()));
+    }
+
+    /// Applies a validated answer to `decision`.
+    fn apply_answer(&mut self, decision: Decision, chosen: Vec<Card>) {
+        let p = decision.player;
+        let source = decision.source;
+        match decision.purpose {
+            Purpose::DiscardToDraw => {
+                self.discard_from_hand(p, &chosen);
+                self.draw(p, chosen.len());
+            }
+            Purpose::DiscardDownTo { .. } | Purpose::DiscardPerEmptyPile => {
+                self.discard_from_hand(p, &chosen);
+            }
+            Purpose::TrashFromHand => self.trash_from_hand(p, &chosen),
+            Purpose::TopdeckFromDiscard => {
+                if let Some(&card) = chosen.first() {
+                    remove_one(&mut self.players[p].discard, card);
+                    self.players[p].deck.push(card);
+                    self.note(p, format!("puts {card} from discard onto their deck"));
+                }
+            }
+            Purpose::PlayDiscarded => {
+                if let Some(&card) = chosen.first() {
+                    let discard = &mut self.players[p].discard;
+                    if let Some(pos) = discard.iter().rposition(|c| *c == card) {
+                        discard.remove(pos);
+                        self.players[p].in_play.push(card);
+                        self.note(p, format!("plays {card}"));
+                        self.effects.push(Effect::Play(card));
+                    }
+                }
+            }
+            Purpose::Gain { destination, .. } => {
+                if let Some(&card) = chosen.first() {
+                    self.gain(p, card, destination);
+                }
+            }
+            Purpose::TopdeckVictory | Purpose::TopdeckFromHand => {
+                if let Some(&card) = chosen.first() {
+                    self.topdeck_from_hand(p, card);
+                }
+            }
+            Purpose::TrashCopper => {
+                if !chosen.is_empty() {
+                    self.trash_from_hand(p, &chosen);
+                    self.players[p].coins += 3;
+                }
+            }
+            Purpose::TrashToRemodel => {
+                if let Some(&card) = chosen.first() {
+                    self.trash_from_hand(p, &chosen);
+                    self.offer_gain(p, source, card.cost() + 2, false, GainDestination::Discard);
+                }
+            }
+            Purpose::TrashTreasureToMine => {
+                if let Some(&card) = chosen.first() {
+                    self.trash_from_hand(p, &chosen);
+                    self.offer_gain(p, source, card.cost() + 3, true, GainDestination::Hand);
+                }
+            }
+            Purpose::PlayTwice => {
+                if let Some(&card) = chosen.first() {
+                    self.players[p].remove_from_hand(card);
+                    self.players[p].in_play.push(card);
+                    self.note(p, format!("plays {card} twice"));
+                    self.effects.push(Effect::Play(card));
+                    self.effects.push(Effect::Play(card));
+                }
+            }
+            Purpose::TrashRevealedTreasure { revealed } => {
+                self.trash_revealed(p, revealed, chosen.first().copied());
+            }
+            Purpose::SetAside => {
+                if let Some(&card) = chosen.first() {
+                    self.players[p].remove_from_hand(card);
+                    self.players[p].set_aside.push(card);
+                    self.note(p, format!("sets aside {card}"));
+                }
+            }
+            Purpose::SentryTrash => {
+                let mut remaining = decision.options;
+                for &card in &chosen {
+                    remove_one(&mut remaining, card);
+                    self.trash.push(card);
+                }
+                if !chosen.is_empty() {
+                    self.note(p, format!("trashes {}", join_cards(&chosen)));
+                }
+                if !remaining.is_empty() {
+                    let max = remaining.len();
+                    self.decide(p, source, Purpose::SentryDiscard, remaining, 0, max);
+                }
+            }
+            Purpose::SentryDiscard => {
+                let mut remaining = decision.options;
+                for &card in &chosen {
+                    remove_one(&mut remaining, card);
+                    self.players[p].discard.push(card);
+                }
+                if !chosen.is_empty() {
+                    self.note(p, format!("discards {}", join_cards(&chosen)));
+                }
+                match remaining.as_slice() {
+                    [a, b] if a != b => {
+                        self.decide(p, source, Purpose::SentryTopCard, remaining, 1, 1);
+                    }
+                    _ => self.players[p].deck.extend(remaining),
+                }
+            }
+            Purpose::SentryTopCard => {
+                let top = chosen[0];
+                let mut rest = decision.options;
+                remove_one(&mut rest, top);
+                self.players[p].deck.extend(rest);
+                self.players[p].deck.push(top);
+            }
+        }
+    }
+
+    fn discard_from_hand(&mut self, player: usize, cards: &[Card]) {
+        for &card in cards {
+            if self.players[player].remove_from_hand(card) {
+                self.players[player].discard.push(card);
+            }
+        }
+        if !cards.is_empty() {
+            self.note(player, format!("discards {}", join_cards(cards)));
+        }
+    }
+
+    fn trash_from_hand(&mut self, player: usize, cards: &[Card]) {
+        for &card in cards {
+            if self.players[player].remove_from_hand(card) {
+                self.trash.push(card);
+            }
+        }
+        if !cards.is_empty() {
+            self.note(player, format!("trashes {}", join_cards(cards)));
         }
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::game::PlayerInfo;
-
-    fn game_with_hand(hand: Vec<Card>) -> GameState {
-        let mut game = GameState::new(vec![
-            PlayerInfo {
-                name: "Alice".to_string(),
-                is_ai: false,
-            },
-            PlayerInfo {
-                name: "Bot".to_string(),
-                is_ai: true,
-            },
-        ]);
-
-        let player = &mut game.players[0];
-        player.hand = hand;
-        player.deck.clear();
-        player.discard.clear();
-        player.in_play.clear();
-        player.actions = 1;
-        player.buys = 1;
-        player.coins = 0;
-
-        game.current_player = 0;
-        game.phase = TurnPhase::Action;
-        game.trash.clear();
-        game.game_over = false;
-        game.log.clear();
-        game.scores = None;
-        game
-    }
-
-    #[test]
-    fn valid_remodel_moves_all_cards_and_consumes_one_action() {
-        let mut game = game_with_hand(vec![Card::Remodel, Card::Estate]);
-        let silver_before = game.supply[&Card::Silver];
-
-        let result = game.execute(PlayerAction::PlayRemodel {
-            trash: Card::Estate,
-            gain: Card::Silver,
-        });
-
-        assert!(result.is_ok());
-        assert!(game.players[0].hand.is_empty());
-        assert_eq!(game.players[0].in_play, vec![Card::Remodel]);
-        assert_eq!(game.players[0].discard, vec![Card::Silver]);
-        assert_eq!(game.trash, vec![Card::Estate]);
-        assert_eq!(game.players[0].actions, 0);
-        assert_eq!(game.supply[&Card::Silver], silver_before - 1);
-        assert_eq!(game.log.len(), 1);
-    }
-
-    #[test]
-    fn two_remodels_allow_playing_one_and_trashing_the_other() {
-        let mut game = game_with_hand(vec![Card::Remodel, Card::Remodel]);
-
-        let result = game.execute(PlayerAction::PlayRemodel {
-            trash: Card::Remodel,
-            gain: Card::Silver,
-        });
-
-        assert!(result.is_ok());
-        assert!(game.players[0].hand.is_empty());
-        assert_eq!(game.players[0].in_play, vec![Card::Remodel]);
-        assert_eq!(game.trash, vec![Card::Remodel]);
-        assert_eq!(game.players[0].discard, vec![Card::Silver]);
-        assert_eq!(game.players[0].actions, 0);
-    }
-
-    #[test]
-    fn failed_remodel_is_atomic_when_target_is_missing() {
-        let mut game = game_with_hand(vec![Card::Remodel, Card::Copper]);
-        let before = serde_json::to_value(&game).expect("serialize state before action");
-
-        let result = game.execute(PlayerAction::PlayRemodel {
-            trash: Card::Estate,
-            gain: Card::Silver,
-        });
-
-        assert!(matches!(result, Err(ActionError::CardNotInHand)));
-        assert_eq!(
-            serde_json::to_value(&game).expect("serialize state after action"),
-            before
-        );
-    }
-
-    #[test]
-    fn single_remodel_cannot_trash_itself_and_state_is_unchanged() {
-        let mut game = game_with_hand(vec![Card::Remodel]);
-        let before = serde_json::to_value(&game).expect("serialize state before action");
-
-        let result = game.execute(PlayerAction::PlayRemodel {
-            trash: Card::Remodel,
-            gain: Card::Silver,
-        });
-
-        assert!(matches!(result, Err(ActionError::CardNotInHand)));
-        assert_eq!(
-            serde_json::to_value(&game).expect("serialize state after action"),
-            before
-        );
-    }
-}
+mod tests;

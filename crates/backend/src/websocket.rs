@@ -1,216 +1,130 @@
 use axum::{
     extract::{
         ws::{Message, WebSocket},
-        State, WebSocketUpgrade, Query,
+        Query, WebSocketUpgrade,
     },
     response::Response,
 };
-use serde::Deserialize;
 use futures_util::{SinkExt, StreamExt};
+use rand::seq::IndexedRandom;
+use serde::Deserialize;
 
-use crate::ai::{simple::SimpleAi, medium::MediumAi};
-use crate::events::{ClientMessage, ServerMessage, ServerPayload};
-use crate::Games;
-use shared::card::Card;
+use crate::ai::{medium::MediumAi, run_ai_turns, simple::SimpleAi, AiPlayer};
+use crate::events::{ClientMessage, ServerMessage};
+use shared::card::{recommended_kingdom, Card, KINGDOM_CARDS};
+use shared::game::{GameState, PlayerInfo};
+
+const HUMAN: usize = 0;
 
 #[derive(Deserialize)]
 pub struct WsQuery {
     #[serde(default = "default_difficulty")]
     difficulty: String,
+    /// A recommended set id, "random", or a comma-separated list of 10 card ids.
+    #[serde(default)]
+    kingdom: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
 }
 
 fn default_difficulty() -> String {
     "medium".to_string()
 }
 
-pub async fn websocket_handler(
-    ws: WebSocketUpgrade,
-    Query(query): Query<WsQuery>,
-    State(games): State<Games>,
-) -> Response {
-    ws.on_upgrade(move |socket| handle_socket(socket, games, query.difficulty))
+pub async fn websocket_handler(ws: WebSocketUpgrade, Query(query): Query<WsQuery>) -> Response {
+    ws.on_upgrade(move |socket| handle_socket(socket, query))
 }
 
-async fn handle_socket(socket: WebSocket, _games: Games, difficulty: String) {
-    println!("WebSocket connected with AI difficulty: {}", difficulty);
-    let (mut sender, mut receiver) = socket.split();
-    let _game_id = uuid::Uuid::new_v4().to_string();
-
-    // Create test game
-    let mut test_game = {
-        let players = vec![
-            shared::game::PlayerInfo {
-                name: "Alice".to_string(),
-                is_ai: false,
-            },
-            shared::game::PlayerInfo {
-                name: "Bot".to_string(),
-                is_ai: true,
-            },
-        ];
-        shared::game::GameState::new(players)
-    };
-
-    // Send initial game state
-    let init_msg = ServerMessage {
-        msg_type: "GameStateUpdate".to_string(),
-        payload: ServerPayload {
-            game_state: test_game.clone(),
-            animation_hints: None,
-        },
-    };
-    if let Ok(text) = serde_json::to_string(&init_msg) {
-        let _ = sender.send(Message::Text(text.into())).await;
+pub fn parse_kingdom(spec: Option<&str>) -> Vec<Card> {
+    let spec = spec.unwrap_or("first-game");
+    if let Some(cards) = recommended_kingdom(spec) {
+        return cards.to_vec();
     }
+    if spec == "random" {
+        return KINGDOM_CARDS.choose_multiple(&mut rand::rng(), 10).copied().collect();
+    }
+    let mut cards: Vec<Card> = spec
+        .split(',')
+        .filter_map(|id| serde_json::from_value(serde_json::Value::String(id.trim().to_string())).ok())
+        .filter(Card::is_kingdom)
+        .collect();
+    cards.sort();
+    cards.dedup();
+    if cards.len() == 10 {
+        cards
+    } else {
+        recommended_kingdom("first-game").unwrap().to_vec()
+    }
+}
 
-    // Process messages
-    while let Some(Ok(msg)) = receiver.next().await {
-        if let Message::Text(text) = msg {
-            if let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text) {
-                println!("Received: {:?}", client_msg);
+async fn handle_socket(socket: WebSocket, query: WsQuery) {
+    let (mut sender, mut receiver) = socket.split();
+    let ai: Box<dyn AiPlayer> = if query.difficulty == "simple" {
+        Box::new(SimpleAi::new())
+    } else {
+        Box::new(MediumAi::new())
+    };
 
-                // Process action
-                let action_result = match client_msg {
-                    ClientMessage::PlayCard { card } => {
-                        if let Ok(card_enum) = parse_card(&card) {
-                            test_game.execute(shared::action::PlayerAction::PlayCard { card: card_enum })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::PlayTreasure { card } => {
-                        if let Ok(card_enum) = parse_card(&card) {
-                            test_game.execute(shared::action::PlayerAction::PlayTreasure { card: card_enum })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::BuyCard { card } => {
-                        if let Ok(card_enum) = parse_card(&card) {
-                            test_game.execute(shared::action::PlayerAction::BuyCard { card: card_enum })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::EndPhase => {
-                        test_game.execute(shared::action::PlayerAction::EndPhase)
-                    }
-                    ClientMessage::PlayAllTreasures => {
-                        test_game.execute(shared::action::PlayerAction::PlayAllTreasures)
-                    }
-                    ClientMessage::PlayCellar { cards } => {
-                        let card_enums: Result<Vec<Card>, _> = cards.iter().map(|s| parse_card(s)).collect();
-                        if let Ok(discards) = card_enums {
-                            test_game.execute(shared::action::PlayerAction::PlayCellar { discards })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::PlayWorkshop { card } => {
-                        if let Ok(card_enum) = parse_card(&card) {
-                            test_game.execute(shared::action::PlayerAction::PlayWorkshop { gain: card_enum })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::PlayMilitia => {
-                        test_game.execute(shared::action::PlayerAction::PlayMilitia)
-                    }
-                    ClientMessage::PlayMine { trash, gain } => {
-                        let trash_card = parse_card(&trash);
-                        let gain_card = parse_card(&gain);
-                        if let (Ok(t), Ok(g)) = (trash_card, gain_card) {
-                            test_game.execute(shared::action::PlayerAction::PlayMine { trash: t, gain: g })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                    ClientMessage::PlayRemodel { trash, gain } => {
-                        let trash_card = parse_card(&trash);
-                        let gain_card = parse_card(&gain);
-                        if let (Ok(t), Ok(g)) = (trash_card, gain_card) {
-                            test_game.execute(shared::action::PlayerAction::PlayRemodel { trash: t, gain: g })
-                        } else {
-                            Err(shared::action::ActionError::InvalidTarget)
-                        }
-                    }
-                };
+    let name = query
+        .name
+        .map(|n| n.trim().chars().take(20).collect::<String>())
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(|| "Alice".to_string());
+    let players = vec![
+        PlayerInfo { name, is_ai: false },
+        PlayerInfo { name: "Bot".to_string(), is_ai: true },
+    ];
+    let kingdom = parse_kingdom(query.kingdom.as_deref());
+    println!("WebSocket connected: AI {}, kingdom {kingdom:?}", ai.name());
+    let mut game = GameState::new(players, &kingdom);
 
-                if let Err(e) = action_result {
-                    eprintln!("Action error: {}", e);
-                }
+    let mut error = None;
+    loop {
+        // Let the AI act (its turn, or answering our attacks) until the human must act.
+        run_ai_turns(&mut game, ai.as_ref());
 
-                // Run AI turn if current player is AI
-                // Select AI based on difficulty parameter
-                let medium_ai = MediumAi::new();
-                let simple_ai = SimpleAi::new();
+        let message = ServerMessage::state_update(game.clone(), HUMAN, error.take());
+        let Ok(text) = serde_json::to_string(&message) else {
+            break;
+        };
+        if sender.send(Message::Text(text.into())).await.is_err() {
+            break;
+        }
 
-                let ai: &dyn crate::ai::AiPlayer = if difficulty == "simple" {
-                    &simple_ai
-                } else {
-                    &medium_ai  // Default to medium
-                };
-
-                let max_ai_actions = 20;
-                let mut ai_actions = 0;
-
-                while !test_game.game_over && ai_actions < max_ai_actions {
-                    let current = test_game.current_player;
-                    if !test_game.players[current].is_ai {
-                        break;
-                    }
-
-                    if let Some(action) = ai.decide_action(&test_game, current) {
-                        println!("AI action: {:?}", action);
-                        if let Err(e) = test_game.execute(action) {
-                            eprintln!("AI action error: {}", e);
-                            // Force end phase on error to avoid infinite loop
-                            let _ = test_game.execute(shared::action::PlayerAction::EndPhase);
-                        }
-                        ai_actions += 1;
-                    } else {
-                        // AI has no action, end phase
-                        let _ = test_game.execute(shared::action::PlayerAction::EndPhase);
-                        ai_actions += 1;
-                    }
-                }
-
-                // Send updated state (after AI has finished)
-                let response = ServerMessage {
-                    msg_type: "GameStateUpdate".to_string(),
-                    payload: ServerPayload {
-                        game_state: test_game.clone(),
-                        animation_hints: None,
-                    },
-                };
-
-                if let Ok(response_text) = serde_json::to_string(&response) {
-                    let _ = sender.send(Message::Text(response_text.into())).await;
-                }
+        let text = loop {
+            match receiver.next().await {
+                Some(Ok(Message::Text(text))) => break Some(text),
+                Some(Ok(_)) => continue,
+                _ => break None,
             }
+        };
+        let Some(text) = text else {
+            break;
+        };
+
+        error = match serde_json::from_str::<ClientMessage>(&text) {
+            Ok(client_msg) => game.execute(HUMAN, client_msg.into()).err().map(|e| e.to_string()),
+            Err(e) => Some(format!("Invalid message: {e}")),
+        };
+        if let Some(e) = &error {
+            eprintln!("Rejected client message: {e}");
         }
     }
 }
 
-fn parse_card(card_str: &str) -> Result<Card, String> {
-    match card_str {
-        "Copper" => Ok(Card::Copper),
-        "Silver" => Ok(Card::Silver),
-        "Gold" => Ok(Card::Gold),
-        "Estate" => Ok(Card::Estate),
-        "Duchy" => Ok(Card::Duchy),
-        "Province" => Ok(Card::Province),
-        "Curse" => Ok(Card::Curse),
-        "Cellar" => Ok(Card::Cellar),
-        "Market" => Ok(Card::Market),
-        "Militia" => Ok(Card::Militia),
-        "Mine" => Ok(Card::Mine),
-        "Moat" => Ok(Card::Moat),
-        "Remodel" => Ok(Card::Remodel),
-        "Smithy" => Ok(Card::Smithy),
-        "Village" => Ok(Card::Village),
-        "Woodcutter" => Ok(Card::Woodcutter),
-        "Workshop" => Ok(Card::Workshop),
-        _ => Err(format!("Unknown card: {}", card_str)),
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kingdom_spec_parsing() {
+        assert_eq!(parse_kingdom(Some("deck-top")), recommended_kingdom("deck-top").unwrap().to_vec());
+        assert_eq!(parse_kingdom(Some("random")).len(), 10);
+        let custom = "Witch,Laboratory,Market,Festival,Sentry,Library,CouncilRoom,Smithy,Militia,ThroneRoom";
+        let parsed = parse_kingdom(Some(custom));
+        assert_eq!(parsed.len(), 10);
+        assert!(parsed.contains(&Card::ThroneRoom));
+        assert_eq!(parse_kingdom(Some("Witch,Copper")), recommended_kingdom("first-game").unwrap().to_vec());
+        assert_eq!(parse_kingdom(None), recommended_kingdom("first-game").unwrap().to_vec());
     }
 }
