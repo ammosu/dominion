@@ -11,6 +11,7 @@ import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { DecisionModal } from './components/GameUI/DecisionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
+import { CardInspector } from './components/GameUI/CardInspector';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
@@ -82,6 +83,7 @@ function App() {
       <ActionLog drawer={logAsDrawer} open={logOpen} onClose={() => setLogOpen(false)} />
 
       <CardTooltip />
+      <CardInspector />
       <Toast />
       <DecisionModal />
       {isGameOver && finalScores && (

@@ -1,55 +1,43 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { useUIStore } from '../../store/uiStore';
 import { CARD_DATA, getCardArtPath, getCardName, isPixelated } from '../../utils/cardData';
 import styles from './CardTooltip.module.css';
 
-export function CardTooltip() {
-  const hoveredCard = useUIStore((state) => state.hoveredCard);
+const typeLabels: Record<string, { zh: string; en: string }> = {
+  treasure: { zh: '寶物牌', en: 'Treasure' },
+  victory: { zh: '勝利牌', en: 'Victory' },
+  action: { zh: '行動牌', en: 'Action' },
+  curse: { zh: '詛咒牌', en: 'Curse' },
+};
+
+const typeColors: Record<string, string> = {
+  treasure: '#ffd700',
+  victory: '#4caf50',
+  action: '#90caf9',
+  curse: '#ce93d8',
+};
+
+/**
+ * A card's artwork, name, cost and rules text, framed in the type color.
+ * Used by the hover tooltip and by the tap-to-inspect sheet (`children`
+ * go below the text, e.g. a Buy button).
+ */
+export function CardPreview({ card, className = '', children }: { card: string; className?: string; children?: ReactNode }) {
   const language = useUIStore((state) => state.language);
   const artStyle = useUIStore((state) => state.artStyle);
-  const [dockSide, setDockSide] = useState<'left' | 'right'>('right');
-
-  useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      const nextSide = event.clientX < window.innerWidth / 2 ? 'right' : 'left';
-      setDockSide((currentSide) => currentSide === nextSide ? currentSide : nextSide);
-    };
-
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, []);
-
-  if (!hoveredCard) return null;
-
-  const data = CARD_DATA[hoveredCard];
+  const data = CARD_DATA[card];
   if (!data) return null;
 
-  const typeLabels: Record<string, { zh: string; en: string }> = {
-    treasure: { zh: '寶物牌', en: 'Treasure' },
-    victory: { zh: '勝利牌', en: 'Victory' },
-    action: { zh: '行動牌', en: 'Action' },
-    curse: { zh: '詛咒牌', en: 'Curse' },
-  };
-
-  const typeColors: Record<string, string> = {
-    treasure: '#ffd700',
-    victory: '#4caf50',
-    action: '#90caf9',
-    curse: '#ce93d8',
-  };
-
-  const artworkPath = getCardArtPath(hoveredCard, artStyle);
-  const displayName = getCardName(hoveredCard, language);
+  const artworkPath = getCardArtPath(card, artStyle);
+  const displayName = getCardName(card, language);
   const accentStyle = {
     '--card-accent': typeColors[data.type],
   } as CSSProperties;
 
   return (
-    <aside
-      className={`${styles.preview} ${dockSide === 'right' ? styles.dockRight : styles.dockLeft}`}
+    <div
+      className={`${styles.preview} ${className}`}
       style={accentStyle}
-      data-testid="card-tooltip"
-      role="tooltip"
       aria-label={`${displayName} ${typeLabels[data.type][language]}`}
     >
       <div className={styles.artworkFrame}>
@@ -94,7 +82,35 @@ export function CardTooltip() {
           </div>
         )}
         {data.tooltip && <div className={styles.detail}>{data.tooltip[language]}</div>}
+        {children}
       </div>
+    </div>
+  );
+}
+
+/** Hover preview, docked on the side away from the pointer. */
+export function CardTooltip() {
+  const hoveredCard = useUIStore((state) => state.hoveredCard);
+  const [dockSide, setDockSide] = useState<'left' | 'right'>('right');
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const nextSide = event.clientX < window.innerWidth / 2 ? 'right' : 'left';
+      setDockSide((currentSide) => currentSide === nextSide ? currentSide : nextSide);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', handlePointerMove);
+  }, []);
+
+  if (!hoveredCard) return null;
+
+  return (
+    <aside role="tooltip" data-testid="card-tooltip">
+      <CardPreview
+        card={hoveredCard}
+        className={`${styles.tooltip} ${dockSide === 'right' ? styles.dockRight : styles.dockLeft}`}
+      />
     </aside>
   );
 }

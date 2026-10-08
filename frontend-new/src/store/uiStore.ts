@@ -27,6 +27,10 @@ interface UIStore {
   hoveredCard: string | null;
   setHoveredCard: (card: string | null) => void;
 
+  /** Supply card opened by a tap (touch screens): details plus a Buy button. */
+  inspectedCard: string | null;
+  setInspectedCard: (card: string | null) => void;
+
   language: 'zh' | 'en';
   setLanguage: (lang: 'zh' | 'en') => void;
 
@@ -49,6 +53,9 @@ export const useUIStore = create<UIStore>((set) => ({
 
   hoveredCard: null,
   setHoveredCard: (card) => set({ hoveredCard: card }),
+
+  inspectedCard: null,
+  setInspectedCard: (card) => set({ inspectedCard: card, hoveredCard: null }),
 
   language: 'zh',
   setLanguage: (lang) => set({ language: lang }),

@@ -1,0 +1,70 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050; /* above the table, below toasts (1100) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.sheet {
+  width: min(320px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.card {
+  flex-shrink: 0;
+}
+
+.remaining {
+  color: #b8a888;
+  font-size: 12px;
+}
+
+.reason {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(120, 40, 30, 0.85);
+  color: #ffd8c8;
+  font-size: 13px;
+  text-align: center;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.buttons button {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 6px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.close {
+  background: rgba(30, 24, 16, 0.95);
+  color: #c4a462;
+  border: 1px solid rgba(196, 164, 98, 0.4);
+}
+
+.buy {
+  background: linear-gradient(180deg, #2a6038 0%, #1d4d2a 100%);
+  color: #e0f0e4;
+  border: 1px solid rgba(76, 160, 90, 0.6);
+}
+
+.buy:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

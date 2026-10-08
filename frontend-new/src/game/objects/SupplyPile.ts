@@ -17,7 +17,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.add(this.face);
     this.setSize(width, height);
     this.setInteractive({ useHandCursor: true });
-    bindCardPointer(this, () => this.scene.events.emit('supply-card-clicked', cardName), (on) => this.hover(on));
+    bindCardPointer(this, (touch) => this.scene.events.emit('supply-card-clicked', cardName, touch), (on) => this.hover(on));
     this.updateCount(count);
     scene.add.existing(this);
   }

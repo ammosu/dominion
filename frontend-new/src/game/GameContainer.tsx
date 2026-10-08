@@ -54,28 +54,34 @@ function requestPlayCard(cardName: string) {
   wsService.send({ type: 'PlayCard', card: cardName });
 }
 
-function requestBuyCard(cardName: string) {
+/** Why `cardName` cannot be bought right now, or null if it can. */
+export function buyBlocker(cardName: string): Record<Lang, string> | null {
   const { gameState: state, viewerPlayer: me, canAct } = useGameStore.getState();
-  if (!state || !me) return;
+  if (!state || !me) return { zh: '遊戲尚未開始', en: 'The game has not started' };
 
   const cost = getCardCost(cardName);
   if (!canAct || state.phase !== 'Buy') {
-    toast({ zh: '只能在自己的購買階段購買卡片', en: 'Can only buy cards in your Buy phase' });
-    return;
+    return { zh: '只能在自己的購買階段購買卡片', en: 'Can only buy cards in your Buy phase' };
   }
   if (me.buys === 0) {
-    toast({ zh: '沒有購買次數了', en: 'No buys remaining' });
-    return;
+    return { zh: '沒有購買次數了', en: 'No buys remaining' };
   }
   if (me.coins < cost) {
-    toast({
+    return {
       zh: `金幣不足！需要 ${cost}，目前只有 ${me.coins}`,
       en: `Not enough coins! Need ${cost}, have ${me.coins}`,
-    });
-    return;
+    };
   }
   if ((state.supply[cardName] ?? 0) === 0) {
-    toast({ zh: '供應區已空', en: 'Supply pile empty' });
+    return { zh: '供應區已空', en: 'Supply pile empty' };
+  }
+  return null;
+}
+
+export function requestBuyCard(cardName: string) {
+  const blocker = buyBlocker(cardName);
+  if (blocker) {
+    toast(blocker);
     return;
   }
   wsService.send({ type: 'BuyCard', card: cardName });
@@ -97,6 +103,7 @@ export function GameContainer() {
     scene.events.off('card-hover-changed');
     scene.events.off('buy-card-request');
     scene.events.off('supply-card-hover-changed');
+    scene.events.off('supply-card-inspect');
 
     scene.events.on('play-card-request', requestPlayCard);
     scene.events.on('buy-card-request', requestBuyCard);
@@ -105,6 +112,9 @@ export function GameContainer() {
     });
     scene.events.on('supply-card-hover-changed', (cardName: string | null) => {
       useUIStore.getState().setHoveredCard(cardName);
+    });
+    scene.events.on('supply-card-inspect', (cardName: string) => {
+      useUIStore.getState().setInspectedCard(cardName);
     });
   };
 

@@ -9,7 +9,7 @@ const LONG_PRESS_MS = 450;
  */
 export function bindCardPointer(
   target: Phaser.GameObjects.Container,
-  onTap: () => void,
+  onTap: (touch: boolean) => void,
   onPreview: (on: boolean) => void,
 ) {
   const scene = target.scene;
@@ -33,7 +33,7 @@ export function bindCardPointer(
   });
   target.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
     if (!pointer.wasTouch) {
-      onTap();
+      onTap(false);
       return;
     }
     endPreview();
@@ -43,7 +43,7 @@ export function bindCardPointer(
     });
   });
   target.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-    if (pointer.wasTouch && pointer.getDuration() < LONG_PRESS_MS) onTap();
+    if (pointer.wasTouch && pointer.getDuration() < LONG_PRESS_MS) onTap(true);
   });
 
   // The finger may lift anywhere (or the card may be rebuilt meanwhile).

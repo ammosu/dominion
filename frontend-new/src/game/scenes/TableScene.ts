@@ -7,9 +7,10 @@ import { loadArtStyle } from '../artTextures';
 import type { ArtStyle } from '../../utils/cardData';
 
 /**
- * Draws the Supply and the viewer's hand. Runs in Phaser RESIZE mode: the
- * canvas fills the table column and everything is re-laid out on resize
- * from the same `computeTableLayout` the React overlays use.
+ * Draws the Supply and the viewer's hand. The canvas fills the table column
+ * in device pixels; the camera zooms by the pixel ratio so this scene works
+ * in CSS pixels, re-laid out on resize from the same `computeTableLayout`
+ * the React overlays use.
  */
 export class TableScene extends Phaser.Scene {
   hand!: Hand;
@@ -27,11 +28,17 @@ export class TableScene extends Phaser.Scene {
   }
 
   create() {
-    this.background = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x2d4a3e).setOrigin(0);
+    this.background = this.add.rectangle(0, 0, 1, 1, 0x2d4a3e).setOrigin(0);
+    this.fitCamera();
     this.hand = new Hand(this);
     this.supplyArea = new SupplyArea(this);
 
-    this.events.on('supply-card-clicked', (cardName: string) => {
+    // A tap opens the card's details first (with a Buy button); a click buys.
+    this.events.on('supply-card-clicked', (cardName: string, touch: boolean) => {
+      if (touch) {
+        this.events.emit('supply-card-inspect', cardName);
+        return;
+      }
       SoundManager.getInstance().playCardBuy();
       this.events.emit('buy-card-request', cardName);
     });
@@ -54,13 +61,25 @@ export class TableScene extends Phaser.Scene {
     return this.hand !== undefined;
   }
 
+  /** Table size in CSS pixels (the canvas is shown at 1/ratio zoom). */
+  private get viewSize() {
+    return { width: this.scale.width * this.scale.zoom, height: this.scale.height * this.scale.zoom };
+  }
+
+  private fitCamera() {
+    const { width, height } = this.viewSize;
+    this.cameras.main.setOrigin(0, 0).setZoom(1 / this.scale.zoom);
+    this.background.setSize(width, height);
+  }
+
   private layout() {
-    return computeTableLayout(this.scale.width, this.scale.height);
+    const { width, height } = this.viewSize;
+    return computeTableLayout(width, height);
   }
 
   private relayout() {
     if (!this.ready) return;
-    this.background.setSize(this.scale.width, this.scale.height);
+    this.fitCamera();
     this.buildSupply();
     this.buildHand();
   }
