@@ -353,3 +353,10 @@
     height: 114px;
   }
 }
+
+/* Press-and-hold previews the card: no text selection or callout menu. */
+.card {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

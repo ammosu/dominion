@@ -2,6 +2,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { getCardFrameStyle, getCardName } from '../../utils/cardData';
 import type { Rect } from '../../game/tableLayout';
+import { useCardPreview } from './useCardPreview';
 import styles from './PlayedCards.module.css';
 
 /** Cards the current player has in play this turn, as tracked by the server. */
@@ -9,7 +10,7 @@ export function PlayedCards({ rect }: { rect: Rect }) {
   const currentPlayer = useGameStore((state) => state.currentPlayer);
   const gameOver = useGameStore((state) => state.gameState?.game_over);
   const language = useUIStore((state) => state.language);
-  const setHoveredCard = useUIStore((state) => state.setHoveredCard);
+  const { previewProps } = useCardPreview();
 
   if (!currentPlayer || gameOver || currentPlayer.in_play.length === 0) return null;
 
@@ -25,8 +26,7 @@ export function PlayedCards({ rect }: { rect: Rect }) {
           key={index}
           className={styles.card}
           style={{ background: getCardFrameStyle(card).color }}
-          onPointerEnter={(e) => e.pointerType === 'mouse' && setHoveredCard(card)}
-          onPointerLeave={(e) => e.pointerType === 'mouse' && setHoveredCard(null)}
+          {...previewProps(card)}
         >
           {getCardName(card, language)}
         </span>

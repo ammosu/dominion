@@ -4,6 +4,7 @@ import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName, isPixelated } from '../../utils/cardData';
 import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
+import { useCardPreview } from './useCardPreview';
 import styles from './DecisionModal.module.css';
 
 /**
@@ -18,6 +19,7 @@ export function DecisionModal() {
   const artStyle = useUIStore((state) => state.artStyle);
   const [selected, setSelected] = useState<number[]>([]);
   const [minimized, setMinimized] = useState(false);
+  const { previewProps, endedLongPress } = useCardPreview();
 
   // A new decision (even an identical-looking one) starts with a fresh selection.
   useEffect(() => {
@@ -83,8 +85,6 @@ export function DecisionModal() {
         </div>
         {countHint && <div className={styles.subtitle}>{countHint}</div>}
 
-        {/* Hover previews only for mouse pointers: on touch there is no
-            pointer-leave, so a preview would stay pinned over the options. */}
         <div className={styles.cardGrid}>
           {decision.options.map((cardName, index) => {
             const frame = getCardFrameStyle(cardName);
@@ -93,9 +93,8 @@ export function DecisionModal() {
               <div
                 key={`${cardName}-${index}`}
                 className={`${styles.card} ${selected.includes(index) ? styles.selected : ''}`}
-                onClick={() => toggle(index)}
-                onPointerEnter={(e) => e.pointerType === 'mouse' && setHoveredCard(cardName)}
-                onPointerLeave={(e) => e.pointerType === 'mouse' && setHoveredCard(null)}
+                onClick={() => !endedLongPress() && toggle(index)}
+                {...previewProps(cardName)}
                 style={{ '--frame': frame.color } as CSSProperties}
                 data-testid={`decision-card-${cardName}-${index}`}
               >

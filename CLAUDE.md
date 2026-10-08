@@ -117,7 +117,7 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 ### Phaser Object Patterns
 - **High-DPI canvas**: `PhaserGame` sizes the canvas to the table column in device pixels (scale mode NONE, zoom 1/ratio, ResizeObserver); `TableScene` zooms its camera by the ratio so scene coordinates are CSS pixels. Never hard-code coordinates: take them from `computeTableLayout`, which React overlays also use, so both layers line up
 - **Rebuild, don't move**: on resize or kingdom/hand change the scene destroys and rebuilds piles / hand cards; each object keeps the `baseY` it was built with for hover tweens, so positions cannot drift
-- **Touch**: `objects/pointerBinding.ts` — mouse acts on press and previews on hover; touch acts on a short tap and previews on press-and-hold. Tapping a Supply pile opens `CardInspector` (details + Buy button, reason from `buyBlocker`) instead of buying
+- **Touch**: `objects/pointerBinding.ts` — mouse acts on press and previews on hover; touch acts on a short tap and previews on press-and-hold. Tapping a Supply pile opens `CardInspector` (details + Buy button, reason from `buyBlocker`) instead of buying. DOM cards (decision options, in-play chips) get the same hover / press-and-hold preview from `useCardPreview`
 - **Narrow screens** (< 900px): the log column becomes a drawer opened from the status bar's ☰ button
 - **Highlights**: GameContainer computes playable hand cards and buyable piles and calls `scene.setHighlights(buyable, playable)`
 - **Scene listener setup**: GameContainer uses `requestAnimationFrame` polling to wait for `scene.hand` to exist before attaching event listeners
