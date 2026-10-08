@@ -83,6 +83,8 @@ export function DecisionModal() {
         </div>
         {countHint && <div className={styles.subtitle}>{countHint}</div>}
 
+        {/* Hover previews only for mouse pointers: on touch there is no
+            pointer-leave, so a preview would stay pinned over the options. */}
         <div className={styles.cardGrid}>
           {decision.options.map((cardName, index) => {
             const frame = getCardFrameStyle(cardName);
@@ -92,8 +94,8 @@ export function DecisionModal() {
                 key={`${cardName}-${index}`}
                 className={`${styles.card} ${selected.includes(index) ? styles.selected : ''}`}
                 onClick={() => toggle(index)}
-                onMouseEnter={() => setHoveredCard(cardName)}
-                onMouseLeave={() => setHoveredCard(null)}
+                onPointerEnter={(e) => e.pointerType === 'mouse' && setHoveredCard(cardName)}
+                onPointerLeave={(e) => e.pointerType === 'mouse' && setHoveredCard(null)}
                 style={{ '--frame': frame.color } as CSSProperties}
                 data-testid={`decision-card-${cardName}-${index}`}
               >

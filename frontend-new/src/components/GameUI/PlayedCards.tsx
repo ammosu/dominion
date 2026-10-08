@@ -25,8 +25,8 @@ export function PlayedCards({ rect }: { rect: Rect }) {
           key={index}
           className={styles.card}
           style={{ background: getCardFrameStyle(card).color }}
-          onMouseEnter={() => setHoveredCard(card)}
-          onMouseLeave={() => setHoveredCard(null)}
+          onPointerEnter={(e) => e.pointerType === 'mouse' && setHoveredCard(card)}
+          onPointerLeave={(e) => e.pointerType === 'mouse' && setHoveredCard(null)}
         >
           {getCardName(card, language)}
         </span>
