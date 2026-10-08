@@ -1,41 +1,36 @@
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
-import { getCardName, getCardType } from '../../utils/cardData';
+import { getCardFrameStyle, getCardName } from '../../utils/cardData';
+import type { Rect } from '../../game/tableLayout';
 import styles from './PlayedCards.module.css';
 
-const TYPE_ICON: Record<string, string> = {
-  Copper: '🟤',
-  Silver: '⚪',
-  Gold: '🟡',
-};
-
 /** Cards the current player has in play this turn, as tracked by the server. */
-export function PlayedCards() {
-  const gameState = useGameStore((state) => state.gameState);
+export function PlayedCards({ rect }: { rect: Rect }) {
   const currentPlayer = useGameStore((state) => state.currentPlayer);
+  const gameOver = useGameStore((state) => state.gameState?.game_over);
   const language = useUIStore((state) => state.language);
+  const setHoveredCard = useUIStore((state) => state.setHoveredCard);
 
-  if (!gameState || !currentPlayer || gameState.game_over) return null;
-
-  const played = currentPlayer.in_play;
-  if (played.length === 0 && currentPlayer.coins === 0) return null;
+  if (!currentPlayer || gameOver || currentPlayer.in_play.length === 0) return null;
 
   return (
-    <div className={styles.container} data-testid="played-cards">
-      <div className={styles.label}>
-        {language === 'zh' ? '🃏 本回合已打出' : '🃏 In Play'}
-      </div>
-      <div className={styles.cards}>
-        {played.map((card, index) => (
-          <div key={index} className={styles.card}>
-            {TYPE_ICON[card] ?? (getCardType(card) === 'action' ? '⚔️' : '💎')}
-            <span className={styles.cardName}>{getCardName(card, language)}</span>
-          </div>
-        ))}
-        <div className={styles.totalCoins}>
-          = 💰 {currentPlayer.coins}
-        </div>
-      </div>
+    <div
+      className={styles.container}
+      style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
+      data-testid="played-cards"
+    >
+      <span className={styles.label}>{language === 'zh' ? '出牌區' : 'In play'}</span>
+      {currentPlayer.in_play.map((card, index) => (
+        <span
+          key={index}
+          className={styles.card}
+          style={{ background: getCardFrameStyle(card).color }}
+          onMouseEnter={() => setHoveredCard(card)}
+          onMouseLeave={() => setHoveredCard(null)}
+        >
+          {getCardName(card, language)}
+        </span>
+      ))}
     </div>
   );
 }

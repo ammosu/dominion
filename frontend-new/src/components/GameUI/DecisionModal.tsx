@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
-import { CARD_DATA, getCardArtPath, getCardCost, getCardName } from '../../utils/cardData';
+import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName } from '../../utils/cardData';
 import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
 import styles from './DecisionModal.module.css';
 
@@ -24,7 +24,8 @@ export function DecisionModal() {
     setMinimized(false);
   }, [decision]);
 
-  if (!decision) return null;
+  // Yes/no choices are answered inline in the StatusBar.
+  if (!decision || isYesNoDecision(decision)) return null;
 
   const zh = language === 'zh';
   const prompt = decisionPrompt(decision, language);
@@ -44,11 +45,9 @@ export function DecisionModal() {
     );
   }
 
-  const yesNo = isYesNoDecision(decision);
   const singleRequired = decision.min === 1 && decision.max === 1;
 
   const toggle = (index: number) => {
-    if (yesNo) return;
     if (singleRequired) {
       send([decision.options[index]]);
       return;
@@ -61,7 +60,7 @@ export function DecisionModal() {
   };
 
   const countHint = (() => {
-    if (yesNo || singleRequired) return null;
+    if (singleRequired) return null;
     if (decision.min === decision.max) {
       return zh ? `請選擇 ${decision.min} 張` : `Choose exactly ${decision.min}`;
     }
@@ -85,52 +84,40 @@ export function DecisionModal() {
 
         <div className={styles.cardGrid}>
           {decision.options.map((cardName, index) => {
-            const data = CARD_DATA[cardName];
+            const frame = getCardFrameStyle(cardName);
             const artworkPath = getCardArtPath(cardName);
-            const backgroundImage = artworkPath
-              ? `linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.12) 42%, rgba(0, 0, 0, 0.82)), url("${artworkPath}")`
-              : undefined;
             return (
               <div
                 key={`${cardName}-${index}`}
-                className={`${styles.card} ${data ? styles[data.type] : ''} ${
-                  artworkPath ? styles.withArtwork : ''
-                } ${selected.includes(index) ? styles.selected : ''}`}
+                className={`${styles.card} ${selected.includes(index) ? styles.selected : ''}`}
                 onClick={() => toggle(index)}
                 onMouseEnter={() => setHoveredCard(cardName)}
                 onMouseLeave={() => setHoveredCard(null)}
-                style={backgroundImage ? { backgroundImage } : undefined}
+                style={{ '--frame': frame.color } as CSSProperties}
                 data-testid={`decision-card-${cardName}-${index}`}
               >
                 <div className={styles.cardName}>{getCardName(cardName, language)}</div>
+                <div
+                  className={styles.cardArt}
+                  style={artworkPath ? { backgroundImage: `url("${artworkPath}")` } : undefined}
+                />
+                <div className={styles.cardLabel}>{frame.label[language]}</div>
                 <div className={styles.cardCost}>{getCardCost(cardName)}</div>
-                {data?.desc && <div className={styles.cardDesc}>{data.desc[language]}</div>}
               </div>
             );
           })}
         </div>
 
         <div className={styles.actions}>
-          {yesNo ? (
-            <>
-              <button className={styles.cancelButton} onClick={() => send([])} data-testid="decision-no">
-                {zh ? '不要' : 'No'}
-              </button>
-              <button className={styles.confirmButton} onClick={() => send(decision.options)} data-testid="decision-yes">
-                {zh ? '是' : 'Yes'}
-              </button>
-            </>
-          ) : (
-            !singleRequired && (
-              <button
-                className={styles.confirmButton}
-                onClick={() => send(selected.map((i) => decision.options[i]))}
-                disabled={!canConfirm}
-                data-testid="decision-confirm"
-              >
-                {zh ? '確認' : 'Confirm'} ({selected.length})
-              </button>
-            )
+          {!singleRequired && (
+            <button
+              className={styles.confirmButton}
+              onClick={() => send(selected.map((i) => decision.options[i]))}
+              disabled={!canConfirm}
+              data-testid="decision-confirm"
+            >
+              {zh ? '確認' : 'Confirm'} ({selected.length})
+            </button>
           )}
         </div>
       </div>

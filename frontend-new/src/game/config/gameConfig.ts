@@ -4,13 +4,13 @@ import { TableScene } from '../scenes/TableScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 1200,
-  height: 800,
+  width: '100%',
+  height: '100%',
   backgroundColor: '#2d4a3e',
   parent: 'phaser-container',
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    // One canvas pixel per CSS pixel so React overlays line up with the table.
+    mode: Phaser.Scale.RESIZE,
   },
   scene: [Preloader, TableScene],
   physics: {

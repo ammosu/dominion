@@ -367,6 +367,38 @@ export function isAction(cardName: string): boolean {
   return getCardType(cardName) === 'action';
 }
 
+export interface CardFrameStyle {
+  /** Banner / label strip color. */
+  color: string;
+  /** Short type label shown at the bottom of the card. */
+  label: Text;
+}
+
+const FRAME_STYLES = {
+  treasure: { color: '#e7c45c', label: { en: 'Treasure', zh: '錢幣卡' } },
+  victory: { color: '#8cc084', label: { en: 'Victory', zh: '分數卡' } },
+  curse: { color: '#a27bbd', label: { en: 'Curse', zh: '詛咒卡' } },
+  action: { color: '#ece3cf', label: { en: 'Action', zh: '行動卡' } },
+  attack: { color: '#ece3cf', label: { en: 'Attack', zh: '攻擊卡' } },
+  reaction: { color: '#8fb5df', label: { en: 'Reaction', zh: '反應卡' } },
+} satisfies Record<string, CardFrameStyle>;
+
+/** Card frame look shared by the Phaser table and React dialogs. */
+export function getCardFrameStyle(cardName: string): CardFrameStyle {
+  const data = CARD_DATA[cardName];
+  if (!data) return FRAME_STYLES.action;
+  if (data.subtypes?.includes('reaction')) return FRAME_STYLES.reaction;
+  if (data.subtypes?.includes('attack')) return FRAME_STYLES.attack;
+  return FRAME_STYLES[data.type];
+}
+
+/** Display order in hand: Actions, Treasures, Victory, Curses; then by cost. */
+export function compareForHand(a: string, b: string): number {
+  const order: CardType[] = ['action', 'treasure', 'victory', 'curse'];
+  const typeDiff = order.indexOf(CARD_DATA[a]?.type ?? 'action') - order.indexOf(CARD_DATA[b]?.type ?? 'action');
+  return typeDiff || getCardCost(b) - getCardCost(a) || a.localeCompare(b);
+}
+
 export function getCardCost(cardName: string): number {
   return CARD_DATA[cardName]?.cost || 0;
 }

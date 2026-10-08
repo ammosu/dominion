@@ -65,8 +65,8 @@ cd frontend-new && npm run dev
 ### Frontend (React + Phaser 3 Hybrid)
 
 Two rendering layers share state through Zustand:
-- **React Layer** — UI overlays: TopBar, ActionLog, TurnControls, Modals, Toast, DeckAreas
-- **Phaser Layer** — Game canvas: hand cards (draggable), supply area (clickable piles)
+- **React Layer** — overlays on the table (PlayerPanel ×2, StatusBar, TrashPile, PlayedCards), the right-hand ActionLog column, modals, Toast
+- **Phaser Layer** — Game canvas: hand (grouped by name, click to play) and Supply piles (click to buy)
 - **Zustand Stores** — `gameStore` (game state from server), `uiStore` (language, toasts, modals)
 
 **Key modules:**
@@ -74,9 +74,10 @@ Two rendering layers share state through Zustand:
 - `DecisionModal.tsx` — renders `pending_decision` for this player and answers with `Resolve`; the only card-choice UI
 - `utils/cardData.ts` — card metadata, rulebook texts, `KINGDOM_PRESETS`; `utils/i18n.ts` — log/error/prompt translation
 - `scenes/TableScene.ts` — Main Phaser scene; `updateHand()`, `updateSupply()`, `updateLanguage()`
-- `objects/Card.ts` — Draggable card with hover/drag animations; stores `originalY` to prevent position drift
-- `objects/Hand.ts` — Fan-arranged hand; `addCardSilent()` + `arrangeCards(animate)` for batch updates without fly-in
-- `objects/SupplyPile.ts` — Clickable supply pile with hover lift; stores `originalY` for stable positioning
+- `game/tableLayout.ts` — `computeTableLayout(w, h)`: the one source of table geometry for Phaser *and* React overlays (`useTableLayout` hook)
+- `objects/CardFace.ts` — card drawing shared by hand and supply: type-colored banner/label (`getCardFrameStyle`), artwork, cost coin, count badge, highlight
+- `objects/Card.ts` / `Hand.ts` — one card per name in hand with a count; `SupplyPile.ts` / `SupplyArea.ts` — base grid (2×4, trash in the free slot) + kingdom (2×5)
+- `components/GameUI/StatusBar.tsx` — Actions | Buys | Coins, prompt line, turn buttons and inline Yes/No decisions
 - `services/websocket.ts` — WebSocket client with auto-reconnect; URL auto-detected from `window.location`
 
 ### Data Flow
@@ -112,8 +113,9 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 `run_ai_turns()` runs after every human message: while the acting player (decision owner, else current player) is an AI it answers the decision or takes a turn action. Rejected AI actions fall back to `EndPhase` / the minimal answer.
 
 ### Phaser Object Patterns
-- **Position drift prevention**: Card and SupplyPile store `originalY` at creation; hover tweens use absolute positions (`y: this.originalY - 10`), never relative
-- **Batch hand updates**: `Hand.addCardSilent()` adds without animation; `Hand.arrangeCards(false)` positions instantly. Used by `TableScene.updateHand()` to avoid fly-in effects on state refresh
+- **RESIZE scale mode**: the canvas fills the table column (CSS grid `1fr | side column`, row locked to the viewport), one canvas pixel = one CSS pixel. Never hard-code coordinates: take them from `computeTableLayout`, which React overlays also use, so both layers line up
+- **Rebuild, don't move**: on resize or kingdom/hand change the scene destroys and rebuilds piles / hand cards; each object keeps the `baseY` it was built with for hover tweens, so positions cannot drift
+- **Highlights**: GameContainer computes playable hand cards and buyable piles and calls `scene.setHighlights(buyable, playable)`
 - **Scene listener setup**: GameContainer uses `requestAnimationFrame` polling to wait for `scene.hand` to exist before attaching event listeners
 
 ### Language Support
@@ -148,6 +150,7 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 - Hand cards are Phaser objects on canvas, NOT React components — click handling is via Phaser events
 - Must call Phaser scene methods from React useEffect, never directly
 - Toast notifications auto-dismiss after 3 seconds
+- The WebSocket connection lives for the page; App only unsubscribes on unmount (so HMR doesn't drop the game)
 
 **Integration:**
 - Backend validation is authoritative; client-side validation is for UX only

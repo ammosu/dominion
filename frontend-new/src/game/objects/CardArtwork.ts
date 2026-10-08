@@ -31,6 +31,7 @@ export class CardArtwork extends Phaser.GameObjects.Container {
     cardName: string,
     width: number,
     height: number,
+    shade: boolean,
   ) {
     super(scene, 0, 0);
 
@@ -51,11 +52,14 @@ export class CardArtwork extends Phaser.GameObjects.Container {
     this.add(this.image);
 
     const type = CARD_DATA[cardName].type;
-    this.add([
-      scene.add.rectangle(0, 0, width, height, CARD_ART_TINTS[type], 0.08),
-      scene.add.rectangle(0, -height * 0.42, width, height * 0.2, 0x000000, 0.4),
-      scene.add.rectangle(0, height * 0.4, width, height * 0.24, 0x000000, 0.44),
-    ]);
+    this.add(scene.add.rectangle(0, 0, width, height, CARD_ART_TINTS[type], 0.08));
+    if (shade) {
+      // Darken the edges so text drawn over the artwork stays readable.
+      this.add([
+        scene.add.rectangle(0, -height * 0.42, width, height * 0.2, 0x000000, 0.4),
+        scene.add.rectangle(0, height * 0.4, width, height * 0.24, 0x000000, 0.44),
+      ]);
+    }
 
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -67,6 +71,7 @@ export class CardArtwork extends Phaser.GameObjects.Container {
     cardName: string,
     width: number,
     height: number,
+    shade = true,
   ): CardArtwork | undefined {
     const path = getCardArtPath(cardName);
     const textureKey = getCardTextureKey(cardName);
@@ -74,7 +79,7 @@ export class CardArtwork extends Phaser.GameObjects.Container {
       return undefined;
     }
 
-    return new CardArtwork(scene, cardName, width, height);
+    return new CardArtwork(scene, cardName, width, height, shade);
   }
 
   setHovered(hovered: boolean): void {

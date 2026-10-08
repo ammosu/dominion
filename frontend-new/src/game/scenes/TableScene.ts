@@ -1,153 +1,102 @@
 import Phaser from 'phaser';
-import { Card } from '../objects/Card';
 import { Hand } from '../objects/Hand';
 import { SupplyArea } from '../objects/SupplyArea';
-import { CardAnimations } from '../animations/CardAnimations';
 import { SoundManager } from '../../utils/SoundManager';
+import { computeTableLayout } from '../tableLayout';
 
+/**
+ * Draws the Supply and the viewer's hand. Runs in Phaser RESIZE mode: the
+ * canvas fills the table column and everything is re-laid out on resize
+ * from the same `computeTableLayout` the React overlays use.
+ */
 export class TableScene extends Phaser.Scene {
-  private hand!: Hand;
+  hand!: Hand;
   private supplyArea!: SupplyArea;
+  private background!: Phaser.GameObjects.Rectangle;
   private currentLang: 'en' | 'zh' = 'zh';
+  private supply: Record<string, number> = {};
+  private kingdom: string[] = [];
+  private handCards: string[] = [];
+  private buyable: ReadonlySet<string> = new Set();
+  private playable: ReadonlySet<string> = new Set();
 
   constructor() {
     super('TableScene');
   }
 
   create() {
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
-
-    // 桌面背景
-    this.add.rectangle(width / 2, height / 2, width, height, 0x2d4a3e);
-
-    // 建立手牌區
+    this.background = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x2d4a3e).setOrigin(0);
     this.hand = new Hand(this);
-
-    // Hand will be populated from game state via updateHand()
-    // (Removed hardcoded test cards)
-
-    // Create supply area
     this.supplyArea = new SupplyArea(this);
 
-    // Listen to supply card events
     this.events.on('supply-card-clicked', (cardName: string) => {
-      console.log('Supply card clicked:', cardName);
       SoundManager.getInstance().playCardBuy();
       this.events.emit('buy-card-request', cardName);
     });
-
     this.events.on('supply-card-hovered', (cardName: string | null) => {
       this.events.emit('supply-card-hover-changed', cardName);
     });
-
-    // 啟用拖放
-    this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
-      gameObject.emit('drag', pointer, dragX, dragY);
-    });
-
-    this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
-      gameObject.emit('dragstart', pointer);
-    });
-
-    this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dropped: boolean) => {
-      gameObject.emit('dragend', pointer, dropped);
-    });
-
-    // 監聽卡片點擊
     this.events.on('card-clicked', (cardName: string) => {
-      console.log('Card clicked:', cardName);
       SoundManager.getInstance().playCardPlay();
-      // 發送到外部（React）
       this.events.emit('play-card-request', cardName);
     });
-
-    // 監聽卡片 Hover
     this.events.on('card-hovered', (cardName: string | null) => {
       this.events.emit('card-hover-changed', cardName);
     });
 
-    // Animation event listeners
-    this.events.on('animate-draw', (cardName: string) => {
-      SoundManager.getInstance().playCardDraw();
-      const deckX = 100;
-      const deckY = 400;
-      const handY = 650;
-      const handX = this.cameras.main.width / 2;
-
-      const card = CardAnimations.animateDrawCard(
-        this,
-        cardName,
-        deckX,
-        deckY,
-        handX,
-        handY,
-        () => {
-          this.hand.addCard(card);
-        }
-      );
-    });
-
-    this.events.on('animate-buy', (data: { cardName: string; pileX: number; pileY: number }) => {
-      const discardX = 200;
-      const discardY = 400;
-
-      CardAnimations.animateBuyCard(
-        this,
-        data.cardName,
-        data.pileX,
-        data.pileY,
-        discardX,
-        discardY
-      );
-    });
+    this.scale.on('resize', this.relayout, this);
   }
 
-  /** Rebuilds the piles when the set of cards changes, otherwise updates counts. */
-  updateSupply(supply: Record<string, number>, costs: Record<string, number>, kingdom: string[] = []) {
-    if (!this.supplyArea) {
-      this.supplyArea = new SupplyArea(this);
-    }
-    if (this.supplyArea.hasSameCards(Object.keys(supply))) {
-      this.supplyArea.updateSupply(supply);
+  private layout() {
+    return computeTableLayout(this.scale.width, this.scale.height);
+  }
+
+  private relayout() {
+    this.background.setSize(this.scale.width, this.scale.height);
+    this.buildSupply();
+    this.buildHand();
+  }
+
+  private buildSupply() {
+    if (Object.keys(this.supply).length === 0) return;
+    this.supplyArea.build(this.layout(), this.supply, this.kingdom, this.currentLang);
+    this.supplyArea.setBuyable(this.buyable);
+  }
+
+  private buildHand() {
+    this.hand.build(this.layout(), this.handCards, this.currentLang);
+    this.hand.setPlayable(this.playable);
+  }
+
+  /** Rebuilds the piles when the kingdom changes, otherwise updates counts. */
+  updateSupply(supply: Record<string, number>, _costs: Record<string, number>, kingdom: string[] = []) {
+    const kingdomChanged = kingdom.join() !== this.kingdom.join() || Object.keys(this.supply).length === 0;
+    this.supply = supply;
+    this.kingdom = kingdom;
+    if (kingdomChanged) {
+      this.buildSupply();
     } else {
-      this.supplyArea.setupSupply(supply, costs, this.currentLang, kingdom);
+      this.supplyArea.updateCounts(supply);
+      this.supplyArea.setBuyable(this.buyable);
     }
   }
 
-  // Add method to update hand from game state
   updateHand(handCards: string[]) {
-    if (!this.hand) {
-      this.hand = new Hand(this);
-    }
-
-    // Clear existing cards
-    this.hand.clear();
-
-    // Create new cards from game state with current language
-    handCards.forEach((cardName) => {
-      const card = new Card(this, 0, 0, cardName, this.currentLang);
-      this.hand.addCardSilent(card);
-    });
-
-    // Arrange all cards at once without animation (no fly-in from top-left)
-    this.hand.arrangeCards(false);
+    this.handCards = handCards;
+    this.buildHand();
   }
 
-  // Add method to update language for all visible cards
+  /** Outline cards that can be bought / played right now. */
+  setHighlights(buyable: string[], playable: string[]) {
+    this.buyable = new Set(buyable);
+    this.playable = new Set(playable);
+    this.supplyArea.setBuyable(this.buyable);
+    this.hand.setPlayable(this.playable);
+  }
+
   updateLanguage(lang: 'en' | 'zh') {
     this.currentLang = lang;
-
-    // Update hand cards
-    if (this.hand) {
-      this.hand.getCards().forEach((card) => {
-        card.updateLanguage(lang);
-      });
-    }
-
-    // Update supply cards
-    if (this.supplyArea) {
-      this.supplyArea.updateLanguage(lang);
-    }
+    this.supplyArea.updateLanguage(lang);
+    this.hand.getCards().forEach((card) => card.updateLanguage(lang));
   }
 }

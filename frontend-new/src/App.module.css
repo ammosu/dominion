@@ -1,0 +1,22 @@
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(250px, 22vw, 340px);
+  /* Lock the row to the viewport so a long log scrolls instead of growing the page. */
+  grid-template-rows: minmax(0, 1fr);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #2d4a3e;
+}
+
+.table {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Phaser canvas fills the table column (RESIZE mode). */
+.table :global(#phaser-container) {
+  position: absolute;
+  inset: 0;
+}

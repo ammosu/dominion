@@ -1,99 +1,52 @@
 import Phaser from 'phaser';
 import { SupplyPile } from './SupplyPile';
-import { SupplyCategory } from './SupplyCategory';
-import { BASE_CARDS, compareByCost } from '../../utils/cardData';
+import { pileCenter, type PileGrid, type TableLayout } from '../tableLayout';
+
+/** dominion.games order: Province/Gold, Duchy/Silver, Estate/Copper, Curse. */
+const BASE_ORDER = ['Province', 'Gold', 'Duchy', 'Silver', 'Estate', 'Copper', 'Curse'];
 
 export class SupplyArea {
-  private scene: Phaser.Scene;
-  private categories: SupplyCategory[] = [];
-  private leftSidebarX: number = 120; // Left sidebar for basic cards
-  private centerX: number = 640; // Center for action cards (half of 1280)
-  private topY: number = 80; // Top position to avoid TopBar
+  private readonly scene: Phaser.Scene;
+  private piles: SupplyPile[] = [];
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
-  setupSupply(
-    supply: Record<string, number>,
-    costs: Record<string, number>,
-    lang: 'en' | 'zh' = 'zh',
-    kingdom: string[] = [],
-  ) {
-    // Clear existing categories
-    this.categories.forEach((category) => category.destroy());
-    this.categories = [];
-
-    // Kingdom piles in the server's order (by cost); fall back to sorting ourselves.
-    const actions = (kingdom.length > 0 ? kingdom : Object.keys(supply))
-      .filter((card) => !BASE_CARDS.includes(card) && supply[card] !== undefined)
-      .sort(compareByCost);
-
-    // LEFT SIDEBAR: Basic cards (Treasures + Victory) in vertical single column
-    const basicCards = BASE_CARDS;
-    const basicLabel = lang === 'zh' ? '基本牌' : 'BASIC CARDS';
-    const basicCategory = new SupplyCategory(
-      this.scene,
-      this.leftSidebarX,
-      this.topY,
-      basicCards,
-      supply,
-      costs,
-      1, // 1 card per row (vertical stack)
-      basicLabel,
-      'treasures', // Use treasures type for coloring
-      0xfff8dc, // Cream color
-      lang
-    );
-    this.categories.push(basicCategory);
-
-    // CENTER: Action cards in horizontal rows
-    if (actions.length > 0) {
-      const actionsLabel = lang === 'zh' ? '王國牌' : 'KINGDOM CARDS';
-      const actionsCategory = new SupplyCategory(
-        this.scene,
-        this.centerX,
-        this.topY,
-        actions,
-        supply,
-        costs,
-        5, // 5 cards per row (horizontal layout)
-        actionsLabel,
-        'actions',
-        0xffffff, // White
-        lang
-      );
-      this.categories.push(actionsCategory);
-    }
+  /** Rebuilds every pile for the given layout. */
+  build(layout: TableLayout, supply: Record<string, number>, kingdom: string[], lang: 'en' | 'zh') {
+    this.clear();
+    const place = (cards: string[], grid: PileGrid) => {
+      cards
+        .filter((card) => supply[card] !== undefined)
+        .forEach((card, index) => {
+          const { x, y } = pileCenter(grid, index);
+          this.piles.push(
+            new SupplyPile(this.scene, x, y, card, grid.pileWidth, grid.pileHeight, supply[card], lang),
+          );
+        });
+    };
+    place(BASE_ORDER, layout.base);
+    place(kingdom, layout.kingdom);
   }
 
-  updateSupply(supply: Record<string, number>) {
-    this.categories.forEach((category) => {
-      category.updateSupply(supply);
+  updateCounts(supply: Record<string, number>) {
+    this.piles.forEach((pile) => {
+      const count = supply[pile.getCardName()];
+      if (count !== undefined) pile.updateCount(count);
     });
   }
 
-  hasSameCards(cardNames: string[]): boolean {
-    const current = this.categories.flatMap((category) => category.getPiles().map((p) => p.getCardName()));
-    return current.length === cardNames.length && cardNames.every((name) => current.includes(name));
-  }
-
-  getPile(cardName: string): SupplyPile | undefined {
-    for (const category of this.categories) {
-      const pile = category.getPiles().find((p) => p.getCardName() === cardName);
-      if (pile) return pile;
-    }
-    return undefined;
-  }
-
-  clear() {
-    this.categories.forEach((category) => category.destroy());
-    this.categories = [];
+  setBuyable(buyable: ReadonlySet<string>) {
+    this.piles.forEach((pile) => pile.setBuyable(buyable.has(pile.getCardName())));
   }
 
   updateLanguage(lang: 'en' | 'zh') {
-    this.categories.forEach((category) => {
-      category.updateLanguage(lang);
-    });
+    this.piles.forEach((pile) => pile.updateLanguage(lang));
+  }
+
+  clear() {
+    this.piles.forEach((pile) => pile.destroy());
+    this.piles = [];
   }
 }

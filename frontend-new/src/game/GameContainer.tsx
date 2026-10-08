@@ -86,6 +86,8 @@ export function GameContainer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameState = useGameStore((state) => state.gameState);
   const viewerHand = useGameStore((state) => state.viewerPlayer?.hand);
+  const me = useGameStore((state) => state.viewerPlayer);
+  const canAct = useGameStore((state) => state.canAct);
   const language = useUIStore((state) => state.language);
 
   const setupSceneListeners = (scene: Phaser.Scene) => {
@@ -134,6 +136,7 @@ export function GameContainer() {
   const syncScene = (scene: any) => {
     const { gameState: state, viewerPlayer } = useGameStore.getState();
     if (!state) return;
+    scene.updateLanguage?.(useUIStore.getState().language);
     scene.updateSupply?.(state.supply, getAllCardCosts(state.supply), state.kingdom);
     if (viewerPlayer) scene.updateHand?.(viewerPlayer.hand);
   };
@@ -153,6 +156,26 @@ export function GameContainer() {
       scene.updateHand(viewerHand);
     }
   }, [viewerHand]);
+
+  // Outline what can be played / bought right now
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene') as any;
+    if (!scene?.setHighlights || !gameState || !me) return;
+    let buyable: string[] = [];
+    let playable: string[] = [];
+    if (canAct && gameState.phase === 'Action' && me.actions > 0) {
+      playable = me.hand.filter(isAction);
+    }
+    if (canAct && gameState.phase === 'Buy') {
+      if (!gameState.turn.has_bought) playable = me.hand.filter(isTreasure);
+      if (me.buys > 0) {
+        buyable = Object.keys(gameState.supply).filter(
+          (card) => gameState.supply[card] > 0 && getCardCost(card) <= me.coins,
+        );
+      }
+    }
+    scene.setHighlights(buyable, playable);
+  }, [gameState, me, canAct]);
 
   // Update language for all visible cards
   useEffect(() => {
