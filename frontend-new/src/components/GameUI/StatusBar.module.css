@@ -51,6 +51,130 @@
   font-size: calc(18px * var(--ui, 1));
 }
 
+/* Counter with its floating change ("+2"). */
+.stat {
+  position: relative;
+  display: inline-flex;
+}
+
+.pulse {
+  animation: statPulse 0.36s ease-out;
+}
+
+@keyframes statPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.18);
+    filter: brightness(1.35);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.coin.pulse {
+  animation: statPulse 0.36s ease-out, coinRing 0.6s ease-out;
+}
+
+@keyframes coinRing {
+  from {
+    box-shadow: 0 0 0 0 rgba(242, 201, 76, 0.75);
+  }
+  to {
+    box-shadow: 0 0 0 calc(10px * var(--ui, 1)) rgba(242, 201, 76, 0);
+  }
+}
+
+.delta {
+  position: absolute;
+  left: 50%;
+  bottom: 85%;
+  font-size: calc(15px * var(--ui, 1));
+  font-weight: 800;
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+.up {
+  color: #ffe08a;
+}
+
+.down {
+  color: #ff9d8a;
+}
+
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -14px);
+  }
+}
+
+/* "Bot is playing" dots. */
+.thinking {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.thinking i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: thinking 0.9s ease-in-out infinite;
+}
+
+.thinking i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.thinking i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes thinking {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .coin.pulse,
+  .thinking i {
+    animation: none;
+  }
+
+  .delta {
+    animation: fadeOut 0.8s step-end forwards;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
 .phase {
   font-size: calc(12px * var(--ui, 1));
   padding: calc(2px * var(--ui, 1)) calc(8px * var(--ui, 1));

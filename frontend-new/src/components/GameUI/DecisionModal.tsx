@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName, isPixelated } from '../../utils/cardData';
-import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
+import { decisionConfirmLabel, decisionPrompt, isYesNoDecision } from '../../utils/i18n';
 import { useCardPreview } from './useCardPreview';
 import styles from './DecisionModal.module.css';
 
@@ -125,7 +125,7 @@ export function DecisionModal() {
               disabled={!canConfirm}
               data-testid="decision-confirm"
             >
-              {zh ? '確認' : 'Confirm'} ({selected.length})
+              {decisionConfirmLabel(decision, selected.length, language)}
             </button>
           )}
         </div>

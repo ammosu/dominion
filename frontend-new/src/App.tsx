@@ -8,6 +8,7 @@ import { PlayerPanel } from './components/GameUI/PlayerPanel';
 import { TrashPile } from './components/GameUI/TrashPile';
 import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
+import { TurnBanner } from './components/GameUI/TurnBanner';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { DecisionModal } from './components/GameUI/DecisionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
@@ -79,12 +80,13 @@ function App() {
             />
           </>
         )}
+        <TurnBanner />
+        <Toast anchor={gameStarted ? layout?.statusBar : undefined} />
       </main>
       <ActionLog drawer={logAsDrawer} open={logOpen} onClose={() => setLogOpen(false)} />
 
       <CardTooltip />
       <CardInspector />
-      <Toast />
       <DecisionModal />
       {isGameOver && finalScores && (
         <GameOverModal scores={finalScores} winners={winners} onClose={handleCloseGameOver} />

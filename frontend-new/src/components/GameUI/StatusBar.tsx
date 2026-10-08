@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
@@ -6,6 +6,43 @@ import { isAction, isTreasure } from '../../utils/cardData';
 import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
 import type { Rect } from '../../game/tableLayout';
 import styles from './StatusBar.module.css';
+
+/**
+ * A counter that pulses and floats its change ("+2", "−1") when `value`
+ * changes within the same turn (`turnKey`); a new turn resets silently.
+ */
+function Stat({ value, turnKey, className, fx, children }: { value: number; turnKey: string; className?: string; fx?: string; children: ReactNode }) {
+  const previous = useRef({ value, turnKey });
+  const changes = useRef(0);
+  const [change, setChange] = useState<{ delta: number; id: number } | null>(null);
+
+  useEffect(() => {
+    const before = previous.current;
+    if (before.turnKey === turnKey && before.value !== value) {
+      setChange({ delta: value - before.value, id: ++changes.current });
+    } else if (before.turnKey !== turnKey) {
+      setChange(null);
+    }
+    previous.current = { value, turnKey };
+  }, [value, turnKey]);
+
+  return (
+    <span className={styles.stat} data-fx={fx}>
+      <span key={change?.id ?? 0} className={`${className ?? ''} ${change ? styles.pulse : ''}`}>{children}</span>
+      {change && (
+        <span
+          key={`d${change.id}`}
+          className={`${styles.delta} ${change.delta > 0 ? styles.up : styles.down}`}
+          onAnimationEnd={() => setChange(null)}
+          aria-hidden
+        >
+          {change.delta > 0 ? '+' : '−'}
+          {Math.abs(change.delta)}
+        </span>
+      )}
+    </span>
+  );
+}
 
 /**
  * Actions | Buys | Coins of the player whose turn it is, a one-line prompt,
@@ -54,7 +91,17 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
         : zh ? '請在視窗中完成選擇' : 'Make your choice in the dialog';
     }
     if (!canAct) {
-      return (
+      return currentPlayer.is_ai ? (
+        <>
+          <span className={styles.promptName}>{currentPlayer.name}</span>
+          {zh ? ' 行動中' : ' is playing'}
+          <span className={styles.thinking} aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+        </>
+      ) : (
         <>
           {zh ? '等待 ' : 'Waiting for '}
           <span className={styles.promptName}>{currentPlayer.name}</span>…
@@ -73,6 +120,9 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
     return zh ? '購買完畢就結束回合' : 'Done buying? End your turn';
   })();
 
+  const turnKey = `${gameState.current_player}-${currentPlayer.turns_taken}`;
+  // Nothing left to play: the Action-phase button just moves on to buying.
+  const actionsDone = me.actions === 0 || !me.hand.some(isAction);
   const variant = rect.width < 560 ? styles.stacked : rect.height < 56 ? styles.compact : '';
   const showTreasures = canAct && gameState.phase === 'Buy' && !gameState.turn.has_bought && me.hand.some(isTreasure);
   const yesNo = myDecision && isYesNoDecision(myDecision) ? myDecision : null;
@@ -86,11 +136,17 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
       >
         <div className={styles.statusMain}>
           <div className={styles.counters}>
-            <span>{currentPlayer.actions} {zh ? '行動' : 'Actions'}</span>
+            <Stat value={currentPlayer.actions} turnKey={turnKey} fx="actions">
+              {currentPlayer.actions} {zh ? '行動' : 'Actions'}
+            </Stat>
             <span className={styles.divider}>|</span>
-            <span>{currentPlayer.buys} {zh ? '購買' : 'Buys'}</span>
+            <Stat value={currentPlayer.buys} turnKey={turnKey} fx="buys">
+              {currentPlayer.buys} {zh ? '購買' : 'Buys'}
+            </Stat>
             <span className={styles.divider}>|</span>
-            <span className={styles.coin}>{currentPlayer.coins}</span>
+            <Stat value={currentPlayer.coins} turnKey={turnKey} className={styles.coin} fx="coins">
+              {currentPlayer.coins}
+            </Stat>
             <span className={styles.phase}>
               {gameState.phase === 'Action' ? (zh ? '行動階段' : 'Action phase') : zh ? '購買階段' : 'Buy phase'}
             </span>
@@ -127,7 +183,9 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
           {canAct && (
             <button className={styles.endPhaseButton} onClick={requestEndPhase} data-testid="end-phase">
               {gameState.phase === 'Action'
-                ? zh ? '結束行動階段 ⏭' : 'End Actions ⏭'
+                ? actionsDone
+                  ? zh ? '進入購買階段 ⏭' : 'To Buy phase ⏭'
+                  : zh ? '結束行動階段 ⏭' : 'End Actions ⏭'
                 : zh ? '結束回合 ⏭' : 'End Turn ⏭'}
             </button>
           )}

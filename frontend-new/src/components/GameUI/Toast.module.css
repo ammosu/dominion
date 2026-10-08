@@ -1,25 +1,38 @@
 .toast {
-  position: fixed;
-  top: 72px;
-  right: 300px;
-  padding: 10px 18px;
-  border-radius: 4px;
-  font-size: 13px;
+  padding: calc(10px * var(--ui, 1)) calc(18px * var(--ui, 1));
+  border-radius: 6px;
+  font-size: calc(14px * var(--ui, 1));
   font-weight: 600;
   font-family: 'Noto Sans TC', serif;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   z-index: 1100;
-  animation: slideIn 0.25s ease-out;
-  max-width: 400px;
+  pointer-events: none;
+  text-align: center;
 }
 
-@keyframes slideIn {
+/* Above the status bar: bottom edge at `top`, centered on `left`. */
+.anchored {
+  position: absolute;
+  width: max-content;
+  transform: translate(-50%, -100%);
+  animation: riseIn 0.22s ease-out;
+}
+
+.floating {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  max-width: min(420px, calc(100vw - 24px));
+  transform: translateX(-50%);
+}
+
+@keyframes riseIn {
   from {
-    transform: translateY(-12px);
+    transform: translate(-50%, calc(-100% + 10px));
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translate(-50%, -100%);
     opacity: 1;
   }
 }
@@ -42,12 +55,8 @@
   border: 1px solid rgba(196, 164, 98, 0.3);
 }
 
-@media (max-width: 899px) {
-  .toast {
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    max-width: none;
-    text-align: center;
+@media (prefers-reduced-motion: reduce) {
+  .anchored {
+    animation: none;
   }
 }

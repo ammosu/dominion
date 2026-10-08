@@ -60,6 +60,21 @@ const LOG_PHRASES_ZH: [RegExp, string][] = [
   [/ ends turn$/, ' 結束回合'],
 ];
 
+/**
+ * The log without bookkeeping lines: phase/turn ends (the next turn header
+ * says as much) and the "gains" that merely repeats the "buys" before it.
+ * Returns the kept entries with their original indices.
+ */
+export function condenseLog(log: string[]): { entry: string; index: number }[] {
+  return log
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ entry, index }) => {
+      if (/ ends (Action phase|turn)$/.test(entry)) return false;
+      const gain = entry.match(/^(.+) gains (.+)$/);
+      return !(gain && index > 0 && log[index - 1] === `${gain[1]} buys ${gain[2]}`);
+    });
+}
+
 export function translateLogEntry(entry: string, lang: Lang): string {
   if (lang === 'en') return entry;
 
@@ -129,6 +144,37 @@ export function decisionPrompt(decision: Decision, lang: Lang): string {
       return zh ? `${source}：選擇要放在最上面的牌` : `${source}: choose the card to put on top`;
     case 'TopdeckFromHand':
       return zh ? `${source}：選一張手牌放到牌庫頂` : `${source}: put a card from your hand onto your deck`;
+  }
+}
+
+/** Confirm-button text for a multi-card decision with `count` cards selected: says what will happen. */
+export function decisionConfirmLabel(decision: Decision, count: number, lang: Lang): string {
+  const zh = lang === 'zh';
+  if (count === 0) {
+    switch (decision.purpose.kind) {
+      case 'DiscardToDraw':
+        return zh ? '不棄牌，繼續' : 'Discard nothing';
+      case 'TrashFromHand':
+      case 'SentryTrash':
+        return zh ? '不移除，繼續' : 'Trash nothing';
+      case 'SentryDiscard':
+        return zh ? '全部放回牌庫頂' : 'Put all back';
+      default:
+        return zh ? '略過' : 'Skip';
+    }
+  }
+  switch (decision.purpose.kind) {
+    case 'DiscardToDraw':
+      return zh ? `棄 ${count} 張並抽 ${count} 張` : `Discard ${count}, draw ${count}`;
+    case 'DiscardDownTo':
+    case 'DiscardPerEmptyPile':
+    case 'SentryDiscard':
+      return zh ? `棄掉 ${count} 張` : `Discard ${count}`;
+    case 'TrashFromHand':
+    case 'SentryTrash':
+      return zh ? `移除 ${count} 張` : `Trash ${count}`;
+    default:
+      return zh ? `確認（${count} 張）` : `Confirm (${count})`;
   }
 }
 

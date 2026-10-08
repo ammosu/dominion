@@ -7,6 +7,7 @@
   border: 1px solid rgba(160, 190, 220, 0.25);
   color: #f2ead8;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .panel.active {

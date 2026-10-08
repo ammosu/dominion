@@ -57,21 +57,7 @@
   background: rgba(196, 164, 98, 0.2);
 }
 
-.kingdom {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(4px * var(--ui, 1));
-  padding: calc(8px * var(--ui, 1)) calc(12px * var(--ui, 1));
-  border-bottom: 1px solid rgba(196, 164, 98, 0.12);
-  font-size: calc(11px * var(--ui, 1));
-}
 
-.kingdom span {
-  padding: calc(1px * var(--ui, 1)) calc(6px * var(--ui, 1));
-  border-left: 3px solid;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 2px;
-}
 
 .logContent {
   flex: 1;

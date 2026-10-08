@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
-import { ART_STYLES, CARD_DATA, getCardFrameStyle, type ArtStyle } from '../../utils/cardData';
-import { translateLogEntry } from '../../utils/i18n';
+import { ART_STYLES, CARD_DATA, type ArtStyle } from '../../utils/cardData';
+import { condenseLog, translateLogEntry } from '../../utils/i18n';
 import { SoundManager } from '../../utils/SoundManager';
 import styles from './ActionLog.module.css';
 
@@ -98,17 +98,8 @@ export function ActionLog({ drawer = false, open = false, onClose }: { drawer?: 
             </button>
           )}
         </div>
-        {gameState && (
-          <div className={styles.kingdom} title={zh ? '本局王國牌' : 'Kingdom'}>
-            {gameState.kingdom.map((card) => (
-              <span key={card} style={{ borderColor: getCardFrameStyle(card).color }}>
-                {CARD_DATA[card]?.name[language] ?? card}
-              </span>
-            ))}
-          </div>
-        )}
         <div className={styles.logContent} ref={logRef}>
-          {gameState?.log.map((entry, index) => (
+          {condenseLog(gameState?.log ?? []).map(({ entry, index }) => (
             <div key={index} className={isTurnLine(entry) ? styles.turnLine : styles.logEntry}>
               {render(entry)}
             </div>

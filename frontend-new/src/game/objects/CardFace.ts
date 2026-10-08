@@ -9,7 +9,8 @@ const resolution = () => window.devicePixelRatio || 2;
 
 /**
  * A card drawn at any size: name banner, artwork, type label strip, cost
- * coin (bottom-left) and an optional count badge (top-left). Used for both
+ * coin (bottom-left) and an optional count badge (top-right of the artwork,
+ * clear of the name). Used for both
  * supply piles and hand cards; origin is the card's center.
  */
 export class CardFace extends Phaser.GameObjects.Container {
@@ -99,18 +100,18 @@ export class CardFace extends Phaser.GameObjects.Container {
         .setResolution(resolution()),
     );
 
-    // Count badge, top-left (hidden until setCount).
-    const badgeHeight = Math.round(bannerHeight * 1.05);
+    // Count badge, top-right just under the name banner (hidden until setCount).
+    const badgeHeight = Math.max(14, Math.round(bannerHeight * 0.95));
     this.countText = scene.add
       .text(0, 0, '', {
         fontFamily: '"Cormorant Garamond", serif',
         fontSize: `${Math.round(badgeHeight * 0.82)}px`,
         fontStyle: 'bold',
-        color: '#ffffff',
+        color: '#f5ead2',
       })
       .setOrigin(0.5)
       .setResolution(resolution());
-    this.countBadge = scene.add.container(left + 1, top + 1);
+    this.countBadge = scene.add.container(0, artTop + 2);
     this.countBadge.setData('height', badgeHeight);
     this.countBadge.add([scene.add.graphics(), this.countText]);
     this.countBadge.setVisible(false);
@@ -122,21 +123,23 @@ export class CardFace extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  setCount(count: number | null) {
+  /** Pile size or copies in hand ("×3"); null hides the badge. */
+  setCount(count: number | null, prefix = '') {
     if (count === null) {
       this.countBadge.setVisible(false);
       return;
     }
     const height = this.countBadge.getData('height') as number;
-    this.countText.setText(String(count));
+    this.countText.setText(`${prefix}${count}`);
     const width = Math.max(height, this.countText.width + 8);
     const bg = this.countBadge.getAt(0) as Phaser.GameObjects.Graphics;
     bg.clear();
-    bg.fillStyle(0xc0392b, 1);
-    bg.lineStyle(1, 0xffffff, 0.8);
+    bg.fillStyle(0x1f1a14, 0.88);
+    bg.lineStyle(1, 0xc4a462, 0.6);
     bg.fillRoundedRect(0, 0, width, height, 4);
     bg.strokeRoundedRect(0, 0, width, height, 4);
     this.countText.setPosition(width / 2, height / 2);
+    this.countBadge.x = this.cardWidth / 2 - 5 - width;
     this.countBadge.setVisible(true);
   }
 

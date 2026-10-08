@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decisionPrompt, translateError, translateLogEntry } from './i18n';
+import { condenseLog, decisionPrompt, translateError, translateLogEntry } from './i18n';
 import { calculateVictoryPoints, CARD_DATA, KINGDOM_PRESETS } from './cardData';
 
 describe('log translation', () => {
@@ -8,6 +8,15 @@ describe('log translation', () => {
     expect(translateLogEntry('Alice discards Estate, Copper', 'zh')).toBe('Alice 棄掉 莊園、銅幣');
     expect(translateLogEntry('Alice gains Gold to hand', 'zh')).toBe('Alice 獲得 黃金 到手牌');
     expect(translateLogEntry("Bot's turn", 'zh')).toBe('—— Bot 的回合 ——');
+  });
+
+  it('drops bookkeeping lines but keeps real gains', () => {
+    const log = ['[AI] Bot buys Silver', '[AI] Bot gains Silver', '[AI] Bot ends turn', "Alice's turn", 'Alice gains Silver', 'Alice ends Action phase'];
+    expect(condenseLog(log)).toEqual([
+      { entry: '[AI] Bot buys Silver', index: 0 },
+      { entry: "Alice's turn", index: 3 },
+      { entry: 'Alice gains Silver', index: 4 },
+    ]);
   });
 
   it('leaves English untouched', () => {
