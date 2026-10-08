@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
-import { getCardName, CARD_DATA } from '../../utils/cardData';
+import { getCardName, CARD_DATA, calculateVictoryPoints } from '../../utils/cardData';
 import { Player } from '../../types/game';
 import styles from './PlayersSidebar.module.css';
 
@@ -16,17 +16,10 @@ export function PlayersSidebar() {
   const players = gameState.players;
   const currentPlayerIndex = gameState.current_player;
 
-  const calculateScore = (player: Player) => {
-    const allCards = [...player.deck, ...player.hand, ...player.discard];
-    let score = 0;
-    for (const card of allCards) {
-      const data = CARD_DATA[card];
-      if (data?.vp !== undefined) {
-        score += data.vp;
-      }
-    }
-    return score;
-  };
+  const ownedCards = (player: Player) => [
+    ...player.deck, ...player.hand, ...player.discard, ...player.in_play, ...player.set_aside,
+  ];
+  const calculateScore = (player: Player) => calculateVictoryPoints(ownedCards(player));
 
   const countCards = (cards: string[]) => {
     const counts: Record<string, number> = {};
@@ -63,7 +56,7 @@ export function PlayersSidebar() {
     const score = calculateScore(player);
 
     // Count treasures
-    const allCards = [...player.deck, ...player.hand, ...player.discard];
+    const allCards = ownedCards(player);
     const goldCount = allCards.filter(c => c === 'Gold').length;
     const silverCount = allCards.filter(c => c === 'Silver').length;
     const copperCount = allCards.filter(c => c === 'Copper').length;

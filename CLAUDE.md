@@ -10,11 +10,14 @@ Dominion card game implementation with Rust backend (Axum + WebSocket) and React
 
 ### Backend (Rust)
 ```bash
+# No local toolchain? Run the same commands in the Dockerfile's image:
+#   docker run --rm -v "$PWD":/app -w /app -e CARGO_TARGET_DIR=/target -v dom-target:/target rust:1.83-slim cargo test
 ~/.cargo/bin/cargo build --release        # Build (release mode)
 ./target/release/backend                   # Run server on localhost:3000
 ~/.cargo/bin/cargo test                    # Run all tests
 ~/.cargo/bin/cargo test -p shared          # Test shared game logic only
 ~/.cargo/bin/cargo test -p backend         # Test backend only
+~/.cargo/bin/cargo test --release -p backend ai_benchmark -- --ignored --nocapture  # MediumAi vs SimpleAi win rates
 ```
 
 ### Frontend (React + Phaser)
@@ -50,11 +53,14 @@ cd frontend-new && npm run dev
 - `crates/shared` — Game logic (actions, cards, game state, player state)
 
 **Key modules:**
-- `websocket.rs` — WebSocket handler, processes `ClientMessage`, runs AI turn loop after each human action
-- `events.rs` — `ClientMessage` (tagged enum) and `ServerMessage` type definitions
-- `ai/simple.rs` — `SimpleAi` implementation (`decide_action()` for buy/play decisions)
-- `shared/action.rs` — `PlayerAction` enum, validation, state mutations via `GameState::execute()`
-- `shared/game.rs` — `GameState` struct, turn phases, supply management, game-over detection
+- `websocket.rs` — WebSocket handler; creates the game from `?difficulty=&kingdom=&name=`, runs `run_ai_turns` until the human must act
+- `events.rs` — `ClientMessage` (tagged enum, card fields deserialize straight into `Card`) and `ServerMessage`
+- `ai/mod.rs` — `AiPlayer` trait, shared turn logic, `resolve_decision()` answers for every decision kind, `run_ai_turns()`
+- `ai/simple.rs` / `ai/medium.rs` — purchase strategies (Big Money vs. kingdom-aware)
+- `shared/card.rs` — all 33 cards of the 2nd-edition base set, costs/types, `RECOMMENDED_KINGDOMS`
+- `shared/decision.rs` — `Decision` (pending choice), `Purpose`, `Effect` (engine stack)
+- `shared/action.rs` — `PlayerAction`, `GameState::execute(actor, action)`, every card's effect, attacks, clean-up
+- `shared/game.rs` — `GameState`, setup by player count, game end, scoring (Gardens) and tie-break
 
 ### Frontend (React + Phaser 3 Hybrid)
 
@@ -64,7 +70,9 @@ Two rendering layers share state through Zustand:
 - **Zustand Stores** — `gameStore` (game state from server), `uiStore` (language, toasts, modals)
 
 **Key modules:**
-- `GameContainer.tsx` — React↔Phaser bridge; validates actions client-side, sends WebSocket messages, syncs state to Phaser scene via useEffect hooks
+- `GameContainer.tsx` — React↔Phaser bridge; validates actions client-side, sends WebSocket messages, syncs the viewer's hand and the supply to Phaser
+- `DecisionModal.tsx` — renders `pending_decision` for this player and answers with `Resolve`; the only card-choice UI
+- `utils/cardData.ts` — card metadata, rulebook texts, `KINGDOM_PRESETS`; `utils/i18n.ts` — log/error/prompt translation
 - `scenes/TableScene.ts` — Main Phaser scene; `updateHand()`, `updateSupply()`, `updateLanguage()`
 - `objects/Card.ts` — Draggable card with hover/drag animations; stores `originalY` to prevent position drift
 - `objects/Hand.ts` — Fan-arranged hand; `addCardSilent()` + `arrangeCards(animate)` for batch updates without fly-in
@@ -91,28 +99,17 @@ Backend uses Rust `#[serde(tag = "type")]` tagged enums. Frontend must send flat
 { type: 'BuyCard', payload: { card: 'Silver' } }  // ❌ Wrong
 ```
 
-### Card Action Routing
-GameContainer routes card clicks by type:
-- Treasure cards (Copper/Silver/Gold) → `PlayTreasure` (Buy phase, adds coins)
-- Action cards → `PlayCard` (Action phase, uses an action)
+### Messages
+Client → server: `PlayCard`, `PlayTreasure`, `PlayAllTreasures`, `BuyCard`, `EndPhase`, `Resolve { cards }`.
+Server → client: `{ type: 'GameStateUpdate', payload: { game_state, viewer, error } }`; `error` is shown as a toast.
 
-### Complex Action Cards
-Cards with multi-step UI (defined in `COMPLEX_ACTIONS` array in GameContainer):
-- **Cellar** — Modal to select hand cards to discard
-- **Workshop** — Modal to select supply card costing ≤4
-- **Mine** — Two-step: trash a treasure, then gain one costing ≤ (trashed cost + 3)
-- **Remodel** — Two-step: trash a card, then gain one costing ≤ (trashed cost + 2)
-- **Militia** — Auto-sends, no modal needed (opponents choose discards server-side)
+### Decisions (server-driven card choices)
+Rules follow the official 2nd-edition rulebook. Playing a card pushes `Effect::Play` on the engine stack; when a card needs a choice the engine stores `pending_decision` (`player`, `source`, `purpose`, `options`, `min..max`) and stops. The owner answers with `Resolve { cards }` (a sub-multiset of `options`). While a decision is pending, nothing else may be done; only `decision.player` may answer (attacks target opponents). Yes/no choices are `options: [card], min 0, max 1`. Add a card by extending `resolve_card` / `apply_answer` in `action.rs` and `resolve_decision` in `ai/mod.rs` — never by adding client message types.
 
-### AI Turn Loop (Server-Side)
-After each human action in `websocket.rs`, the backend automatically runs AI turns:
-1. Check if current player is AI (`player.is_ai`)
-2. Call `SimpleAi::decide_action()` in a loop (max 20 actions)
-3. If AI returns `None` or action errors, force `EndPhase`
-4. Loop until it's a human player's turn again
-5. Send final `GameStateUpdate` with all AI actions already applied
+Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is auto-revealed (it has no downside in this set); Treasures cannot be played after buying.
 
-The frontend `AITurnController` is now a no-op — all AI logic is server-side.
+### AI Loop (Server-Side)
+`run_ai_turns()` runs after every human message: while the acting player (decision owner, else current player) is an AI it answers the decision or takes a turn action. Rejected AI actions fall back to `EndPhase` / the minimal answer.
 
 ### Phaser Object Patterns
 - **Position drift prevention**: Card and SupplyPile store `originalY` at creation; hover tweens use absolute positions (`y: this.originalY - 10`), never relative
@@ -143,9 +140,11 @@ The frontend `AITurnController` is now a no-op — all AI logic is server-side.
 **Backend:**
 - `~/.cargo/bin/cargo` may be needed if cargo is not in PATH
 - WebSocket handler creates a new game per connection (not persistent across reconnects)
-- `parse_card()` in websocket.rs must match all card name strings exactly
+- Card ids are the Rust enum names (`CouncilRoom`, `ThroneRoom`); log lines use display names ("Council Room")
 
 **Frontend:**
+- Render `viewerPlayer` (this client), not `currentPlayer`: the human answers attacks during the AI's turn
+- Card art: `tools/card-art/generate.py` (Codex CLI image generation, cute style in `style.md`, subjects in `cards.json`)
 - Hand cards are Phaser objects on canvas, NOT React components — click handling is via Phaser events
 - Must call Phaser scene methods from React useEffect, never directly
 - Toast notifications auto-dismiss after 3 seconds

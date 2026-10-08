@@ -8,7 +8,7 @@
   background: #17120c;
   border: 2px solid color-mix(in srgb, var(--card-accent) 72%, #d8c08b 28%);
   border-radius: 10px;
-  z-index: 950;
+  z-index: 1100; /* above the decision modal (1000) */
   pointer-events: none;
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.66),

@@ -8,25 +8,30 @@ import { DeckAreas } from './components/GameUI/DeckAreas';
 import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
 import { GameOverModal } from './components/GameUI/GameOverModal';
-import { CardSelectionModal } from './components/GameUI/CardSelectionModal';
+import { DecisionModal } from './components/GameUI/DecisionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
 import { StartScreen } from './components/GameUI/StartScreen';
 import { PlayersSidebar } from './components/GameUI/PlayersSidebar';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
+import { useUIStore } from './store/uiStore';
+import { translateError } from './utils/i18n';
 
 function App() {
   const setGameState = useGameStore((state) => state.setGameState);
   const isGameOver = useGameStore((state) => state.isGameOver);
   const finalScores = useGameStore((state) => state.finalScores);
+  const winners = useGameStore((state) => state.winners);
   const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     // WebSocket connection is now established in StartScreen after user selects AI difficulty
     const unsubscribe = wsService.onMessage((msg) => {
-      console.log('Received message:', msg);
-      if (msg.type === 'GameStateUpdate' && msg.payload.game_state) {
-        setGameState(msg.payload.game_state as any);
+      if (msg.type !== 'GameStateUpdate') return;
+      setGameState(msg.payload.game_state, msg.payload.viewer);
+      if (msg.payload.error) {
+        const { language, showToast } = useUIStore.getState();
+        showToast(translateError(msg.payload.error, language), 'error');
       }
     });
 
@@ -55,9 +60,9 @@ function App() {
       <CardTooltip />
       <Toast />
       <GameContainer />
-      <CardSelectionModal />
+      <DecisionModal />
       {isGameOver && finalScores && (
-        <GameOverModal scores={finalScores} onClose={handleCloseGameOver} />
+        <GameOverModal scores={finalScores} winners={winners} onClose={handleCloseGameOver} />
       )}
     </div>
   );

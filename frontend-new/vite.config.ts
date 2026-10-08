@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// Override with BACKEND_URL=http://localhost:3300 when port 3000 is taken.
+const backend = process.env.BACKEND_URL ?? 'http://localhost:3000';
+
 export default defineConfig({
   plugins: [react()],
   build: {
@@ -17,9 +20,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': backend,
       '/ws': {
-        target: 'ws://localhost:3000',
+        target: backend.replace(/^http/, 'ws'),
         ws: true,
       },
     },

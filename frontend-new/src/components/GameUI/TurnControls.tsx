@@ -3,28 +3,24 @@ import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import { SoundManager } from '../../utils/SoundManager';
-import { CARD_DATA } from '../../utils/cardData';
+import { isAction, isTreasure } from '../../utils/cardData';
 import styles from './TurnControls.module.css';
-
-const TREASURES = ['Copper', 'Silver', 'Gold'];
 
 export function TurnControls() {
   const gameState = useGameStore((state) => state.gameState);
-  const currentPlayer = useGameStore((state) => state.currentPlayer);
+  const currentPlayer = useGameStore((state) => state.viewerPlayer);
+  const canAct = useGameStore((state) => state.canAct);
   const language = useUIStore((state) => state.language);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState<{ zh: string; en: string }>({ zh: '', en: '' });
 
-  if (!gameState || !currentPlayer) {
+  if (!gameState || !currentPlayer || !canAct) {
     return null;
   }
 
   const hasActionCardsInHand = () => {
-    return currentPlayer.hand.some((cardName) => {
-      const cardData = CARD_DATA[cardName];
-      return cardData && cardData.type === 'action';
-    });
+    return currentPlayer.hand.some(isAction);
   };
 
   const checkEndPhaseWarning = (): boolean => {
@@ -83,11 +79,10 @@ export function TurnControls() {
   const phaseButton = {
     Action: { zh: '結束行動階段 ⏭', en: 'End Action Phase ⏭' },
     Buy: { zh: '結束購買階段 ⏭', en: 'End Buy Phase ⏭' },
-    Cleanup: { zh: '結束清理', en: 'End Cleanup' },
   };
 
-  const hasTreasuresInHand = currentPlayer.hand.some((c) => TREASURES.includes(c));
-  const showPlayAllTreasures = gameState.phase === 'Buy' && hasTreasuresInHand;
+  const hasTreasuresInHand = currentPlayer.hand.some(isTreasure);
+  const showPlayAllTreasures = gameState.phase === 'Buy' && hasTreasuresInHand && !gameState.turn.has_bought;
 
   return (
     <>

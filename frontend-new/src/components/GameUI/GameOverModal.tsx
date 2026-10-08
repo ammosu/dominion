@@ -3,14 +3,15 @@ import styles from './GameOverModal.module.css';
 
 interface GameOverModalProps {
   scores: { name: string; score: number }[];
+  winners: string[];
   onClose: () => void;
 }
 
-export function GameOverModal({ scores, onClose }: GameOverModalProps) {
+export function GameOverModal({ scores, winners, onClose }: GameOverModalProps) {
   const language = useUIStore((state) => state.language);
 
   const sorted = [...scores].sort((a, b) => b.score - a.score);
-  const winner = sorted[0];
+  const winnerNames = winners.length > 0 ? winners : [sorted[0].name];
 
   return (
     <div className={styles.overlay}>
@@ -21,9 +22,11 @@ export function GameOverModal({ scores, onClose }: GameOverModalProps) {
 
         <div className={styles.winner}>
           <span className={styles.crown}>👑</span>
-          <h2>{winner.name}</h2>
+          <h2>{winnerNames.join(' & ')}</h2>
           <p>
-            {language === 'zh' ? '獲勝！' : 'Wins!'}
+            {winnerNames.length > 1
+              ? (language === 'zh' ? '共享勝利！' : 'Share the victory!')
+              : (language === 'zh' ? '獲勝！' : 'Wins!')}
           </p>
         </div>
 

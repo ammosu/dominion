@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SupplyPile } from './SupplyPile';
 import { SupplyCategory } from './SupplyCategory';
+import { BASE_CARDS, compareByCost } from '../../utils/cardData';
 
 export class SupplyArea {
   private scene: Phaser.Scene;
@@ -13,20 +14,23 @@ export class SupplyArea {
     this.scene = scene;
   }
 
-  setupSupply(supply: Record<string, number>, costs: Record<string, number>, lang: 'en' | 'zh' = 'zh') {
+  setupSupply(
+    supply: Record<string, number>,
+    costs: Record<string, number>,
+    lang: 'en' | 'zh' = 'zh',
+    kingdom: string[] = [],
+  ) {
     // Clear existing categories
     this.categories.forEach((category) => category.destroy());
     this.categories = [];
 
-    // Organize cards by type
-    const treasures = ['Copper', 'Silver', 'Gold'];
-    const victory = ['Estate', 'Duchy', 'Province', 'Curse'];
-    const actions = Object.keys(supply).filter(
-      (card) => !treasures.includes(card) && !victory.includes(card)
-    );
+    // Kingdom piles in the server's order (by cost); fall back to sorting ourselves.
+    const actions = (kingdom.length > 0 ? kingdom : Object.keys(supply))
+      .filter((card) => !BASE_CARDS.includes(card) && supply[card] !== undefined)
+      .sort(compareByCost);
 
     // LEFT SIDEBAR: Basic cards (Treasures + Victory) in vertical single column
-    const basicCards = [...treasures, ...victory];
+    const basicCards = BASE_CARDS;
     const basicLabel = lang === 'zh' ? '基本牌' : 'BASIC CARDS';
     const basicCategory = new SupplyCategory(
       this.scene,
@@ -67,6 +71,11 @@ export class SupplyArea {
     this.categories.forEach((category) => {
       category.updateSupply(supply);
     });
+  }
+
+  hasSameCards(cardNames: string[]): boolean {
+    const current = this.categories.flatMap((category) => category.getPiles().map((p) => p.getCardName()));
+    return current.length === cardNames.length && cardNames.every((name) => current.includes(name));
   }
 
   getPile(cardName: string): SupplyPile | undefined {

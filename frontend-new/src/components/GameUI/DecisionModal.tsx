@@ -1,0 +1,139 @@
+import { useEffect, useState } from 'react';
+import { useGameStore } from '../../store/gameStore';
+import { useUIStore } from '../../store/uiStore';
+import { wsService } from '../../services/websocket';
+import { CARD_DATA, getCardArtPath, getCardCost, getCardName } from '../../utils/cardData';
+import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
+import styles from './DecisionModal.module.css';
+
+/**
+ * Renders whatever decision the server is waiting on from this player.
+ * Every card choice in the game (own cards and opponents' attacks) goes
+ * through here and is answered with a single `Resolve` message.
+ */
+export function DecisionModal() {
+  const decision = useGameStore((state) => state.myDecision);
+  const language = useUIStore((state) => state.language);
+  const setHoveredCard = useUIStore((state) => state.setHoveredCard);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [minimized, setMinimized] = useState(false);
+
+  // A new decision (even an identical-looking one) starts with a fresh selection.
+  useEffect(() => {
+    setSelected([]);
+    setMinimized(false);
+  }, [decision]);
+
+  if (!decision) return null;
+
+  const zh = language === 'zh';
+  const prompt = decisionPrompt(decision, language);
+  const send = (cards: string[]) => {
+    setHoveredCard(null);
+    wsService.send({ type: 'Resolve', cards });
+  };
+
+  if (minimized) {
+    return (
+      <div className={styles.peekBar}>
+        <span>{prompt}</span>
+        <button className={styles.confirmButton} onClick={() => setMinimized(false)}>
+          {zh ? '返回選擇' : 'Back to choice'}
+        </button>
+      </div>
+    );
+  }
+
+  const yesNo = isYesNoDecision(decision);
+  const singleRequired = decision.min === 1 && decision.max === 1;
+
+  const toggle = (index: number) => {
+    if (yesNo) return;
+    if (singleRequired) {
+      send([decision.options[index]]);
+      return;
+    }
+    if (selected.includes(index)) {
+      setSelected(selected.filter((i) => i !== index));
+    } else if (selected.length < decision.max) {
+      setSelected([...selected, index]);
+    }
+  };
+
+  const countHint = (() => {
+    if (yesNo || singleRequired) return null;
+    if (decision.min === decision.max) {
+      return zh ? `請選擇 ${decision.min} 張` : `Choose exactly ${decision.min}`;
+    }
+    return zh
+      ? `可選 ${decision.min}–${decision.max} 張`
+      : `Choose ${decision.min}–${decision.max}`;
+  })();
+
+  const canConfirm = selected.length >= decision.min && selected.length <= decision.max;
+
+  return (
+    <div className={styles.overlay} data-testid="decision-modal">
+      <div className={styles.modal}>
+        <div className={styles.headerRow}>
+          <h2 className={styles.title}>{prompt}</h2>
+          <button className={styles.peekButton} onClick={() => setMinimized(true)} title={zh ? '查看桌面' : 'View table'}>
+            {zh ? '查看桌面' : 'View table'}
+          </button>
+        </div>
+        {countHint && <div className={styles.subtitle}>{countHint}</div>}
+
+        <div className={styles.cardGrid}>
+          {decision.options.map((cardName, index) => {
+            const data = CARD_DATA[cardName];
+            const artworkPath = getCardArtPath(cardName);
+            const backgroundImage = artworkPath
+              ? `linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.12) 42%, rgba(0, 0, 0, 0.82)), url("${artworkPath}")`
+              : undefined;
+            return (
+              <div
+                key={`${cardName}-${index}`}
+                className={`${styles.card} ${data ? styles[data.type] : ''} ${
+                  artworkPath ? styles.withArtwork : ''
+                } ${selected.includes(index) ? styles.selected : ''}`}
+                onClick={() => toggle(index)}
+                onMouseEnter={() => setHoveredCard(cardName)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={backgroundImage ? { backgroundImage } : undefined}
+                data-testid={`decision-card-${cardName}-${index}`}
+              >
+                <div className={styles.cardName}>{getCardName(cardName, language)}</div>
+                <div className={styles.cardCost}>{getCardCost(cardName)}</div>
+                {data?.desc && <div className={styles.cardDesc}>{data.desc[language]}</div>}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className={styles.actions}>
+          {yesNo ? (
+            <>
+              <button className={styles.cancelButton} onClick={() => send([])} data-testid="decision-no">
+                {zh ? '不要' : 'No'}
+              </button>
+              <button className={styles.confirmButton} onClick={() => send(decision.options)} data-testid="decision-yes">
+                {zh ? '是' : 'Yes'}
+              </button>
+            </>
+          ) : (
+            !singleRequired && (
+              <button
+                className={styles.confirmButton}
+                onClick={() => send(selected.map((i) => decision.options[i]))}
+                disabled={!canConfirm}
+                data-testid="decision-confirm"
+              >
+                {zh ? '確認' : 'Confirm'} ({selected.length})
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

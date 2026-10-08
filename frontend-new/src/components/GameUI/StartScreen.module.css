@@ -166,3 +166,52 @@
   border-color: rgba(196, 164, 98, 0.3);
   color: #a08860;
 }
+
+.kingdomRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rerollButton {
+  background: rgba(196, 164, 98, 0.1);
+  border: 1px solid rgba(196, 164, 98, 0.35);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.kingdomPreview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 420px;
+  margin: 4px 0 8px;
+}
+
+.kingdomChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 3px;
+  border: 1px solid rgba(196, 164, 98, 0.25);
+  border-radius: 12px;
+  background: rgba(196, 164, 98, 0.06);
+  font-size: 12px;
+  color: #e8dcc8;
+}
+
+.kingdomCost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c4a462;
+  color: #1a1208;
+  font-weight: 700;
+  font-size: 11px;
+}

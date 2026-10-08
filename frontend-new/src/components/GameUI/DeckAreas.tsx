@@ -5,7 +5,7 @@ import { getCardName, CARD_DATA } from '../../utils/cardData';
 import styles from './DeckAreas.module.css';
 
 export function DeckAreas() {
-  const currentPlayer = useGameStore((state) => state.currentPlayer);
+  const currentPlayer = useGameStore((state) => state.viewerPlayer);
   const language = useUIStore((state) => state.language);
   const [showDiscard, setShowDiscard] = useState(false);
 

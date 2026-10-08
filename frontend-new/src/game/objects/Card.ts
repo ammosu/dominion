@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { getCardName } from '../../utils/cardData';
+import { getCardName, getCardType } from '../../utils/cardData';
 import { CardArtwork } from './CardArtwork';
 
 export class Card extends Phaser.GameObjects.Container {
@@ -191,11 +191,12 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   private getCardBgColor(cardName: string): number {
-    const treasures = ['Copper', 'Silver', 'Gold'];
-    const victory = ['Estate', 'Duchy', 'Province'];
-    if (treasures.includes(cardName)) return 0xfff8dc; // cream/gold tint
-    if (victory.includes(cardName)) return 0xe8f5e9; // light green
-    if (cardName === 'Curse') return 0xf3e5f5; // light purple
-    return 0xffffff; // white for action cards
+    switch (getCardType(cardName)) {
+      case 'treasure': return 0xfff8dc;
+      case 'victory': return 0xe8f5e9;
+      case 'curse': return 0xf3e5f5;
+      default: return 0xffffff;
+    }
   }
+
 }

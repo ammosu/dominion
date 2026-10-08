@@ -71,6 +71,8 @@ export class WebSocketService {
       this.reconnectTimer = null;
     }
     if (this.ws) {
+      // Detach first so an intentional close does not trigger auto-reconnect.
+      this.ws.onclose = null;
       this.ws.close();
       this.ws = null;
     }

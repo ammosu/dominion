@@ -38,7 +38,6 @@ export function TopBar() {
   const phaseText = {
     Action: { zh: '行動階段', en: 'Action Phase' },
     Buy: { zh: '購買階段', en: 'Buy Phase' },
-    Cleanup: { zh: '清理階段', en: 'Cleanup Phase' },
   };
 
   return (

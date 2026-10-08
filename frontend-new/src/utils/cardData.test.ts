@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  CARD_DATA,
   getCardArtPath,
   getCardTextureKey,
   getConfiguredCardArt,
@@ -21,26 +22,11 @@ describe('card artwork metadata', () => {
     expect(getCardArtPath('Unknown')).toBeUndefined();
   });
 
-  it('configures artwork for the complete base set', () => {
-    expect(getConfiguredCardArt().map(({ cardName }) => cardName)).toEqual([
-      'Copper',
-      'Silver',
-      'Gold',
-      'Estate',
-      'Duchy',
-      'Province',
-      'Curse',
-      'Cellar',
-      'Market',
-      'Smithy',
-      'Village',
-      'Workshop',
-      'Militia',
-      'Mine',
-      'Moat',
-      'Remodel',
-      'Woodcutter',
-    ]);
+  it('configures artwork for every card', () => {
+    expect(getConfiguredCardArt().map(({ cardName }) => cardName).sort()).toEqual(
+      Object.keys(CARD_DATA).sort(),
+    );
+    expect(getConfiguredCardArt()).toHaveLength(33);
   });
 
   it('maps every configured artwork path to an existing public WebP', () => {

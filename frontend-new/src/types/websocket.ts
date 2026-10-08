@@ -1,3 +1,5 @@
+import { GameState } from './game';
+
 // Backend expects tagged enum format: { type: "BuyCard", card: "Copper" }
 export type ClientMessage =
   | { type: 'PlayCard'; card: string }
@@ -5,24 +7,15 @@ export type ClientMessage =
   | { type: 'PlayAllTreasures' }
   | { type: 'BuyCard'; card: string }
   | { type: 'EndPhase' }
-  | { type: 'PlayCellar'; cards: string[] }
-  | { type: 'PlayWorkshop'; card: string }
-  | { type: 'PlayMilitia' }
-  | { type: 'PlayMine'; trash: string; gain: string }
-  | { type: 'PlayRemodel'; trash: string; gain: string }
-  | { type: 'StartGame'; playerName: string };
-
-export interface AnimationHint {
-  type: string;
-  from: string;
-  to: string;
-  card: string;
-}
+  | { type: 'Resolve'; cards: string[] };
 
 export interface ServerMessage {
-  type: string;
+  type: 'GameStateUpdate';
   payload: {
-    game_state?: unknown;
-    animation_hints?: AnimationHint;
+    game_state: GameState;
+    /** Index of the player this connection controls. */
+    viewer: number;
+    /** Why the last message was rejected, if it was. */
+    error: string | null;
   };
 }

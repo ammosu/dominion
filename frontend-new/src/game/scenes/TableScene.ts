@@ -103,15 +103,15 @@ export class TableScene extends Phaser.Scene {
     });
   }
 
-  // Add method to update supply
-  updateSupply(supply: Record<string, number>, costs: Record<string, number>) {
+  /** Rebuilds the piles when the set of cards changes, otherwise updates counts. */
+  updateSupply(supply: Record<string, number>, costs: Record<string, number>, kingdom: string[] = []) {
     if (!this.supplyArea) {
       this.supplyArea = new SupplyArea(this);
     }
-    if (this.supplyArea.getPile(Object.keys(supply)[0])) {
+    if (this.supplyArea.hasSameCards(Object.keys(supply))) {
       this.supplyArea.updateSupply(supply);
     } else {
-      this.supplyArea.setupSupply(supply, costs, this.currentLang);
+      this.supplyArea.setupSupply(supply, costs, this.currentLang, kingdom);
     }
   }
 

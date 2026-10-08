@@ -1,16 +1,25 @@
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
-import { CARD_DATA } from '../../utils/cardData';
+import { isAction, isTreasure } from '../../utils/cardData';
 import styles from './PhaseInstructions.module.css';
-
-const TREASURES = ['Copper', 'Silver', 'Gold'];
 
 export function PhaseInstructions() {
   const gameState = useGameStore((state) => state.gameState);
   const currentPlayer = useGameStore((state) => state.currentPlayer);
+  const myDecision = useGameStore((state) => state.myDecision);
   const language = useUIStore((state) => state.language);
 
   if (!gameState || !currentPlayer) return null;
+
+  if (myDecision) {
+    return (
+      <div className={styles.instructions} data-testid="phase-instructions">
+        {language === 'zh' ? '🃏 請在視窗中完成選擇' : '🃏 Make your choice in the dialog'}
+      </div>
+    );
+  }
+
+  if (gameState.game_over) return null;
 
   // Don't show instructions during AI turn
   if (currentPlayer.is_ai) {
@@ -23,10 +32,8 @@ export function PhaseInstructions() {
 
   const getInstruction = (): string => {
     const hand = currentPlayer.hand;
-    const actionCards = hand.filter(
-      (c) => CARD_DATA[c]?.type === 'action'
-    );
-    const treasureCards = hand.filter((c) => TREASURES.includes(c));
+    const actionCards = hand.filter(isAction);
+    const treasureCards = gameState.turn.has_bought ? [] : hand.filter(isTreasure);
 
     switch (gameState.phase) {
       case 'Action': {
@@ -61,10 +68,6 @@ export function PhaseInstructions() {
           : '✅ Done buying? Click "End Buy Phase"';
       }
 
-      case 'Cleanup':
-        return language === 'zh'
-          ? '⏳ 清理中... 棄掉手牌並抽新牌'
-          : '⏳ Cleanup... Discarding hand and drawing new cards';
     }
   };
 
