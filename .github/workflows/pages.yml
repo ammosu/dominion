@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -40,9 +40,9 @@ jobs:
       - name: Build engine for the browser
         run: wasm-pack build crates/wasm --release --target web --no-pack --out-dir "$GITHUB_WORKSPACE/frontend-new/src/wasm"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: frontend-new/package-lock.json
 

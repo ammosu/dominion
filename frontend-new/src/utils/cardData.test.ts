@@ -11,7 +11,7 @@ import {
 
 function publicAssetExists(publicPath: string): boolean {
   const publicRoot = fileURLToPath(new URL('../../public/', import.meta.url));
-  return existsSync(`${publicRoot}${publicPath.replace(/^\//, '')}`);
+  return existsSync(`${publicRoot}${publicPath.slice(import.meta.env.BASE_URL.length)}`);
 }
 
 describe('card artwork metadata', () => {
@@ -27,7 +27,7 @@ describe('card artwork metadata', () => {
     const art = getConfiguredCardArt(style);
     expect(art.map(({ cardName }) => cardName).sort()).toEqual(Object.keys(CARD_DATA).sort());
     art.forEach(({ cardName, path }) => {
-      expect(path).toBe(`/assets/cards/${style}/${cardName.toLowerCase()}.webp`);
+      expect(path).toBe(`${import.meta.env.BASE_URL}assets/cards/${style}/${cardName.toLowerCase()}.webp`);
       expect(publicAssetExists(path), path).toBe(true);
     });
   });
