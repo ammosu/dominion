@@ -1,4 +1,4 @@
-use shared::{
+use crate::{
     action::PlayerAction,
     card::Card,
     decision::{Decision, Purpose},
@@ -278,15 +278,15 @@ pub fn resolve_decision(game: &GameState, decision: &Decision) -> Vec<Card> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shared::card::KINGDOM_CARDS;
-    use shared::game::PlayerInfo;
+    use crate::card::KINGDOM_CARDS;
+    use crate::game::PlayerInfo;
 
     /// Two AIs play full games on every recommended kingdom; every decision
     /// they make must be accepted and every game must finish.
     #[test]
     fn ai_games_finish_on_every_kingdom() {
         let ais: [&dyn AiPlayer; 2] = [&simple::SimpleAi, &medium::MediumAi];
-        let kingdoms = shared::card::RECOMMENDED_KINGDOMS
+        let kingdoms = crate::card::RECOMMENDED_KINGDOMS
             .iter()
             .map(|(_, k)| k.to_vec())
             .chain(std::iter::once(KINGDOM_CARDS[..10].to_vec()))
@@ -353,7 +353,7 @@ mod tests {
     #[ignore]
     fn ai_benchmark() {
         const GAMES: usize = 100;
-        for (id, kingdom) in shared::card::RECOMMENDED_KINGDOMS {
+        for (id, kingdom) in crate::card::RECOMMENDED_KINGDOMS {
             let mut medium_wins = 0.0;
             for i in 0..GAMES {
                 let medium_seat = i % 2;

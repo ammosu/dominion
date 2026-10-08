@@ -1,4 +1,5 @@
 import { ClientMessage, ServerMessage } from '../types/websocket';
+import { LocalEngineService } from './localEngine';
 
 type MessageHandler = (message: ServerMessage) => void;
 
@@ -79,4 +80,14 @@ export class WebSocketService {
   }
 }
 
-export const wsService = new WebSocketService();
+/** What the UI needs from a game connection, server or in-browser. */
+export interface GameConnection {
+  connect(url?: string): void;
+  send(message: ClientMessage): void;
+  onMessage(handler: MessageHandler): () => void;
+  disconnect(): void;
+}
+
+// VITE_ENGINE=wasm (GitHub Pages) runs the engine in the browser instead.
+export const wsService: GameConnection =
+  import.meta.env.VITE_ENGINE === 'wasm' ? new LocalEngineService() : new WebSocketService();

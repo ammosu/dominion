@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use shared::action::PlayerAction;
-use shared::card::Card;
-use shared::game::GameState;
+use crate::action::PlayerAction;
+use crate::card::Card;
+use crate::game::GameState;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -56,8 +56,8 @@ impl ServerMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shared::card::recommended_kingdom;
-    use shared::game::PlayerInfo;
+    use crate::card::recommended_kingdom;
+    use crate::game::PlayerInfo;
 
     #[test]
     fn server_message_has_flat_type_and_payload() {

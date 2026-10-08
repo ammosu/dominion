@@ -1,5 +1,5 @@
 use super::{decide_turn_action, gain_value, AiPlayer};
-use shared::{action::PlayerAction, card::Card, game::GameState};
+use crate::{action::PlayerAction, card::Card, game::GameState};
 
 /// Money plus a few strong Kingdom cards, greening by game phase.
 pub struct MediumAi;

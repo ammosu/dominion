@@ -50,13 +50,15 @@ cd frontend-new && npm run dev
 ### Backend (Rust — Cargo Workspace)
 
 - `crates/backend` — Axum web server with WebSocket handler
-- `crates/shared` — Game logic (actions, cards, game state, player state)
+- `crates/shared` — Game logic (actions, cards, game state, player state), AI, protocol and `Session` (one human-vs-AI game)
+- `crates/wasm` — `WasmGame`: the same `Session` compiled to WebAssembly for the static GitHub Pages build
 
 **Key modules:**
-- `websocket.rs` — WebSocket handler; creates the game from `?difficulty=&kingdom=&name=`, runs `run_ai_turns` until the human must act
-- `events.rs` — `ClientMessage` (tagged enum, card fields deserialize straight into `Card`) and `ServerMessage`
-- `ai/mod.rs` — `AiPlayer` trait, shared turn logic, `resolve_decision()` answers for every decision kind, `run_ai_turns()`
-- `ai/simple.rs` / `ai/medium.rs` — purchase strategies (Big Money vs. kingdom-aware)
+- `websocket.rs` — WebSocket handler; a thin loop around `shared::session::Session` (created from `?difficulty=&kingdom=&name=`)
+- `shared/protocol.rs` — `ClientMessage` (tagged enum, card fields deserialize straight into `Card`) and `ServerMessage`
+- `shared/session.rs` — game setup, `parse_kingdom`, and `handle(json)`: execute, then `run_ai_turns` until the human must act
+- `shared/ai/mod.rs` — `AiPlayer` trait, shared turn logic, `resolve_decision()` answers for every decision kind, `run_ai_turns()`
+- `shared/ai/simple.rs` / `shared/ai/medium.rs` — purchase strategies (Big Money vs. kingdom-aware)
 - `shared/card.rs` — all 33 cards of the 2nd-edition base set, costs/types, `RECOMMENDED_KINGDOMS`
 - `shared/decision.rs` — `Decision` (pending choice), `Purpose`, `Effect` (engine stack)
 - `shared/action.rs` — `PlayerAction`, `GameState::execute(actor, action)`, every card's effect, attacks, clean-up
@@ -129,6 +131,16 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 - Dev (Vite proxy): `ws://localhost:5173/ws` → proxied to backend:3000
 - Docker (nginx): `ws://localhost:8080/ws` → proxied to backend:3000
 - HTTPS: automatically uses `wss://`
+
+## GitHub Pages (static, no server)
+
+`.github/workflows/pages.yml` deploys on every push to `main`: `cargo test`, `wasm-pack build crates/wasm` into `frontend-new/src/wasm/` (gitignored), then `VITE_ENGINE=wasm BASE_PATH=/<repo>/ npm run build`. With `VITE_ENGINE=wasm`, `wsService` is a `LocalEngineService` that runs `shared::session::Session` in the browser; the WebSocket server shares the same `Session`, so both modes play identically. Card art paths use `import.meta.env.BASE_URL`. Requires Settings → Pages → Source: GitHub Actions.
+
+Build the wasm package locally (needs a recent stable Rust for wasm-pack's wasm-bindgen install; the workspace itself still builds on 1.83):
+```bash
+wasm-pack build crates/wasm --release --target web --no-pack --out-dir "$PWD/frontend-new/src/wasm"
+cd frontend-new && VITE_ENGINE=wasm BASE_PATH=/dominion/ npm run build
+```
 
 ## Docker Deployment
 

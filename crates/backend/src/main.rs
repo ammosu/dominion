@@ -1,5 +1,3 @@
-mod ai;
-mod events;
 mod websocket;
 
 use axum::{routing::get, Router};

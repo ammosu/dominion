@@ -1,8 +1,11 @@
 pub mod action;
+pub mod ai;
 pub mod card;
 pub mod decision;
 pub mod game;
 pub mod player;
+pub mod protocol;
+pub mod session;
 
 pub use game::{GameState, PlayerInfo, Supply, TurnPhase};
 

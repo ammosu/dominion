@@ -1,5 +1,5 @@
 use super::{decide_turn_action, is_late_game, AiPlayer};
-use shared::{action::PlayerAction, card::Card, game::GameState};
+use crate::{action::PlayerAction, card::Card, game::GameState};
 
 /// "Big Money": buys only Treasure and Victory cards, plays whatever Actions
 /// it happens to gain.

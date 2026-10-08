@@ -451,7 +451,10 @@ export interface ConfiguredCardArt {
 }
 
 export function getCardArtPath(cardName: string, style: ArtStyle): string | undefined {
-  return CARD_DATA[cardName] ? `/assets/cards/${style}/${cardName.toLowerCase()}.webp` : undefined;
+  // BASE_URL is '/' normally and '/dominion/' on GitHub Pages.
+  return CARD_DATA[cardName]
+    ? `${import.meta.env.BASE_URL}assets/cards/${style}/${cardName.toLowerCase()}.webp`
+    : undefined;
 }
 
 export function getCardTextureKey(cardName: string, style: ArtStyle): string {
