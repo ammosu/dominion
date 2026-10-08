@@ -101,15 +101,27 @@ export class Director {
 
   /** Cuts everything short: the table shows the final state. */
   skip = () => {
+    this.clear();
+    this.end();
+  };
+
+  /**
+   * A tap during a replay skips it, but the table keeps waiting a moment:
+   * the same press must not also buy or play the card under it.
+   */
+  private onSkip = () => {
+    window.removeEventListener('pointerdown', this.onSkip, true);
+    this.clear();
+    this.later(400, () => this.end());
+  };
+
+  private clear() {
     this.timers.forEach((t) => window.clearTimeout(t));
     this.timers = [];
     this.ghosts.forEach((el) => el.remove());
     this.ghosts.clear();
     this.inPlay.clear();
-    this.end();
-  };
-
-  private onSkip = () => this.skip();
+  }
 
   private end() {
     window.removeEventListener('pointerdown', this.onSkip, true);
