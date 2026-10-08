@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
-import { CARD_DATA, getCardFrameStyle } from '../../utils/cardData';
+import { ART_STYLES, CARD_DATA, getCardFrameStyle, type ArtStyle } from '../../utils/cardData';
 import { translateLogEntry } from '../../utils/i18n';
 import { SoundManager } from '../../utils/SoundManager';
 import styles from './ActionLog.module.css';
@@ -21,6 +21,8 @@ export function ActionLog() {
   const viewer = useGameStore((state) => state.viewer);
   const language = useUIStore((state) => state.language);
   const setLanguage = useUIStore((state) => state.setLanguage);
+  const artStyle = useUIStore((state) => state.artStyle);
+  const setArtStyle = useUIStore((state) => state.setArtStyle);
   const [soundOn, setSoundOn] = useState(true);
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +70,17 @@ export function ActionLog() {
     <aside className={styles.side} data-testid="side-panel">
       <div className={styles.header}>
         <span className={styles.title}>{zh ? '皇輿爭霸' : 'Dominion'}</span>
+        <select
+          className={styles.styleSelect}
+          value={artStyle}
+          onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
+          title={zh ? '插圖風格' : 'Art style'}
+          data-testid="art-style-select"
+        >
+          {ART_STYLES.map((style) => (
+            <option key={style.id} value={style.id}>{style.name[language]}</option>
+          ))}
+        </select>
         <button className={styles.iconButton} onClick={toggleSound} title={zh ? '音效' : 'Sound'}>
           {soundOn ? '🔊' : '🔇'}
         </button>

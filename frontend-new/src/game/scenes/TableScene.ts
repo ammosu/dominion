@@ -3,6 +3,8 @@ import { Hand } from '../objects/Hand';
 import { SupplyArea } from '../objects/SupplyArea';
 import { SoundManager } from '../../utils/SoundManager';
 import { computeTableLayout } from '../tableLayout';
+import { loadArtStyle } from '../artTextures';
+import type { ArtStyle } from '../../utils/cardData';
 
 /**
  * Draws the Supply and the viewer's hand. Runs in Phaser RESIZE mode: the
@@ -52,6 +54,7 @@ export class TableScene extends Phaser.Scene {
   }
 
   private relayout() {
+    if (!this.background) return; // not created yet; create() lays out later
     this.background.setSize(this.scale.width, this.scale.height);
     this.buildSupply();
     this.buildHand();
@@ -92,6 +95,16 @@ export class TableScene extends Phaser.Scene {
     this.playable = new Set(playable);
     this.supplyArea.setBuyable(this.buyable);
     this.hand.setPlayable(this.playable);
+  }
+
+  /** Switches card artwork, loading the set on first use, then redraws. */
+  setArtStyle(style: ArtStyle) {
+    if (loadArtStyle(this, style)) {
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => this.relayout());
+      this.load.start();
+    } else {
+      this.relayout();
+    }
   }
 
   updateLanguage(lang: 'en' | 'zh') {

@@ -1,9 +1,6 @@
 import Phaser from 'phaser';
-import {
-  CARD_DATA,
-  getCardArtPath,
-  getCardTextureKey,
-} from '../../utils/cardData';
+import { CARD_DATA, getCardTextureKey } from '../../utils/cardData';
+import { currentArtStyle } from '../artTextures';
 import {
   calculateCoverCrop,
   calculateHoverCrop,
@@ -35,7 +32,7 @@ export class CardArtwork extends Phaser.GameObjects.Container {
   ) {
     super(scene, 0, 0);
 
-    const textureKey = getCardTextureKey(cardName);
+    const textureKey = getCardTextureKey(cardName, currentArtStyle(scene));
     const frame = scene.textures.getFrame(textureKey);
     if (!frame) {
       throw new Error(`Missing loaded texture: ${textureKey}`);
@@ -73,9 +70,8 @@ export class CardArtwork extends Phaser.GameObjects.Container {
     height: number,
     shade = true,
   ): CardArtwork | undefined {
-    const path = getCardArtPath(cardName);
-    const textureKey = getCardTextureKey(cardName);
-    if (!path || !scene.textures.exists(textureKey)) {
+    const textureKey = getCardTextureKey(cardName, currentArtStyle(scene));
+    if (!CARD_DATA[cardName] || !scene.textures.exists(textureKey)) {
       return undefined;
     }
 

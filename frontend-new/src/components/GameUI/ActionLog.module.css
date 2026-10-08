@@ -25,6 +25,7 @@
   font-size: 18px;
   color: #c4a462;
   letter-spacing: 2px;
+  white-space: nowrap;
 }
 
 .iconButton {
@@ -35,6 +36,21 @@
   padding: 3px 8px;
   cursor: pointer;
   font-size: 13px;
+}
+
+.styleSelect {
+  max-width: 96px;
+  background: rgba(196, 164, 98, 0.08);
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 4px;
+  color: #c4a462;
+  padding: 3px 4px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.styleSelect option {
+  background: #17120c;
 }
 
 .iconButton:hover {

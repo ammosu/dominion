@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import {
+  ART_STYLES,
   BASE_CARDS,
+  type ArtStyle,
   CARD_DATA,
   KINGDOM_PRESETS,
   compareByCost,
@@ -29,6 +31,8 @@ function randomKingdom(): string[] {
 export function StartScreen({ onStart }: StartScreenProps) {
   const language = useUIStore((state) => state.language);
   const setLanguage = useUIStore((state) => state.setLanguage);
+  const artStyle = useUIStore((state) => state.artStyle);
+  const setArtStyle = useUIStore((state) => state.setArtStyle);
   const [playerName, setPlayerName] = useState('Alice');
   const [aiDifficulty, setAiDifficulty] = useState<'simple' | 'medium'>('medium');
   const [kingdomId, setKingdomId] = useState('first-game');
@@ -118,6 +122,19 @@ export function StartScreen({ onStart }: StartScreenProps) {
               </span>
             ))}
           </div>
+
+          <label className={styles.label}>
+            {language === 'zh' ? '插圖風格' : 'Art Style'}
+          </label>
+          <select
+            className={styles.select}
+            value={artStyle}
+            onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
+          >
+            {ART_STYLES.map((style) => (
+              <option key={style.id} value={style.id}>{style.name[language]}</option>
+            ))}
+          </select>
 
           <button className={styles.startButton} onClick={handleStart}>
             {language === 'zh' ? '開始遊戲' : 'Start Game'}

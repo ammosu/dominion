@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
-import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName } from '../../utils/cardData';
+import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName, isPixelated } from '../../utils/cardData';
 import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
 import styles from './DecisionModal.module.css';
 
@@ -15,6 +15,7 @@ export function DecisionModal() {
   const decision = useGameStore((state) => state.myDecision);
   const language = useUIStore((state) => state.language);
   const setHoveredCard = useUIStore((state) => state.setHoveredCard);
+  const artStyle = useUIStore((state) => state.artStyle);
   const [selected, setSelected] = useState<number[]>([]);
   const [minimized, setMinimized] = useState(false);
 
@@ -85,7 +86,7 @@ export function DecisionModal() {
         <div className={styles.cardGrid}>
           {decision.options.map((cardName, index) => {
             const frame = getCardFrameStyle(cardName);
-            const artworkPath = getCardArtPath(cardName);
+            const artworkPath = getCardArtPath(cardName, artStyle);
             return (
               <div
                 key={`${cardName}-${index}`}
@@ -99,7 +100,14 @@ export function DecisionModal() {
                 <div className={styles.cardName}>{getCardName(cardName, language)}</div>
                 <div
                   className={styles.cardArt}
-                  style={artworkPath ? { backgroundImage: `url("${artworkPath}")` } : undefined}
+                  style={
+                    artworkPath
+                      ? {
+                          backgroundImage: `url("${artworkPath}")`,
+                          imageRendering: isPixelated(artStyle) ? 'pixelated' : undefined,
+                        }
+                      : undefined
+                  }
                 />
                 <div className={styles.cardLabel}>{frame.label[language]}</div>
                 <div className={styles.cardCost}>{getCardCost(cardName)}</div>

@@ -89,6 +89,7 @@ export function GameContainer() {
   const me = useGameStore((state) => state.viewerPlayer);
   const canAct = useGameStore((state) => state.canAct);
   const language = useUIStore((state) => state.language);
+  const artStyle = useUIStore((state) => state.artStyle);
 
   const setupSceneListeners = (scene: Phaser.Scene) => {
     // Remove any existing listeners first to avoid duplicates
@@ -176,6 +177,12 @@ export function GameContainer() {
     }
     scene.setHighlights(buyable, playable);
   }, [gameState, me, canAct]);
+
+  // Swap card artwork sets
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene') as any;
+    scene?.setArtStyle?.(artStyle);
+  }, [artStyle]);
 
   // Update language for all visible cards
   useEffect(() => {

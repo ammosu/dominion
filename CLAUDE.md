@@ -146,7 +146,7 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 
 **Frontend:**
 - Render `viewerPlayer` (this client), not `currentPlayer`: the human answers attacks during the AI's turn
-- Card art: `tools/card-art/generate.py` (Codex CLI image generation, cute style in `style.md`, subjects in `cards.json`)
+- Card art: several sets in `public/assets/cards/<style>/`, chosen in-game (`uiStore.artStyle`, saved to localStorage). Generate with `python3 tools/card-art/generate.py --style <name>` (Codex CLI; styles in `tools/card-art/styles/*.md`, subjects in `cards.json`), then add the style to `ART_STYLES` in `cardData.ts`. Phaser texture keys include the style; `TableScene.setArtStyle()` lazy-loads a set
 - Hand cards are Phaser objects on canvas, NOT React components — click handling is via Phaser events
 - Must call Phaser scene methods from React useEffect, never directly
 - Toast notifications auto-dismiss after 3 seconds

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { getConfiguredCardArt } from '../../utils/cardData';
+import { useUIStore } from '../../store/uiStore';
+import { loadArtStyle } from '../artTextures';
 
 export class Preloader extends Phaser.Scene {
   constructor() {
@@ -39,9 +40,7 @@ export class Preloader extends Phaser.Scene {
       console.warn(`Card artwork failed to load: ${file.key}`);
     });
 
-    getConfiguredCardArt().forEach(({ textureKey, path }) => {
-      this.load.image(textureKey, path);
-    });
+    loadArtStyle(this, useUIStore.getState().artStyle);
   }
 
   create() {

@@ -1,11 +1,12 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useUIStore } from '../../store/uiStore';
-import { CARD_DATA, getCardArtPath, getCardName } from '../../utils/cardData';
+import { CARD_DATA, getCardArtPath, getCardName, isPixelated } from '../../utils/cardData';
 import styles from './CardTooltip.module.css';
 
 export function CardTooltip() {
   const hoveredCard = useUIStore((state) => state.hoveredCard);
   const language = useUIStore((state) => state.language);
+  const artStyle = useUIStore((state) => state.artStyle);
   const [dockSide, setDockSide] = useState<'left' | 'right'>('right');
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function CardTooltip() {
     curse: '#ce93d8',
   };
 
-  const artworkPath = getCardArtPath(hoveredCard);
+  const artworkPath = getCardArtPath(hoveredCard, artStyle);
   const displayName = getCardName(hoveredCard, language);
   const accentStyle = {
     '--card-accent': typeColors[data.type],
@@ -56,6 +57,7 @@ export function CardTooltip() {
           <img
             className={styles.artwork}
             src={artworkPath}
+            style={isPixelated(artStyle) ? { imageRendering: 'pixelated' } : undefined}
             alt=""
             draggable={false}
           />

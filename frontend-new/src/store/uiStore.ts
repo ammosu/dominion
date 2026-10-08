@@ -1,4 +1,15 @@
 import { create } from 'zustand';
+import { DEFAULT_ART_STYLE, isArtStyle, type ArtStyle } from '../utils/cardData';
+
+const ART_STYLE_KEY = 'dominion.artStyle';
+const savedArtStyle = (() => {
+  try {
+    const saved = localStorage.getItem(ART_STYLE_KEY);
+    return isArtStyle(saved) ? saved : DEFAULT_ART_STYLE;
+  } catch {
+    return DEFAULT_ART_STYLE;
+  }
+})();
 
 interface UIStore {
   showRulesModal: boolean;
@@ -19,6 +30,10 @@ interface UIStore {
   language: 'zh' | 'en';
   setLanguage: (lang: 'zh' | 'en') => void;
 
+  /** Card artwork set; remembered across visits. */
+  artStyle: ArtStyle;
+  setArtStyle: (style: ArtStyle) => void;
+
   toast: { message: string; type: 'error' | 'success' | 'info' } | null;
   showToast: (message: string, type: 'error' | 'success' | 'info') => void;
 }
@@ -37,6 +52,16 @@ export const useUIStore = create<UIStore>((set) => ({
 
   language: 'zh',
   setLanguage: (lang) => set({ language: lang }),
+
+  artStyle: savedArtStyle,
+  setArtStyle: (style) => {
+    try {
+      localStorage.setItem(ART_STYLE_KEY, style);
+    } catch {
+      // Private mode etc.: the choice just isn't remembered.
+    }
+    set({ artStyle: style });
+  },
 
   toast: null,
   showToast: (message, type) => set({ toast: { message, type } }),
