@@ -1,12 +1,15 @@
 .shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(250px, 22vw, 340px);
+  grid-template-columns: minmax(0, 1fr) clamp(250px, 20vw, 440px);
   /* Lock the row to the viewport so a long log scrolls instead of growing the page. */
   grid-template-rows: minmax(0, 1fr);
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* excludes mobile browser chrome */
   overflow: hidden;
   background: #2d4a3e;
+  /* No double-tap zoom on rapid button taps. */
+  touch-action: manipulation;
 }
 
 .table {
@@ -19,4 +22,10 @@
 .table :global(#phaser-container) {
   position: absolute;
   inset: 0;
+}
+
+@media (max-width: 899px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -47,7 +47,8 @@ export class CardFace extends Phaser.GameObjects.Container {
     frame.fillRect(left + inset, top + height - inset - labelHeight, width - 2 * inset, labelHeight);
     this.add(frame);
 
-    this.artwork = CardArtwork.create(scene, cardName, width - 2 * inset, artHeight, false);
+    // Tiny cards (very short windows) skip the artwork rather than crash on it.
+    this.artwork = artHeight >= 8 ? CardArtwork.create(scene, cardName, width - 2 * inset, artHeight, false) : undefined;
     if (this.artwork) {
       this.artwork.setPosition(0, artTop + artHeight / 2);
       this.add(this.artwork);

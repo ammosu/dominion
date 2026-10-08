@@ -3,8 +3,8 @@
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 16px;
+  gap: calc(16px * var(--ui, 1));
+  padding: 0 calc(16px * var(--ui, 1));
   background: rgba(16, 12, 8, 0.82);
   border: 1px solid rgba(196, 164, 98, 0.25);
   border-radius: 6px;
@@ -18,14 +18,14 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(2px * var(--ui, 1));
 }
 
 .counters {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 20px;
+  gap: calc(10px * var(--ui, 1));
+  font-size: calc(20px * var(--ui, 1));
   font-weight: 600;
   color: #f2e6cc;
 }
@@ -39,21 +39,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 6px;
+  min-width: calc(28px * var(--ui, 1));
+  height: calc(28px * var(--ui, 1));
+  padding: 0 calc(6px * var(--ui, 1));
   border-radius: 14px;
   background: #f2c94c;
   border: 2px solid #6b4e16;
   color: #2a1d10;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
-  font-size: 18px;
+  font-size: calc(18px * var(--ui, 1));
 }
 
 .phase {
-  font-size: 12px;
-  padding: 2px 8px;
+  font-size: calc(12px * var(--ui, 1));
+  padding: calc(2px * var(--ui, 1)) calc(8px * var(--ui, 1));
   border-radius: 10px;
   background: rgba(76, 160, 90, 0.25);
   color: #bfe6c6;
@@ -61,7 +61,7 @@
 }
 
 .prompt {
-  font-size: 14px;
+  font-size: calc(14px * var(--ui, 1));
   color: #d8c9a8;
   white-space: nowrap;
   overflow: hidden;
@@ -75,13 +75,13 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: calc(8px * var(--ui, 1));
 }
 
 .endPhaseButton {
   font-family: 'Noto Sans TC', serif;
-  padding: 10px 22px;
-  font-size: 13px;
+  padding: calc(10px * var(--ui, 1)) calc(22px * var(--ui, 1));
+  font-size: calc(13px * var(--ui, 1));
   font-weight: 700;
   background: linear-gradient(180deg, #2a6038 0%, #1d4d2a 100%);
   color: #c8e8d0;
@@ -105,27 +105,10 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.soundButton {
-  padding: 7px 10px;
-  font-size: 16px;
-  background: rgba(20, 15, 10, 0.85);
-  color: #b89858;
-  border: 1px solid rgba(196, 164, 98, 0.2);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-}
-
-.soundButton:hover {
-  background: rgba(196, 164, 98, 0.12);
-  border-color: rgba(196, 164, 98, 0.35);
-}
-
 .playAllTreasuresButton {
   font-family: 'Noto Sans TC', serif;
-  padding: 9px 18px;
-  font-size: 12px;
+  padding: calc(9px * var(--ui, 1)) calc(18px * var(--ui, 1));
+  font-size: calc(12px * var(--ui, 1));
   font-weight: 600;
   background: linear-gradient(180deg, #7a5c14 0%, #5c440e 100%);
   color: #fce8a8;
@@ -176,7 +159,7 @@
   background: linear-gradient(170deg, #1e1810 0%, #14100a 100%);
   border: 2px solid rgba(196, 164, 98, 0.4);
   border-radius: 8px;
-  width: 380px;
+  width: min(380px, calc(100vw - 24px));
   padding: 0;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(196, 164, 98, 0.1);
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -195,9 +178,9 @@
 
 .confirmationHeader {
   background: rgba(196, 164, 98, 0.08);
-  padding: 16px 20px;
+  padding: calc(16px * var(--ui, 1)) calc(20px * var(--ui, 1));
   font-family: 'Cinzel', 'Noto Sans TC', serif;
-  font-size: 15px;
+  font-size: calc(15px * var(--ui, 1));
   font-weight: 700;
   color: #d4b880;
   border-bottom: 1px solid rgba(196, 164, 98, 0.2);
@@ -205,25 +188,25 @@
 }
 
 .confirmationMessage {
-  padding: 24px 20px;
+  padding: calc(24px * var(--ui, 1)) calc(20px * var(--ui, 1));
   font-family: 'Noto Sans TC', serif;
-  font-size: 14px;
+  font-size: calc(14px * var(--ui, 1));
   line-height: 1.6;
   color: #c0b0a0;
 }
 
 .confirmationButtons {
   display: flex;
-  gap: 10px;
-  padding: 16px 20px;
+  gap: calc(10px * var(--ui, 1));
+  padding: calc(16px * var(--ui, 1)) calc(20px * var(--ui, 1));
   border-top: 1px solid rgba(196, 164, 98, 0.15);
 }
 
 .confirmButton {
   flex: 1;
   font-family: 'Noto Sans TC', serif;
-  padding: 10px 18px;
-  font-size: 13px;
+  padding: calc(10px * var(--ui, 1)) calc(18px * var(--ui, 1));
+  font-size: calc(13px * var(--ui, 1));
   font-weight: 600;
   background: linear-gradient(180deg, #c45a36 0%, #9a3f22 100%);
   color: #ffd8c8;
@@ -248,8 +231,8 @@
 .cancelButton {
   flex: 1;
   font-family: 'Noto Sans TC', serif;
-  padding: 10px 18px;
-  font-size: 13px;
+  padding: calc(10px * var(--ui, 1)) calc(18px * var(--ui, 1));
+  font-size: calc(13px * var(--ui, 1));
   font-weight: 600;
   background: rgba(196, 164, 98, 0.08);
   color: #b89858;
@@ -269,87 +252,101 @@
   transform: translateY(0);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1366px) {
-  .turnControls {
-    bottom: 12px;
-    right: 12px;
-    gap: 7px;
-  }
-
-  .endPhaseButton {
-    padding: 9px 18px;
-    font-size: 12px;
-  }
-
-  .playAllTreasuresButton {
-    padding: 8px 15px;
-    font-size: 11px;
-  }
-
-  .soundButton {
-    padding: 6px 9px;
-    font-size: 15px;
-  }
-
-  .confirmationModal {
-    width: 340px;
-  }
-
-  .confirmationHeader {
-    padding: 14px 18px;
-    font-size: 14px;
-  }
-
-  .confirmationMessage {
-    padding: 20px 18px;
-    font-size: 13px;
-  }
+/* Opens the log drawer on narrow screens. */
+.logButton {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: calc(4px * var(--ui, 1)) calc(10px * var(--ui, 1));
+  font-size: calc(13px * var(--ui, 1));
+  font-family: inherit;
+  background: rgba(196, 164, 98, 0.1);
+  color: #c4a462;
+  border: 1px solid rgba(196, 164, 98, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-@media (max-width: 1024px) {
-  .turnControls {
-    bottom: 10px;
-    right: 8px;
-    gap: 6px;
-  }
+/* Short tables (phones held sideways). */
+.compact {
+  gap: calc(10px * var(--ui, 1));
+  padding: 0 calc(10px * var(--ui, 1));
+}
 
-  .endPhaseButton {
-    padding: 8px 16px;
-    font-size: 11px;
-  }
+.compact .counters {
+  font-size: calc(16px * var(--ui, 1));
+  gap: calc(6px * var(--ui, 1));
+}
 
-  .playAllTreasuresButton {
-    padding: 7px 14px;
-    font-size: 10px;
-  }
+.compact .coin {
+  min-width: calc(24px * var(--ui, 1));
+  height: calc(24px * var(--ui, 1));
+  font-size: calc(15px * var(--ui, 1));
+}
 
-  .soundButton {
-    padding: 5px 8px;
-    font-size: 14px;
-  }
+.compact .prompt {
+  font-size: calc(12px * var(--ui, 1));
+}
 
-  .confirmationModal {
-    width: 320px;
-  }
+.compact .endPhaseButton,
+.compact .playAllTreasuresButton,
+.compact .cancelButton {
+  padding: calc(7px * var(--ui, 1)) calc(12px * var(--ui, 1));
+}
 
-  .confirmationHeader {
-    padding: 12px 16px;
-    font-size: 13px;
-  }
+/* Narrow tables (phones held upright): counters, prompt, then buttons. */
+.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: calc(4px * var(--ui, 1));
+  padding: calc(6px * var(--ui, 1)) calc(8px * var(--ui, 1));
+}
 
-  .confirmationMessage {
-    padding: 18px 16px;
-    font-size: 12px;
-  }
+.stacked .counters {
+  font-size: calc(16px * var(--ui, 1));
+  gap: calc(6px * var(--ui, 1));
+}
 
-  .confirmationButtons {
-    padding: 14px 16px;
-  }
+.stacked .coin {
+  min-width: calc(24px * var(--ui, 1));
+  height: calc(24px * var(--ui, 1));
+  font-size: calc(15px * var(--ui, 1));
+}
 
-  .confirmButton,
-  .cancelButton {
-    padding: 9px 16px;
-    font-size: 12px;
-  }
+.stacked .phase {
+  font-size: calc(11px * var(--ui, 1));
+  padding: calc(1px * var(--ui, 1)) calc(6px * var(--ui, 1));
+}
+
+.stacked .prompt {
+  font-size: calc(12px * var(--ui, 1));
+  white-space: normal;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.stacked .actions {
+  gap: calc(6px * var(--ui, 1));
+}
+
+.stacked .actions > button {
+  flex: 1;
+  min-height: calc(36px * var(--ui, 1));
+  padding: calc(6px * var(--ui, 1)) calc(8px * var(--ui, 1));
+  font-size: calc(13px * var(--ui, 1));
+}
+
+/* New log lines since the drawer was last open. */
+.unread {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e05a3a;
+  box-shadow: 0 0 0 2px #100c08;
 }

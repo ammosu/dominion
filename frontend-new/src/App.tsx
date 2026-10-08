@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { GameContainer } from './game/GameContainer';
 import { useTableLayout } from './game/useTableLayout';
+import { useMediaQuery } from './game/useMediaQuery';
 import { ActionLog } from './components/GameUI/ActionLog';
 import { StatusBar } from './components/GameUI/StatusBar';
 import { PlayerPanel } from './components/GameUI/PlayerPanel';
@@ -27,6 +28,14 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const tableRef = useRef<HTMLElement>(null);
   const layout = useTableLayout(tableRef);
+  // Below this width the log column becomes a drawer opened from the status bar.
+  const logAsDrawer = useMediaQuery('(max-width: 899px)');
+  const [logOpen, setLogOpen] = useState(false);
+  const logLength = useGameStore((state) => state.gameState?.log.length ?? 0);
+  const [logSeen, setLogSeen] = useState(0);
+  useEffect(() => {
+    if (logOpen) setLogSeen(logLength);
+  }, [logOpen, logLength]);
 
   useEffect(() => {
     // The WebSocket connection is opened by StartScreen once options are chosen.
@@ -50,7 +59,7 @@ function App() {
   const opponent = players ? players.findIndex((_, i) => i !== viewer) : -1;
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} style={{ '--ui': layout?.uiScale ?? 1 } as CSSProperties}>
       {!gameStarted && <StartScreen onStart={() => setGameStarted(true)} />}
 
       {/* Phaser draws the Supply and hand; overlays use the same table layout. */}
@@ -62,11 +71,15 @@ function App() {
             <PlayerPanel playerIndex={viewer} rect={layout.myPanel} variant="me" />
             <TrashPile rect={layout.trash} />
             <PlayedCards rect={layout.inPlay} />
-            <StatusBar rect={layout.statusBar} />
+            <StatusBar
+              rect={layout.statusBar}
+              onOpenLog={logAsDrawer ? () => setLogOpen(true) : undefined}
+              logUnread={logLength > logSeen}
+            />
           </>
         )}
       </main>
-      <ActionLog />
+      <ActionLog drawer={logAsDrawer} open={logOpen} onClose={() => setLogOpen(false)} />
 
       <CardTooltip />
       <Toast />

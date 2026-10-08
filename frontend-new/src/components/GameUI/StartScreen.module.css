@@ -9,8 +9,7 @@
     radial-gradient(ellipse at 70% 80%, rgba(20, 40, 28, 0.3) 0%, transparent 60%),
     linear-gradient(160deg, #1a1208 0%, #0e1a12 40%, #0a0e08 100%);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow-y: auto;
   z-index: 3000;
 }
 
@@ -30,6 +29,9 @@
 }
 
 .container {
+  /* Auto margins center the form but let it scroll when the screen is short. */
+  margin: auto;
+  padding: 24px 12px;
   text-align: center;
   color: #e8dcc8;
   position: relative;
@@ -214,4 +216,25 @@
   color: #1a1208;
   font-weight: 700;
   font-size: 11px;
+}
+
+@media (max-height: 640px), (max-width: 420px) {
+  .title {
+    font-size: 52px;
+  }
+
+  .title::after {
+    margin-top: 14px;
+  }
+
+  .form {
+    margin-top: 16px;
+    gap: 12px;
+  }
+
+  .input,
+  .select {
+    padding: 8px 20px;
+    font-size: 18px;
+  }
 }

@@ -15,8 +15,11 @@ const CARD_TEXT_COLORS: Record<string, string> = {
   reaction: '#8fb5df',
 };
 
-/** Right-hand column: title, language/sound toggles and the full game log. */
-export function ActionLog() {
+/**
+ * Right-hand column: title, language/sound toggles and the full game log.
+ * On narrow screens it is a drawer (`drawer`), shown while `open`.
+ */
+export function ActionLog({ drawer = false, open = false, onClose }: { drawer?: boolean; open?: boolean; onClose?: () => void }) {
   const gameState = useGameStore((state) => state.gameState);
   const viewer = useGameStore((state) => state.viewer);
   const language = useUIStore((state) => state.language);
@@ -28,7 +31,7 @@ export function ActionLog() {
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [gameState?.log]);
+  }, [gameState?.log, open]);
 
   const players = gameState?.players ?? [];
   const tokenColors = useMemo(() => {
@@ -67,43 +70,51 @@ export function ActionLog() {
   const isTurnLine = (entry: string) => entry.endsWith("'s turn");
 
   return (
-    <aside className={styles.side} data-testid="side-panel">
-      <div className={styles.header}>
-        <span className={styles.title}>{zh ? '皇輿爭霸' : 'Dominion'}</span>
-        <select
-          className={styles.styleSelect}
-          value={artStyle}
-          onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
-          title={zh ? '插圖風格' : 'Art style'}
-          data-testid="art-style-select"
-        >
-          {ART_STYLES.map((style) => (
-            <option key={style.id} value={style.id}>{style.name[language]}</option>
-          ))}
-        </select>
-        <button className={styles.iconButton} onClick={toggleSound} title={zh ? '音效' : 'Sound'}>
-          {soundOn ? '🔊' : '🔇'}
-        </button>
-        <button className={styles.iconButton} onClick={() => setLanguage(zh ? 'en' : 'zh')}>
-          {zh ? 'EN' : '中文'}
-        </button>
-      </div>
-      {gameState && (
-        <div className={styles.kingdom} title={zh ? '本局王國牌' : 'Kingdom'}>
-          {gameState.kingdom.map((card) => (
-            <span key={card} style={{ borderColor: getCardFrameStyle(card).color }}>
-              {CARD_DATA[card]?.name[language] ?? card}
-            </span>
+    <>
+      {drawer && open && <div className={styles.backdrop} onClick={onClose} />}
+      <aside className={`${styles.side} ${drawer ? styles.drawer : ''} ${open ? styles.open : ''}`} data-testid="side-panel">
+        <div className={styles.header}>
+          <span className={styles.title}>{zh ? '皇輿爭霸' : 'Dominion'}</span>
+          <select
+            className={styles.styleSelect}
+            value={artStyle}
+            onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
+            title={zh ? '插圖風格' : 'Art style'}
+            data-testid="art-style-select"
+          >
+            {ART_STYLES.map((style) => (
+              <option key={style.id} value={style.id}>{style.name[language]}</option>
+            ))}
+          </select>
+          <button className={styles.iconButton} onClick={toggleSound} title={zh ? '音效' : 'Sound'}>
+            {soundOn ? '🔊' : '🔇'}
+          </button>
+          <button className={styles.iconButton} onClick={() => setLanguage(zh ? 'en' : 'zh')}>
+            {zh ? 'EN' : '中文'}
+          </button>
+          {drawer && (
+            <button className={styles.iconButton} onClick={onClose} title={zh ? '關閉' : 'Close'} data-testid="close-log">
+              ✕
+            </button>
+          )}
+        </div>
+        {gameState && (
+          <div className={styles.kingdom} title={zh ? '本局王國牌' : 'Kingdom'}>
+            {gameState.kingdom.map((card) => (
+              <span key={card} style={{ borderColor: getCardFrameStyle(card).color }}>
+                {CARD_DATA[card]?.name[language] ?? card}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className={styles.logContent} ref={logRef}>
+          {gameState?.log.map((entry, index) => (
+            <div key={index} className={isTurnLine(entry) ? styles.turnLine : styles.logEntry}>
+              {render(entry)}
+            </div>
           ))}
         </div>
-      )}
-      <div className={styles.logContent} ref={logRef}>
-        {gameState?.log.map((entry, index) => (
-          <div key={index} className={isTurnLine(entry) ? styles.turnLine : styles.logEntry}>
-            {render(entry)}
-          </div>
-        ))}
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

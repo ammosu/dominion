@@ -49,12 +49,17 @@ export class TableScene extends Phaser.Scene {
     this.scale.on('resize', this.relayout, this);
   }
 
+  /** False until create() ran; GameContainer re-syncs everything once it has. */
+  private get ready() {
+    return this.hand !== undefined;
+  }
+
   private layout() {
     return computeTableLayout(this.scale.width, this.scale.height);
   }
 
   private relayout() {
-    if (!this.background) return; // not created yet; create() lays out later
+    if (!this.ready) return;
     this.background.setSize(this.scale.width, this.scale.height);
     this.buildSupply();
     this.buildHand();
@@ -73,6 +78,7 @@ export class TableScene extends Phaser.Scene {
 
   /** Rebuilds the piles when the kingdom changes, otherwise updates counts. */
   updateSupply(supply: Record<string, number>, _costs: Record<string, number>, kingdom: string[] = []) {
+    if (!this.ready) return;
     const kingdomChanged = kingdom.join() !== this.kingdom.join() || Object.keys(this.supply).length === 0;
     this.supply = supply;
     this.kingdom = kingdom;
@@ -85,6 +91,7 @@ export class TableScene extends Phaser.Scene {
   }
 
   updateHand(handCards: string[]) {
+    if (!this.ready) return;
     this.handCards = handCards;
     this.buildHand();
   }
@@ -93,6 +100,7 @@ export class TableScene extends Phaser.Scene {
   setHighlights(buyable: string[], playable: string[]) {
     this.buyable = new Set(buyable);
     this.playable = new Set(playable);
+    if (!this.ready) return;
     this.supplyArea.setBuyable(this.buyable);
     this.hand.setPlayable(this.playable);
   }
@@ -109,6 +117,7 @@ export class TableScene extends Phaser.Scene {
 
   updateLanguage(lang: 'en' | 'zh') {
     this.currentLang = lang;
+    if (!this.ready) return;
     this.supplyArea.updateLanguage(lang);
     this.hand.getCards().forEach((card) => card.updateLanguage(lang));
   }

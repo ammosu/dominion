@@ -41,3 +41,13 @@
   color: #c4a462;
   border: 1px solid rgba(196, 164, 98, 0.3);
 }
+
+@media (max-width: 899px) {
+  .toast {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    max-width: none;
+    text-align: center;
+  }
+}

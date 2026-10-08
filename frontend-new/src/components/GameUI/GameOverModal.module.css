@@ -129,3 +129,9 @@
   background: linear-gradient(180deg, #327044 0%, #245a32 100%);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
+
+@media (max-width: 520px) {
+  .modal {
+    padding: 24px 16px;
+  }
+}

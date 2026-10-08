@@ -11,7 +11,7 @@ import styles from './StatusBar.module.css';
  * Actions | Buys | Coins of the player whose turn it is, a one-line prompt,
  * the turn buttons, and inline Yes/No answers for simple decisions.
  */
-export function StatusBar({ rect }: { rect: Rect }) {
+export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; onOpenLog?: () => void; logUnread?: boolean }) {
   const gameState = useGameStore((state) => state.gameState);
   const currentPlayer = useGameStore((state) => state.currentPlayer);
   const me = useGameStore((state) => state.viewerPlayer);
@@ -73,13 +73,14 @@ export function StatusBar({ rect }: { rect: Rect }) {
     return zh ? '購買完畢就結束回合' : 'Done buying? End your turn';
   })();
 
+  const variant = rect.width < 560 ? styles.stacked : rect.height < 56 ? styles.compact : '';
   const showTreasures = canAct && gameState.phase === 'Buy' && !gameState.turn.has_bought && me.hand.some(isTreasure);
   const yesNo = myDecision && isYesNoDecision(myDecision) ? myDecision : null;
 
   return (
     <>
       <div
-        className={styles.statusBar}
+        className={`${styles.statusBar} ${variant}`}
         style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
         data-testid="status-bar"
       >
@@ -93,6 +94,12 @@ export function StatusBar({ rect }: { rect: Rect }) {
             <span className={styles.phase}>
               {gameState.phase === 'Action' ? (zh ? '行動階段' : 'Action phase') : zh ? '購買階段' : 'Buy phase'}
             </span>
+            {onOpenLog && (
+              <button className={styles.logButton} onClick={onOpenLog} data-testid="open-log">
+                {zh ? '☰ 紀錄' : '☰ Log'}
+                {logUnread && <span className={styles.unread} />}
+              </button>
+            )}
           </div>
           <div className={styles.prompt} data-testid="status-prompt">{prompt}</div>
         </div>

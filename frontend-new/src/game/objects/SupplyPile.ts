@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CardFace } from './CardFace';
+import { bindCardPointer } from './pointerBinding';
 
 const BUYABLE_COLOR = 0x6fd07f;
 
@@ -16,9 +17,7 @@ export class SupplyPile extends Phaser.GameObjects.Container {
     this.add(this.face);
     this.setSize(width, height);
     this.setInteractive({ useHandCursor: true });
-    this.on('pointerover', () => this.hover(true));
-    this.on('pointerout', () => this.hover(false));
-    this.on('pointerdown', () => this.scene.events.emit('supply-card-clicked', cardName));
+    bindCardPointer(this, () => this.scene.events.emit('supply-card-clicked', cardName), (on) => this.hover(on));
     this.updateCount(count);
     scene.add.existing(this);
   }

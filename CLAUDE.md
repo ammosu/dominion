@@ -76,9 +76,9 @@ Two rendering layers share state through Zustand:
 - `DecisionModal.tsx` — renders `pending_decision` for this player and answers with `Resolve`; the only card-choice UI
 - `utils/cardData.ts` — card metadata, rulebook texts, `KINGDOM_PRESETS`; `utils/i18n.ts` — log/error/prompt translation
 - `scenes/TableScene.ts` — Main Phaser scene; `updateHand()`, `updateSupply()`, `updateLanguage()`
-- `game/tableLayout.ts` — `computeTableLayout(w, h)`: the one source of table geometry for Phaser *and* React overlays (`useTableLayout` hook)
+- `game/tableLayout.ts` — `computeTableLayout(w, h)`: the one source of table geometry for Phaser *and* React overlays (`useTableLayout` hook); `wide` mode (base cards left of the kingdom; 4×2 base when the table is short) or `portrait` mode (phones: kingdom 5×2 over base 4×2, player strips on top). `uiScale` (CSS var `--ui`) grows overlay text on big screens
 - `objects/CardFace.ts` — card drawing shared by hand and supply: type-colored banner/label (`getCardFrameStyle`), artwork, cost coin, count badge, highlight
-- `objects/Card.ts` / `Hand.ts` — one card per name in hand with a count; `SupplyPile.ts` / `SupplyArea.ts` — base grid (2×4, trash in the free slot) + kingdom (2×5)
+- `objects/Card.ts` / `Hand.ts` — one card per name in hand with a count; `SupplyPile.ts` / `SupplyArea.ts` — base grid (2 or 4 columns, trash in slot 7) + kingdom (5 columns)
 - `components/GameUI/StatusBar.tsx` — Actions | Buys | Coins, prompt line, turn buttons and inline Yes/No decisions
 - `services/websocket.ts` — WebSocket client with auto-reconnect; URL auto-detected from `window.location`
 
@@ -117,6 +117,8 @@ Rule notes: the game ends at the end of a turn; ties go to fewer turns; Moat is 
 ### Phaser Object Patterns
 - **RESIZE scale mode**: the canvas fills the table column (CSS grid `1fr | side column`, row locked to the viewport), one canvas pixel = one CSS pixel. Never hard-code coordinates: take them from `computeTableLayout`, which React overlays also use, so both layers line up
 - **Rebuild, don't move**: on resize or kingdom/hand change the scene destroys and rebuilds piles / hand cards; each object keeps the `baseY` it was built with for hover tweens, so positions cannot drift
+- **Touch**: `objects/pointerBinding.ts` — mouse acts on press and previews on hover; touch acts on a short tap and previews on press-and-hold
+- **Narrow screens** (< 900px): the log column becomes a drawer opened from the status bar's ☰ button
 - **Highlights**: GameContainer computes playable hand cards and buyable piles and calls `scene.setHighlights(buyable, playable)`
 - **Scene listener setup**: GameContainer uses `requestAnimationFrame` polling to wait for `scene.hand` to exist before attaching event listeners
 
