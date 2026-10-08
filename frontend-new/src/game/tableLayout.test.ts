@@ -41,7 +41,9 @@ describe.each([
 
   it('stacks supply, in-play strip, status bar and hand without overlap', () => {
     expect(gridBottom(kingdom, 2)).toBeLessThanOrEqual(layout.inPlay.y);
-    expect(gridBottom(base, baseRows(base))).toBeLessThanOrEqual(layout.inPlay.y);
+    // In wide mode the in-play area may sit beside the base column instead.
+    const baseClear = gridBottom(base, baseRows(base)) <= layout.inPlay.y || gridRight(base) <= layout.inPlay.x;
+    expect(baseClear).toBe(true);
     expect(bottom(layout.inPlay)).toBeLessThanOrEqual(layout.statusBar.y);
     expect(bottom(layout.statusBar)).toBeLessThanOrEqual(layout.hand.y);
   });

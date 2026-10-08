@@ -1,0 +1,44 @@
+/* A small card face (name banner + artwork), used in play and for flying cards. */
+.mini {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  background: #1a1410;
+  border: 2px solid var(--frame, #c4a462);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.name {
+  flex-shrink: 0;
+  padding: 1px 2px;
+  background: var(--frame, #c4a462);
+  color: #2a1d10;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: max(9px, calc(var(--h) * 0.12));
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.art {
+  flex: 1;
+  background-color: #2a2018;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Face-down: drawn cards and hidden hands (card-back art set inline). */
+.back {
+  border-color: #c9a75f;
+  background-color: #1b3956;
+  background-size: cover;
+  background-position: center;
+}

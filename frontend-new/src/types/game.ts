@@ -1,5 +1,7 @@
 // Mirrors the backend's serialized GameState (crates/shared).
 
+import type { GameEvent } from './events';
+
 export type GainDestination = 'Discard' | 'Hand' | 'DeckTop';
 
 export type Purpose =
@@ -48,6 +50,8 @@ export interface GameState {
   trash: string[];
   pending_decision: Decision | null;
   log: string[];
+  /** What the last message (and the AI turns it triggered) did, in order. */
+  events?: GameEvent[];
   game_over: boolean;
   scores: [string, number][] | null;
   winners: string[];

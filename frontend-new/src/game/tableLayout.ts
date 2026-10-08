@@ -39,6 +39,7 @@ export interface TableLayout {
   /** Free slot after Curse in the base grid. */
   trash: Rect;
   kingdom: PileGrid;
+  /** Cards in play this turn: a strip, or a row of small cards when there is room. */
   inPlay: Rect;
   statusBar: Rect;
   myPanel: Rect;
@@ -55,6 +56,37 @@ const BASE_SLOTS = 8;
 const TRASH_SLOT = 7;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+/** dominion.games order: Province/Gold, Duchy/Silver, Estate/Copper, Curse. */
+export const BASE_ORDER = ['Province', 'Gold', 'Duchy', 'Silver', 'Estate', 'Copper', 'Curse'];
+
+/** Where `card`'s Supply pile is drawn, or null if it is not in this game. */
+export function supplyPileRect(layout: TableLayout, kingdom: string[], card: string): Rect | null {
+  const base = BASE_ORDER.indexOf(card);
+  if (base >= 0) return slotRect(layout.base, base);
+  const index = kingdom.indexOf(card);
+  return index >= 0 ? slotRect(layout.kingdom, index) : null;
+}
+
+/** Width of the vertical "In play" label left of the small cards. */
+export const IN_PLAY_LABEL_WIDTH = 24;
+
+/** In-play strips at least this tall show small cards instead of name chips. */
+export const IN_PLAY_CARD_MIN_HEIGHT = 56;
+
+/**
+ * Rects of `count` small cards in the in-play area: a centered row, after a
+ * label column, overlapping when it gets crowded.
+ */
+export function inPlaySlots(rect: Rect, count: number, labelWidth: number): Rect[] {
+  const height = rect.height - 6;
+  const width = Math.round(height * HAND_RATIO);
+  const room = rect.width - labelWidth;
+  const step = count > 1 ? Math.min(width + 6, (room - width) / (count - 1)) : 0;
+  const rowWidth = width + step * (count - 1);
+  const left = rect.x + labelWidth + Math.max(0, (room - rowWidth) / 2);
+  return Array.from({ length: count }, (_, i) => ({ x: left + i * step, y: rect.y + 3, width, height }));
+}
 
 export function pileCenter(grid: PileGrid, index: number): { x: number; y: number } {
   const col = index % grid.cols;
@@ -141,6 +173,11 @@ function wideLayout(width: number, height: number): TableLayout {
   const contentWidth = width - 2 * margin;
   const statusWidth = Math.min(contentWidth, 1000 * uiScale);
   const handLeft = margin + panelWidth + 2 * gap;
+  const kingdomX = Math.round(kingdomLeft + Math.max(0, regionWidth - kingdomSpan) / 2);
+
+  // In play: under the kingdom, growing into whatever room the piles left.
+  const kingdomBottom = margin + 2 * kingdomHeight + gap;
+  const inPlayRoom = Math.round(clamp(inPlayTop + inPlayHeight - kingdomBottom - gap, inPlayHeight, 150 * uiScale));
 
   return {
     mode: 'wide',
@@ -149,14 +186,19 @@ function wideLayout(width: number, height: number): TableLayout {
     base,
     trash: slotRect(base, TRASH_SLOT),
     kingdom: {
-      x: Math.round(kingdomLeft + Math.max(0, regionWidth - kingdomSpan) / 2),
+      x: kingdomX,
       y: margin,
       cols: 5,
       pileWidth: kingdomWidth,
       pileHeight: kingdomHeight,
       gap,
     },
-    inPlay: { x: margin, y: inPlayTop, width: contentWidth, height: inPlayHeight },
+    inPlay: {
+      x: Math.min(kingdomX, baseRight + gap),
+      y: inPlayTop + inPlayHeight - inPlayRoom,
+      width: width - margin - Math.min(kingdomX, baseRight + gap),
+      height: inPlayRoom,
+    },
     statusBar: { x: Math.round((width - statusWidth) / 2), y: statusTop, width: statusWidth, height: statusHeight },
     myPanel: { x: margin, y: handTop, width: panelWidth, height: handHeight },
     hand: {
@@ -223,7 +265,10 @@ function portraitLayout(width: number, height: number): TableLayout {
 
   const handTop = height - margin - handHeight;
   const statusTop = handTop - gap - statusHeight;
-  const inPlayTop = statusTop - 4 - inPlayHeight;
+  const inPlayBottom = statusTop - 4;
+  // In play grows up into the room left under the base cards.
+  const baseBottom = base.y + 2 * pileHeight + gap;
+  const inPlayRoom = Math.round(clamp(inPlayBottom - baseBottom - gap, inPlayHeight, 130));
   const half = (contentWidth - gap) / 2;
 
   return {
@@ -233,7 +278,7 @@ function portraitLayout(width: number, height: number): TableLayout {
     base,
     trash: slotRect(base, TRASH_SLOT),
     kingdom,
-    inPlay: { x: margin, y: inPlayTop, width: contentWidth, height: inPlayHeight },
+    inPlay: { x: margin, y: inPlayBottom - inPlayRoom, width: contentWidth, height: inPlayRoom },
     statusBar: { x: margin, y: statusTop, width: contentWidth, height: statusHeight },
     myPanel: { x: margin + half + gap, y: margin, width: half, height: panelHeight },
     hand: {

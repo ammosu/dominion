@@ -1,9 +1,6 @@
 import Phaser from 'phaser';
 import { SupplyPile } from './SupplyPile';
-import { pileCenter, type PileGrid, type TableLayout } from '../tableLayout';
-
-/** dominion.games order: Province/Gold, Duchy/Silver, Estate/Copper, Curse. */
-const BASE_ORDER = ['Province', 'Gold', 'Duchy', 'Silver', 'Estate', 'Copper', 'Curse'];
+import { BASE_ORDER, pileCenter, type PileGrid, type TableLayout } from '../tableLayout';
 
 export class SupplyArea {
   private readonly scene: Phaser.Scene;

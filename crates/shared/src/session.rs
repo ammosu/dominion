@@ -69,12 +69,16 @@ impl Session {
     /// The state to show before the first human message.
     pub fn start(&mut self) -> ServerMessage {
         run_ai_turns(&mut self.game, self.ai.as_ref());
+        // Nothing to animate on the opening table.
+        self.game.events.clear();
         ServerMessage::state_update(self.game.clone(), HUMAN, None)
     }
 
     /// Applies one client message (JSON), lets the AI act until the human
-    /// must act again, and returns the resulting state.
+    /// must act again, and returns the resulting state. Its `events` cover
+    /// exactly this message and the AI turns it triggered.
     pub fn handle(&mut self, text: &str) -> ServerMessage {
+        self.game.events.clear();
         let error = match serde_json::from_str::<ClientMessage>(text) {
             Ok(message) => self.game.execute(HUMAN, message.into()).err().map(|e| e.to_string()),
             Err(e) => Some(format!("Invalid message: {e}")),
@@ -112,5 +116,32 @@ mod tests {
 
         let reply = serde_json::to_value(session.handle("not json")).unwrap();
         assert!(reply["payload"]["error"].as_str().unwrap().starts_with("Invalid message"));
+        assert_eq!(reply["payload"]["game_state"]["events"], serde_json::json!([]), "a rejected message changes nothing");
+    }
+
+    #[test]
+    fn events_cover_one_message_and_the_ai_turn() {
+        let mut session = Session::new("simple", Some("first-game"), None);
+        let start = serde_json::to_value(session.start()).unwrap();
+        assert_eq!(start["payload"]["game_state"]["events"], serde_json::json!([]));
+
+        session.handle(r#"{"type":"EndPhase"}"#);
+        let reply = serde_json::to_value(session.handle(r#"{"type":"PlayAllTreasures"}"#)).unwrap();
+        let events = reply["payload"]["game_state"]["events"].as_array().unwrap().clone();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0]["kind"], "Play");
+        assert_eq!(events[0]["from"], "Hand");
+
+        // Ending the turn: our clean-up, the AI's whole turn, then our turn again.
+        let reply = serde_json::to_value(session.handle(r#"{"type":"EndPhase"}"#)).unwrap();
+        let kinds: Vec<String> = reply["payload"]["game_state"]["events"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| e["kind"].as_str().unwrap().to_string())
+            .collect();
+        assert_eq!(kinds[..3], ["Cleanup", "Draw", "TurnStart"]);
+        assert!(kinds.contains(&"Buy".to_string()) || kinds.iter().filter(|k| *k == "Cleanup").count() == 2);
+        assert_eq!(kinds.last().unwrap(), "TurnStart");
     }
 }

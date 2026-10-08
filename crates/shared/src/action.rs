@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::card::Card;
 use crate::decision::{Decision, Effect, GainDestination, Purpose};
+use crate::event::{GameEvent, Zone};
 use crate::game::{GameState, TurnPhase, TurnState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -145,6 +146,18 @@ impl GameState {
         self.log.push(format!("{prefix}{} {}", p.name, message.into()));
     }
 
+    fn emit(&mut self, event: GameEvent) {
+        self.events.push(event);
+    }
+
+    /// Notes a reshuffle when drawing `n` will run through the deck.
+    fn emit_shuffle_before_draw(&mut self, player: usize, n: usize) {
+        let p = &self.players[player];
+        if n > p.deck.len() && !p.discard.is_empty() {
+            self.emit(GameEvent::Shuffle { player });
+        }
+    }
+
     fn other_players(&self, player: usize) -> impl Iterator<Item = usize> {
         let n = self.players.len();
         (1..n).map(move |offset| (player + offset) % n)
@@ -162,9 +175,11 @@ impl GameState {
     }
 
     fn draw(&mut self, player: usize, n: usize) {
+        self.emit_shuffle_before_draw(player, n);
         let drawn = self.players[player].draw_cards(n);
         if drawn > 0 {
             self.note(player, format!("draws {drawn} card(s)"));
+            self.emit(GameEvent::Draw { player, count: drawn });
         }
     }
 
@@ -186,6 +201,12 @@ impl GameState {
             GainDestination::DeckTop => " onto deck",
         };
         self.note(player, format!("gains {card}{suffix}"));
+        let to = match destination {
+            GainDestination::Discard => Zone::Discard,
+            GainDestination::Hand => Zone::Hand,
+            GainDestination::DeckTop => Zone::Deck,
+        };
+        self.emit(GameEvent::Gain { player, card, to });
         true
     }
 
@@ -231,6 +252,7 @@ impl GameState {
         self.players[p].actions -= 1;
         self.players[p].in_play.push(card);
         self.note(p, format!("plays {card}"));
+        self.emit(GameEvent::Play { player: p, cards: vec![card], from: Zone::Hand });
         self.effects.push(Effect::Play(card));
         self.run_effects();
         Ok(())
@@ -270,6 +292,7 @@ impl GameState {
         }
         let coins = self.play_treasure(card);
         self.note(p, format!("plays {card} for +{coins} coin(s)"));
+        self.emit(GameEvent::Play { player: p, cards: vec![card], from: Zone::Hand });
         Ok(())
     }
 
@@ -281,6 +304,9 @@ impl GameState {
         self.players[p].hand = rest;
         let total: u32 = treasures.iter().map(|&card| self.play_treasure(card)).sum();
         self.note(p, format!("plays all treasures for +{total} coin(s)"));
+        if !treasures.is_empty() {
+            self.emit(GameEvent::Play { player: p, cards: treasures, from: Zone::Hand });
+        }
         Ok(())
     }
 
@@ -306,6 +332,7 @@ impl GameState {
         self.players[p].buys -= 1;
         self.turn.has_bought = true;
         self.note(p, format!("buys {card}"));
+        self.emit(GameEvent::Buy { player: p, card });
         self.gain(p, card, GainDestination::Discard);
         Ok(())
     }
@@ -325,17 +352,21 @@ impl GameState {
     /// passing the turn (the game only ends at the end of a turn).
     fn cleanup(&mut self) {
         let p = self.current_player;
+        self.emit(GameEvent::Cleanup { player: p });
         let player = &mut self.players[p];
         let mut in_play = std::mem::take(&mut player.in_play);
         player.discard.append(&mut in_play);
         player.discard_hand();
-        player.draw_cards(5);
+        self.emit_shuffle_before_draw(p, 5);
+        let player = &mut self.players[p];
+        let drawn = player.draw_cards(5);
         player.actions = 1;
         player.buys = 1;
         player.coins = 0;
         player.turns_taken += 1;
         self.turn = TurnState::default();
         self.note(p, "ends turn");
+        self.emit(GameEvent::Draw { player: p, count: drawn });
 
         if self.is_game_over() {
             self.finish_game();
@@ -346,11 +377,13 @@ impl GameState {
         self.phase = TurnPhase::Action;
         let next_name = self.players[self.current_player].name.clone();
         self.log.push(format!("{next_name}'s turn"));
+        self.emit(GameEvent::TurnStart { player: self.current_player });
     }
 
     fn finish_game(&mut self) {
         self.game_over = true;
         self.log.push("Game over!".to_string());
+        self.emit(GameEvent::GameOver);
         let scores = self.calculate_scores();
         for (name, score) in &scores {
             self.log.push(format!("{name}: {score} points"));
@@ -518,6 +551,7 @@ impl GameState {
                 if let Some(top) = self.players[p].take_top_card() {
                     self.players[p].discard.push(top);
                     self.note(p, format!("discards {top}"));
+                    self.emit(GameEvent::Discard { player: p, cards: vec![top], from: Zone::Deck });
                     if top.is_action() {
                         self.decide(p, card, Purpose::PlayDiscarded, vec![top], 0, 1);
                     }
@@ -538,9 +572,11 @@ impl GameState {
     }
 
     fn resolve_attack(&mut self, card: Card, target: usize) {
+        self.emit(GameEvent::Attack { player: self.current_player, card, target });
         // Moat is always revealed when held: it has no downside in this set.
         if self.players[target].hand.contains(&Card::Moat) {
             self.note(target, "reveals Moat and is unaffected");
+            self.emit(GameEvent::Blocked { player: target, card });
             return;
         }
 
@@ -605,6 +641,7 @@ impl GameState {
         if self.players[player].remove_from_hand(card) {
             self.players[player].deck.push(card);
             self.note(player, format!("puts {card} onto their deck"));
+            self.emit(GameEvent::Topdeck { player, cards: vec![card], from: Zone::Hand });
         }
     }
 
@@ -613,25 +650,34 @@ impl GameState {
             if remove_one(&mut revealed, card) {
                 self.trash.push(card);
                 self.note(player, format!("trashes {card}"));
+                self.emit(GameEvent::Trash { player, cards: vec![card], from: Zone::Deck });
             }
         }
         if !revealed.is_empty() {
             self.note(player, format!("discards {}", join_cards(&revealed)));
+            self.emit(GameEvent::Discard { player, cards: revealed.clone(), from: Zone::Deck });
             self.players[player].discard.append(&mut revealed);
         }
     }
 
     fn library_draw(&mut self) {
         let p = self.current_player;
+        let mut drawn = 0;
         while self.players[p].hand.len() < 7 {
+            self.emit_shuffle_before_draw(p, 1);
             let Some(card) = self.players[p].draw_one() else {
                 break;
             };
+            drawn += 1;
             if card.is_action() {
+                self.emit(GameEvent::Draw { player: p, count: drawn });
                 self.effects.push(Effect::LibraryDraw);
                 self.decide(p, Card::Library, Purpose::SetAside, vec![card], 0, 1);
                 return;
             }
+        }
+        if drawn > 0 {
+            self.emit(GameEvent::Draw { player: p, count: drawn });
         }
         self.note(p, format!("draws up to {} cards", self.players[p].hand.len()));
     }
@@ -654,6 +700,7 @@ impl GameState {
                     remove_one(&mut self.players[p].discard, card);
                     self.players[p].deck.push(card);
                     self.note(p, format!("puts {card} from discard onto their deck"));
+                    self.emit(GameEvent::Topdeck { player: p, cards: vec![card], from: Zone::Discard });
                 }
             }
             Purpose::PlayDiscarded => {
@@ -663,6 +710,7 @@ impl GameState {
                         discard.remove(pos);
                         self.players[p].in_play.push(card);
                         self.note(p, format!("plays {card}"));
+                        self.emit(GameEvent::Play { player: p, cards: vec![card], from: Zone::Discard });
                         self.effects.push(Effect::Play(card));
                     }
                 }
@@ -700,6 +748,7 @@ impl GameState {
                     self.players[p].remove_from_hand(card);
                     self.players[p].in_play.push(card);
                     self.note(p, format!("plays {card} twice"));
+                    self.emit(GameEvent::Play { player: p, cards: vec![card], from: Zone::Hand });
                     self.effects.push(Effect::Play(card));
                     self.effects.push(Effect::Play(card));
                 }
@@ -722,6 +771,7 @@ impl GameState {
                 }
                 if !chosen.is_empty() {
                     self.note(p, format!("trashes {}", join_cards(&chosen)));
+                    self.emit(GameEvent::Trash { player: p, cards: chosen.clone(), from: Zone::Deck });
                 }
                 if !remaining.is_empty() {
                     let max = remaining.len();
@@ -736,6 +786,7 @@ impl GameState {
                 }
                 if !chosen.is_empty() {
                     self.note(p, format!("discards {}", join_cards(&chosen)));
+                    self.emit(GameEvent::Discard { player: p, cards: chosen.clone(), from: Zone::Deck });
                 }
                 match remaining.as_slice() {
                     [a, b] if a != b => {
@@ -762,6 +813,7 @@ impl GameState {
         }
         if !cards.is_empty() {
             self.note(player, format!("discards {}", join_cards(cards)));
+            self.emit(GameEvent::Discard { player, cards: cards.to_vec(), from: Zone::Hand });
         }
     }
 
@@ -773,6 +825,7 @@ impl GameState {
         }
         if !cards.is_empty() {
             self.note(player, format!("trashes {}", join_cards(cards)));
+            self.emit(GameEvent::Trash { player, cards: cards.to_vec(), from: Zone::Hand });
         }
     }
 }

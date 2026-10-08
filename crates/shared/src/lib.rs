@@ -2,6 +2,7 @@ pub mod action;
 pub mod ai;
 pub mod card;
 pub mod decision;
+pub mod event;
 pub mod game;
 pub mod player;
 pub mod protocol;

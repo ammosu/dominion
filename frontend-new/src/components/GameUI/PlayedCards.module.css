@@ -46,3 +46,45 @@
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+/* Room for small cards: a faint tray with a vertical label. */
+.area {
+  position: absolute;
+  z-index: 45;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.sideLabel {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-size: calc(12px * var(--ui, 1));
+  letter-spacing: 2px;
+  color: rgba(232, 220, 200, 0.75);
+  padding: 6px 3px;
+  border-radius: 4px;
+  background: rgba(10, 8, 6, 0.45);
+}
+
+.played {
+  z-index: 50;
+  pointer-events: auto;
+  transition: left 0.25s ease, top 0.25s ease;
+  /* A newly played card shows once its flying copy lands. */
+  animation: landed 0.12s ease-out 0.33s backwards;
+}
+
+@keyframes landed {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .played {
+    animation: none;
+  }
+}

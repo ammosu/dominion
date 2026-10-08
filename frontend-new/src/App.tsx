@@ -9,6 +9,8 @@ import { TrashPile } from './components/GameUI/TrashPile';
 import { PlayedCards } from './components/GameUI/PlayedCards';
 import { Toast } from './components/GameUI/Toast';
 import { TurnBanner } from './components/GameUI/TurnBanner';
+import { FxLayer, playEvents } from './fx/FxLayer';
+import { useFxStore } from './fx/fxStore';
 import { GameOverModal } from './components/GameUI/GameOverModal';
 import { DecisionModal } from './components/GameUI/DecisionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
@@ -27,6 +29,8 @@ function App() {
   const winners = useGameStore((state) => state.winners);
   const players = useGameStore((state) => state.gameState?.players);
   const viewer = useGameStore((state) => state.viewer);
+  // The final scores wait until the last turn has been shown.
+  const replaying = useFxStore((state) => state.busy);
   const [gameStarted, setGameStarted] = useState(false);
   const tableRef = useRef<HTMLElement>(null);
   const layout = useTableLayout(tableRef);
@@ -43,7 +47,9 @@ function App() {
     // The WebSocket connection is opened by StartScreen once options are chosen.
     const unsubscribe = wsService.onMessage((msg) => {
       if (msg.type !== 'GameStateUpdate') return;
+      const before = useGameStore.getState().gameState;
       setGameState(msg.payload.game_state, msg.payload.viewer);
+      playEvents(before, msg.payload.game_state, msg.payload.viewer);
       if (msg.payload.error) {
         const { language, showToast } = useUIStore.getState();
         showToast(translateError(msg.payload.error, language), 'error');
@@ -80,6 +86,7 @@ function App() {
             />
           </>
         )}
+        <FxLayer layout={layout} />
         <TurnBanner />
         <Toast anchor={gameStarted ? layout?.statusBar : undefined} />
       </main>
@@ -88,7 +95,7 @@ function App() {
       <CardTooltip />
       <CardInspector />
       <DecisionModal />
-      {isGameOver && finalScores && (
+      {isGameOver && finalScores && !replaying && (
         <GameOverModal scores={finalScores} winners={winners} onClose={handleCloseGameOver} />
       )}
     </div>

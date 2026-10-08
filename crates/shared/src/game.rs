@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::card::Card;
 use crate::decision::{Decision, Effect};
+use crate::event::GameEvent;
 use crate::player::Player;
 
 pub type Supply = HashMap<Card, u32>;
@@ -47,6 +48,10 @@ pub struct GameState {
     pub effects: Vec<Effect>,
     pub game_over: bool,
     pub log: Vec<String>,
+    /// What happened since the session last cleared it (one client message
+    /// and the AI turns it triggered), for animations.
+    #[serde(default)]
+    pub events: Vec<GameEvent>,
     pub scores: Option<Vec<(String, i32)>>,
     pub winners: Vec<String>,
 }
@@ -92,6 +97,7 @@ impl GameState {
             effects: Vec::new(),
             game_over: false,
             log: vec!["Game started!".to_string()],
+            events: Vec::new(),
             scores: None,
             winners: Vec::new(),
         }

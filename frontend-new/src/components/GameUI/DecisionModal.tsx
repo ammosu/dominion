@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { useFxStore } from '../../fx/fxStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import { getCardArtPath, getCardCost, getCardFrameStyle, getCardName, isPixelated } from '../../utils/cardData';
@@ -13,7 +14,9 @@ import styles from './DecisionModal.module.css';
  * through here and is answered with a single `Resolve` message.
  */
 export function DecisionModal() {
-  const decision = useGameStore((state) => state.myDecision);
+  // Answering waits until the moves that led here (e.g. an attack) have been shown.
+  const replaying = useFxStore((state) => state.busy);
+  const decision = useGameStore((state) => (replaying ? null : state.myDecision));
   const language = useUIStore((state) => state.language);
   const setHoveredCard = useUIStore((state) => state.setHoveredCard);
   const artStyle = useUIStore((state) => state.artStyle);

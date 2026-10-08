@@ -61,6 +61,7 @@ cd frontend-new && npm run dev
 - `shared/ai/simple.rs` / `shared/ai/medium.rs` — purchase strategies (Big Money vs. kingdom-aware)
 - `shared/card.rs` — all 33 cards of the 2nd-edition base set, costs/types, `RECOMMENDED_KINGDOMS`
 - `shared/decision.rs` — `Decision` (pending choice), `Purpose`, `Effect` (engine stack)
+- `shared/event.rs` — `GameEvent` (Play, Draw, Gain, Discard, Trash, Attack, Blocked, Cleanup, TurnStart…): `GameState.events` lists what one client message and the AI turns it triggered did, in order (`Session` clears it per message); the client animates from it
 - `shared/action.rs` — `PlayerAction`, `GameState::execute(actor, action)`, every card's effect, attacks, clean-up
 - `shared/game.rs` — `GameState`, setup by player count, game end, scoring (Gardens) and tie-break
 
@@ -79,7 +80,9 @@ Two rendering layers share state through Zustand:
 - `game/tableLayout.ts` — `computeTableLayout(w, h)`: the one source of table geometry for Phaser *and* React overlays (`useTableLayout` hook); `wide` mode (base cards left of the kingdom; 4×2 base when the table is short) or `portrait` mode (phones: kingdom 5×2 over base 4×2, player strips on top). `uiScale` (CSS var `--ui`) grows overlay text on big screens
 - `objects/CardFace.ts` — card drawing shared by hand and supply: type-colored banner/label (`getCardFrameStyle`), artwork, cost coin, count badge, highlight
 - `objects/Card.ts` / `Hand.ts` — one card per name in hand with a count; `SupplyPile.ts` / `SupplyArea.ts` — base grid (2 or 4 columns, trash in slot 7) + kingdom (5 columns)
-- `components/GameUI/StatusBar.tsx` — Actions | Buys | Coins, prompt line, turn buttons and inline Yes/No decisions
+- `components/GameUI/StatusBar.tsx` — Actions | Buys | Coins (pulse and float their change), prompt line, turn buttons and inline Yes/No decisions
+- `fx/director.ts` + `fx/FxLayer.tsx` — plays `game_state.events` over the table after the new state is applied: cards fly (DOM ghosts, Web Animations) between hand, in-play row, Supply, deck/discard (`data-fx` anchors in PlayerPanel) and trash; attack streaks, Moat shield, turn banners. Another player's moves replay at a readable pace while `fxStore.busy` holds input, the decision modal and the game-over modal; a tap skips. `prefers-reduced-motion` skips flights
+- `components/GameUI/PlayedCards.tsx` — in-play row of small cards (`fx/miniCard.tsx`) in the space `tableLayout` leaves under the Supply; name chips when cramped
 - `services/websocket.ts` — WebSocket client with auto-reconnect; URL auto-detected from `window.location`
 
 ### Data Flow
@@ -88,7 +91,8 @@ Two rendering layers share state through Zustand:
 User clicks card → Phaser emits event → GameContainer validates →
   WebSocket send → Backend executes → AI turn loop runs →
   GameStateUpdate response → Zustand store update →
-  React re-renders + Phaser scene.updateHand()/updateSupply()
+  React re-renders + Phaser scene.updateHand()/updateSupply() +
+  playEvents(prev, next) animates next.events
 ```
 
 Backend always responds with **full game state** (no deltas). Frontend replaces entire state on each message.
@@ -155,6 +159,8 @@ cd frontend-new && VITE_ENGINE=wasm BASE_PATH=/dominion/ npm run build
 
 **Backend:**
 - `~/.cargo/bin/cargo` may be needed if cargo is not in PATH
+- Changing `GameState` (or any engine code) needs a `wasm-pack` rebuild before `VITE_ENGINE=wasm` dev picks it up; `frontend-new/src/wasm/` is a gitignored build artifact
+- Log strings are parsed by `translateLogEntry`/`condenseLog`: change their wording only together with `i18n.ts`
 - WebSocket handler creates a new game per connection (not persistent across reconnects)
 - Card ids are the Rust enum names (`CouncilRoom`, `ThroneRoom`); log lines use display names ("Council Room")
 

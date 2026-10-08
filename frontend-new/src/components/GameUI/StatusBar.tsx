@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { useFxStore } from '../../fx/fxStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import { isAction, isTreasure } from '../../utils/cardData';
@@ -50,10 +51,15 @@ function Stat({ value, turnKey, className, fx, children }: { value: number; turn
  */
 export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; onOpenLog?: () => void; logUnread?: boolean }) {
   const gameState = useGameStore((state) => state.gameState);
-  const currentPlayer = useGameStore((state) => state.currentPlayer);
   const me = useGameStore((state) => state.viewerPlayer);
-  const canAct = useGameStore((state) => state.canAct);
-  const myDecision = useGameStore((state) => state.myDecision);
+  // While another player's moves are replayed, show them as acting and wait.
+  const replaying = useFxStore((state) => state.busy);
+  const replayActor = useFxStore((state) => state.actor);
+  const currentPlayer = useGameStore((state) =>
+    replaying && replayActor !== null ? state.gameState?.players[replayActor] ?? null : state.currentPlayer,
+  );
+  const canAct = useGameStore((state) => state.canAct) && !replaying;
+  const myDecision = useGameStore((state) => (replaying ? null : state.myDecision));
   const language = useUIStore((state) => state.language);
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
@@ -120,7 +126,7 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
     return zh ? '購買完畢就結束回合' : 'Done buying? End your turn';
   })();
 
-  const turnKey = `${gameState.current_player}-${currentPlayer.turns_taken}`;
+  const turnKey = `${currentPlayer.name}-${currentPlayer.turns_taken}`;
   // Nothing left to play: the Action-phase button just moves on to buying.
   const actionsDone = me.actions === 0 || !me.hand.some(isAction);
   const variant = rect.width < 560 ? styles.stacked : rect.height < 56 ? styles.compact : '';

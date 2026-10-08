@@ -3,6 +3,7 @@ import { PhaserGame } from './PhaserGame';
 import { wsService } from '../services/websocket';
 import { useUIStore } from '../store/uiStore';
 import { useGameStore } from '../store/gameStore';
+import { useFxStore } from '../fx/fxStore';
 import { getAllCardCosts, getCardCost, isAction, isTreasure } from '../utils/cardData';
 
 type Lang = 'zh' | 'en';
@@ -14,6 +15,8 @@ function toast(message: Record<Lang, string>) {
 
 /** Client-side checks are for quick feedback only; the server is authoritative. */
 function requestPlayCard(cardName: string) {
+  // Another player's moves are being shown; the tap just skips ahead.
+  if (useFxStore.getState().busy) return;
   const { gameState: state, viewerPlayer: me, canAct, myDecision } = useGameStore.getState();
   if (!state || !me) return;
 
@@ -79,6 +82,7 @@ export function buyBlocker(cardName: string): Record<Lang, string> | null {
 }
 
 export function requestBuyCard(cardName: string) {
+  if (useFxStore.getState().busy) return;
   const blocker = buyBlocker(cardName);
   if (blocker) {
     toast(blocker);
@@ -93,7 +97,8 @@ export function GameContainer() {
   const gameState = useGameStore((state) => state.gameState);
   const viewerHand = useGameStore((state) => state.viewerPlayer?.hand);
   const me = useGameStore((state) => state.viewerPlayer);
-  const canAct = useGameStore((state) => state.canAct);
+  const replaying = useFxStore((state) => state.busy);
+  const canAct = useGameStore((state) => state.canAct) && !replaying;
   const language = useUIStore((state) => state.language);
   const artStyle = useUIStore((state) => state.artStyle);
 

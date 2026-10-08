@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import { useUIStore } from '../../store/uiStore';
+import { useGameStore } from '../../store/gameStore';
 import styles from './GameOverModal.module.css';
 
 interface GameOverModalProps {
@@ -9,13 +11,23 @@ interface GameOverModalProps {
 
 export function GameOverModal({ scores, winners, onClose }: GameOverModalProps) {
   const language = useUIStore((state) => state.language);
+  const myName = useGameStore((state) => state.viewerPlayer?.name);
 
   const sorted = [...scores].sort((a, b) => b.score - a.score);
   const winnerNames = winners.length > 0 ? winners : [sorted[0].name];
+  const won = myName !== undefined && winnerNames.includes(myName);
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
+      {/* A few slow falling coins when we win. */}
+      {won && (
+        <div className={styles.coins} aria-hidden>
+          {Array.from({ length: 12 }, (_, i) => (
+            <i key={i} style={{ '--i': i } as CSSProperties} />
+          ))}
+        </div>
+      )}
+      <div className={`${styles.modal} ${won ? styles.won : ''}`}>
         <h1 className={styles.title}>
           {language === 'zh' ? '遊戲結束' : 'Game Over'}
         </h1>

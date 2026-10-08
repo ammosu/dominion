@@ -65,3 +65,13 @@
     opacity: 0;
   }
 }
+
+/* Another player's turn: quieter and shorter. */
+.other {
+  animation-duration: 0.9s;
+}
+
+.other .title {
+  font-size: calc(20px * var(--ui, 1));
+  color: #ffb3a6;
+}

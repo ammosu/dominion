@@ -1,32 +1,28 @@
-import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useUIStore } from '../../store/uiStore';
+import { useFxStore } from '../../fx/fxStore';
 import styles from './TurnBanner.module.css';
 
-/** Brief "Your turn" banner across the table whenever the turn passes to this player. */
+/** Brief banner across the table when a turn starts ("Your turn", "Bot's turn"); raised by the effects director. */
 export function TurnBanner() {
   const language = useUIStore((state) => state.language);
-  const [banner, setBanner] = useState<{ turn: number; id: number } | null>(null);
-
-  useEffect(() => {
-    let id = 0;
-    return useGameStore.subscribe((state, previous) => {
-      const next = state.gameState;
-      const before = previous.gameState;
-      // Not on the first state (game start / reconnect): only real hand-overs.
-      if (!next || !before || next.game_over) return;
-      if (next.current_player === state.viewer && before.current_player !== state.viewer) {
-        setBanner({ turn: (next.players[state.viewer]?.turns_taken ?? 0) + 1, id: ++id });
-      }
-    });
-  }, []);
+  const banner = useFxStore((state) => state.banner);
+  const viewer = useGameStore((state) => state.viewer);
+  const name = useGameStore((state) => (banner ? state.gameState?.players[banner.player]?.name : undefined));
 
   if (!banner) return null;
   const zh = language === 'zh';
+  const mine = banner.player === viewer;
 
   return (
-    <div key={banner.id} className={styles.banner} onAnimationEnd={() => setBanner(null)} role="status" data-testid="turn-banner">
-      <span className={styles.title}>{zh ? '輪到你' : 'Your turn'}</span>
+    <div
+      key={banner.id}
+      className={`${styles.banner} ${mine ? '' : styles.other}`}
+      onAnimationEnd={() => useFxStore.getState().set({ banner: null })}
+      role="status"
+      data-testid="turn-banner"
+    >
+      <span className={styles.title}>{mine ? (zh ? '輪到你' : 'Your turn') : zh ? `${name} 的回合` : `${name}'s turn`}</span>
       <span className={styles.turn}>{zh ? `第 ${banner.turn} 回合` : `Turn ${banner.turn}`}</span>
     </div>
   );

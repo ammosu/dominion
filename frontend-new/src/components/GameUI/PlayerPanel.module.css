@@ -105,7 +105,9 @@ button.pile:not(:disabled):hover .pileCard {
 }
 
 .deck {
-  background: repeating-linear-gradient(45deg, #23476b, #23476b 6px, #1b3956 6px, #1b3956 12px);
+  background-color: #1b3956;
+  background-size: cover;
+  background-position: center;
   border: 2px solid #c9a75f;
 }
 
