@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { canHover } from '../../utils/hover';
 
 const LONG_PRESS_MS = 450;
 
@@ -6,6 +7,10 @@ const LONG_PRESS_MS = 450;
  * Mouse: press acts, hovering previews. Touch has no hover, so a short tap
  * acts and press-and-hold previews the card (until the finger lifts)
  * without acting.
+ *
+ * Phaser also listens for touches on the whole window and hit-tests them
+ * against the table, so a tap on a dialog above the canvas would reach the
+ * card beneath it: only presses and releases on the canvas itself count.
  */
 export function bindCardPointer(
   target: Phaser.GameObjects.Container,
@@ -15,6 +20,7 @@ export function bindCardPointer(
   const scene = target.scene;
   let timer: Phaser.Time.TimerEvent | null = null;
   let previewing = false;
+  const onCanvas = (element: unknown) => element === scene.game.canvas;
 
   const endPreview = () => {
     timer?.remove();
@@ -25,13 +31,16 @@ export function bindCardPointer(
     }
   };
 
+  // iOS follows a tap with mousedown/mouseup on whatever was tapped; Phaser
+  // takes those from the window and would "hover" the card under a dialog.
   target.on('pointerover', (pointer: Phaser.Input.Pointer) => {
-    if (!pointer.wasTouch) onPreview(true);
+    if (!pointer.wasTouch && canHover() && onCanvas(pointer.event?.target)) onPreview(true);
   });
   target.on('pointerout', (pointer: Phaser.Input.Pointer) => {
     if (!pointer.wasTouch) onPreview(false);
   });
   target.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    if (!onCanvas(pointer.downElement)) return;
     if (!pointer.wasTouch) {
       onTap(false);
       return;
@@ -43,7 +52,8 @@ export function bindCardPointer(
     });
   });
   target.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-    if (pointer.wasTouch && pointer.getDuration() < LONG_PRESS_MS) onTap(true);
+    if (!pointer.wasTouch || !onCanvas(pointer.downElement) || !onCanvas(pointer.upElement)) return;
+    if (pointer.getDuration() < LONG_PRESS_MS) onTap(true);
   });
 
   // The finger may lift anywhere (or the card may be rebuilt meanwhile).

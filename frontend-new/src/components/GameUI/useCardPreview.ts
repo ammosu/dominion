@@ -1,5 +1,6 @@
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react';
 import { useUIStore } from '../../store/uiStore';
+import { canHover } from '../../utils/hover';
 
 const LONG_PRESS_MS = 450; // same as the Phaser table (pointerBinding.ts)
 
@@ -22,7 +23,7 @@ export function useCardPreview() {
 
   const previewProps = (card: string) => ({
     onPointerEnter: (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') setHoveredCard(card);
+      if (e.pointerType === 'mouse' && canHover()) setHoveredCard(card);
     },
     onPointerLeave: (e: PointerEvent) => {
       if (e.pointerType === 'mouse') setHoveredCard(null);

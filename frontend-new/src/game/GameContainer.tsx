@@ -101,6 +101,7 @@ export function GameContainer() {
   const canAct = useGameStore((state) => state.canAct) && !replaying;
   const language = useUIStore((state) => state.language);
   const artStyle = useUIStore((state) => state.artStyle);
+  const inspectedCard = useUIStore((state) => state.inspectedCard);
 
   const setupSceneListeners = (scene: Phaser.Scene) => {
     // Remove any existing listeners first to avoid duplicates
@@ -192,6 +193,14 @@ export function GameContainer() {
     }
     scene.setHighlights(buyable, playable);
   }, [gameState, me, canAct]);
+
+  // Dialogs over the table (a card choice, a card's details) take every tap:
+  // the table beneath ignores input until they close.
+  const dialogOpen = useGameStore((state) => state.myDecision !== null) || inspectedCard !== null;
+  useEffect(() => {
+    const scene = gameRef.current?.getScene('TableScene');
+    if (scene?.input) scene.input.enabled = !dialogOpen;
+  }, [dialogOpen]);
 
   // Swap card artwork sets
   useEffect(() => {

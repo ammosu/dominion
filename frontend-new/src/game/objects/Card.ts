@@ -13,7 +13,7 @@ export class Card extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.baseY = y;
     this.face = new CardFace(scene, cardName, width, height, lang);
-    this.face.setCount(count > 1 ? count : null, '×');
+    this.face.setCount(count);
     this.add(this.face);
     this.setSize(width, height);
     this.setInteractive({ useHandCursor: true });
