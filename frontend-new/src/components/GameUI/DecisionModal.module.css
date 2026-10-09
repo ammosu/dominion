@@ -281,10 +281,33 @@
   font-size: 13px;
 }
 
+.closeButton {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(196, 164, 98, 0.45);
+  color: #d4b880;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: rgba(196, 164, 98, 0.15);
+}
+
 @media (pointer: coarse) {
   .peekButton {
     min-height: 44px;
     font-size: 15px;
+  }
+
+  .closeButton {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
   }
 }
 

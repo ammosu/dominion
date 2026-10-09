@@ -129,7 +129,7 @@ export function decisionPrompt(decision: Decision, lang: Lang): string {
     case 'TrashToRemodel':
       return zh ? `${source}：選一張手牌移除` : `${source}: choose a card to trash`;
     case 'TrashTreasureToMine':
-      return zh ? `${source}：可以移除一張寶物牌來升級` : `${source}: you may trash a Treasure to upgrade it`;
+      return zh ? `${source}：選一張寶物牌升級` : `${source}: choose a Treasure to upgrade`;
     case 'PlayTwice':
       return zh ? `${source}：選一張行動牌執行兩次` : `${source}: choose an Action card to play twice`;
     case 'TrashRevealedTreasure':

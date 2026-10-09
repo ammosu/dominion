@@ -52,9 +52,12 @@ export function DecisionModal() {
   }
 
   const singleRequired = decision.min === 1 && decision.max === 1;
+  // "You may pick one" (Mine, Throne Room, Harbinger): a tap picks, ✕ skips.
+  const singleOptional = decision.min === 0 && decision.max === 1;
+  const pickOnTap = singleRequired || singleOptional;
 
   const toggle = (index: number) => {
-    if (singleRequired) {
+    if (pickOnTap) {
       send([decision.options[index]]);
       return;
     }
@@ -67,6 +70,7 @@ export function DecisionModal() {
 
   const countHint = (() => {
     if (singleRequired) return null;
+    if (singleOptional) return zh ? '點選一張，或按 ✕ 略過' : 'Tap a card, or ✕ to skip';
     if (decision.min === decision.max) {
       return zh ? `請選擇 ${decision.min} 張` : `Choose exactly ${decision.min}`;
     }
@@ -85,6 +89,17 @@ export function DecisionModal() {
           <button className={styles.peekButton} onClick={() => setMinimized(true)} title={zh ? '查看桌面' : 'View table'}>
             {zh ? '查看桌面' : 'View table'}
           </button>
+          {singleOptional && (
+            <button
+              className={styles.closeButton}
+              onClick={() => send([])}
+              title={zh ? '略過' : 'Skip'}
+              aria-label={zh ? '略過' : 'Skip'}
+              data-testid="decision-skip"
+            >
+              ✕
+            </button>
+          )}
         </div>
         {countHint && <div className={styles.subtitle}>{countHint}</div>}
 
@@ -121,7 +136,7 @@ export function DecisionModal() {
         </div>
 
         <div className={styles.actions}>
-          {!singleRequired && (
+          {!pickOnTap && (
             <button
               className={styles.confirmButton}
               onClick={() => send(selected.map((i) => decision.options[i]))}
