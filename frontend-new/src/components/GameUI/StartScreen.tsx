@@ -11,6 +11,7 @@ import {
   getCardCost,
   getCardName,
 } from '../../utils/cardData';
+import { randomPlayerName } from '../../utils/playerNames';
 import styles from './StartScreen.module.css';
 
 interface StartScreenProps {
@@ -33,7 +34,10 @@ export function StartScreen({ onStart }: StartScreenProps) {
   const setLanguage = useUIStore((state) => state.setLanguage);
   const artStyle = useUIStore((state) => state.artStyle);
   const setArtStyle = useUIStore((state) => state.setArtStyle);
-  const [playerName, setPlayerName] = useState('Alice');
+  // A random name in the current language until the player types their own;
+  // switching language swaps an untouched name for one in the new language.
+  const [playerName, setPlayerName] = useState(() => randomPlayerName(language));
+  const [nameEdited, setNameEdited] = useState(false);
   const [aiDifficulty, setAiDifficulty] = useState<'simple' | 'medium'>('medium');
   const [kingdomId, setKingdomId] = useState('first-game');
   const [randomCards, setRandomCards] = useState<string[]>(randomKingdom);
@@ -50,7 +54,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
     const params = new URLSearchParams({
       difficulty: aiDifficulty,
       kingdom: kingdomId === 'random' ? randomCards.join(',') : kingdomId,
-      name: playerName.trim() || 'Alice',
+      name: playerName.trim() || randomPlayerName(language),
     });
     wsService.connect(`${protocol}//${host}/ws?${params}`);
     onStart();
@@ -67,13 +71,30 @@ export function StartScreen({ onStart }: StartScreenProps) {
           <label className={styles.label}>
             {language === 'zh' ? '玩家名稱' : 'Player Name'}
           </label>
-          <input
-            type="text"
-            className={styles.input}
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            maxLength={20}
-          />
+          <div className={styles.kingdomRow}>
+            <input
+              type="text"
+              className={styles.input}
+              value={playerName}
+              onChange={(e) => {
+                setPlayerName(e.target.value);
+                setNameEdited(true);
+              }}
+              maxLength={20}
+              data-testid="player-name"
+            />
+            <button
+              className={styles.rerollButton}
+              onClick={() => {
+                setPlayerName(randomPlayerName(language, playerName));
+                setNameEdited(false);
+              }}
+              title={language === 'zh' ? '隨機名字' : 'Random name'}
+              data-testid="reroll-name"
+            >
+              🎲
+            </button>
+          </div>
 
           <label className={styles.label}>
             {language === 'zh' ? 'AI 難度' : 'AI Difficulty'}
@@ -142,7 +163,11 @@ export function StartScreen({ onStart }: StartScreenProps) {
 
           <button
             className={styles.langButton}
-            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+            onClick={() => {
+              const next = language === 'zh' ? 'en' : 'zh';
+              setLanguage(next);
+              if (!nameEdited) setPlayerName(randomPlayerName(next));
+            }}
           >
             {language === 'zh' ? 'English' : '中文'}
           </button>

@@ -474,3 +474,22 @@
   background: #e05a3a;
   box-shadow: 0 0 0 2px #100c08;
 }
+
+/* The only sensible next move: a glowing, breathing button. */
+.suggested {
+  outline: 2px solid #f4d06a;
+  outline-offset: 2px;
+  animation: suggestPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes suggestPulse {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(244, 208, 106, 0.45), 0 2px 8px rgba(0, 0, 0, 0.4); }
+  50% { box-shadow: 0 0 18px 5px rgba(244, 208, 106, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suggested {
+    animation: none;
+    box-shadow: 0 0 12px 3px rgba(244, 208, 106, 0.7);
+  }
+}

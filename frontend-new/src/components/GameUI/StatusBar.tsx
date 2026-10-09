@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useFxStore } from '../../fx/fxStore';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
-import { isAction, isTreasure } from '../../utils/cardData';
+import { getCardCost, isAction, isTreasure } from '../../utils/cardData';
 import { decisionPrompt, isYesNoDecision } from '../../utils/i18n';
 import type { Rect } from '../../game/tableLayout';
 import styles from './StatusBar.module.css';
@@ -66,6 +66,11 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
   if (!gameState || !currentPlayer || !me) return null;
   const zh = language === 'zh';
 
+  // Something other than a 0-cost card (Copper, Curse) is affordable.
+  const worthBuying =
+    me.buys > 0 &&
+    Object.entries(gameState.supply).some(([card, count]) => count > 0 && getCardCost(card) > 0 && getCardCost(card) <= me.coins);
+
   const endPhase = () => {
     setConfirmation(null);
     wsService.send({ type: 'EndPhase' });
@@ -78,7 +83,7 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
           ? `你還有 ${me.actions} 個行動，且手中有行動卡。確定要結束行動階段嗎？`
           : `You still have ${me.actions} action(s) and action cards in hand. End the Action phase?`,
       );
-    } else if (gameState.phase === 'Buy' && me.coins > 0 && me.buys > 0) {
+    } else if (gameState.phase === 'Buy' && worthBuying) {
       setConfirmation(
         zh
           ? `你還有 ${me.coins} 金幣和 ${me.buys} 次購買。確定要結束回合嗎？`
@@ -122,7 +127,7 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
       return zh ? '沒有可打的行動卡，進入購買階段' : 'No Action to play — go to the Buy phase';
     }
     if (treasures) return zh ? '打出寶物，再點擊發光的供應堆購買' : 'Play Treasures, then click a highlighted pile to buy';
-    if (me.buys > 0 && me.coins > 0) return zh ? '點擊發光的供應堆購買' : 'Click a highlighted pile to buy';
+    if (worthBuying) return zh ? '點擊發光的供應堆購買' : 'Click a highlighted pile to buy';
     return zh ? '購買完畢就結束回合' : 'Done buying? End your turn';
   })();
 
@@ -132,6 +137,13 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
   const variant = rect.width < 560 ? styles.stacked : rect.height < 56 ? styles.compact : '';
   const showTreasures = canAct && gameState.phase === 'Buy' && !gameState.turn.has_bought && me.hand.some(isTreasure);
   const yesNo = myDecision && isYesNoDecision(myDecision) ? myDecision : null;
+  // When only one move makes sense, make its button glow: no Action to play
+  // → go to Buy; nothing worth buying → play Treasures if any, else end the turn.
+  const suggested = !canAct || myDecision
+    ? null
+    : gameState.phase === 'Action'
+      ? actionsDone ? 'end' : null
+      : worthBuying ? null : showTreasures ? 'treasures' : 'end';
 
   return (
     <>
@@ -179,7 +191,7 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
           )}
           {showTreasures && (
             <button
-              className={styles.playAllTreasuresButton}
+              className={`${styles.playAllTreasuresButton} ${suggested === 'treasures' ? styles.suggested : ''}`}
               onClick={() => wsService.send({ type: 'PlayAllTreasures' })}
               data-testid="play-all-treasures"
             >
@@ -187,7 +199,11 @@ export function StatusBar({ rect, onOpenLog, logUnread = false }: { rect: Rect; 
             </button>
           )}
           {canAct && (
-            <button className={styles.endPhaseButton} onClick={requestEndPhase} data-testid="end-phase">
+            <button
+              className={`${styles.endPhaseButton} ${suggested === 'end' ? styles.suggested : ''}`}
+              onClick={requestEndPhase}
+              data-testid="end-phase"
+            >
               {gameState.phase === 'Action'
                 ? actionsDone
                   ? zh ? '進入購買階段 ⏭' : 'To Buy phase ⏭'
