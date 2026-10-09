@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useFxStore } from '../../fx/fxStore';
 import { useUIStore } from '../../store/uiStore';
@@ -16,6 +16,42 @@ const ownedCards = (p: Player) => [...p.deck, ...p.hand, ...p.discard, ...p.in_p
  * top; ours sits beside the hand with clickable deck/discard piles, or is a
  * strip too when there is no room for them (phones).
  */
+/** The score badge; a change pulses it and shows the difference beside it. */
+function Score({ value, title }: { value: number; title: string }) {
+  const previous = useRef(value);
+  const changes = useRef(0);
+  const [change, setChange] = useState<{ delta: number; id: number } | null>(null);
+
+  useEffect(() => {
+    if (value !== previous.current) setChange({ delta: value - previous.current, id: ++changes.current });
+    previous.current = value;
+  }, [value]);
+
+  const up = change ? change.delta > 0 : false;
+  return (
+    <span className={styles.scoreWrap}>
+      {change && (
+        <span
+          key={`d${change.id}`}
+          className={`${styles.scoreDelta} ${up ? styles.up : styles.down}`}
+          onAnimationEnd={() => setChange(null)}
+          aria-hidden
+        >
+          {up ? '+' : '−'}
+          {Math.abs(change.delta)}
+        </span>
+      )}
+      <span
+        key={change?.id ?? 0}
+        className={`${styles.score} ${change ? (up ? styles.scoreUp : styles.scoreDown) : ''}`}
+        title={title}
+      >
+        {value}
+      </span>
+    </span>
+  );
+}
+
 export function PlayerPanel({ playerIndex, rect, variant }: { playerIndex: number; rect: Rect; variant: 'opponent' | 'me' }) {
   const gameState = useGameStore((state) => state.gameState);
   const language = useUIStore((state) => state.language);
@@ -55,7 +91,7 @@ export function PlayerPanel({ playerIndex, rect, variant }: { playerIndex: numbe
             {player.is_ai && '🤖 '}
             {player.name}
           </span>
-          <span className={styles.score} title={zh ? '分數' : 'Score'}>{score}</span>
+          <Score value={score} title={zh ? '分數' : 'Score'} />
         </div>
 
         {strip ? (

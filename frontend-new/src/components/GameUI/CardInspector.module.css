@@ -68,3 +68,21 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* Entrance: the dialog rises and settles. */
+.sheet {
+  animation: dialogIn 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.15) both;
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
+}

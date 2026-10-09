@@ -82,6 +82,7 @@ Two rendering layers share state through Zustand:
 - `objects/Card.ts` / `Hand.ts` — one card per name in hand with a count; `SupplyPile.ts` / `SupplyArea.ts` — base grid (2 or 4 columns, trash in slot 7) + kingdom (5 columns)
 - `components/GameUI/StatusBar.tsx` — Actions | Buys | Coins (pulse and float their change), prompt line, turn buttons and inline Yes/No decisions
 - `fx/director.ts` + `fx/FxLayer.tsx` — plays `game_state.events` over the table after the new state is applied: cards fly (DOM ghosts, Web Animations) between hand, in-play row, Supply, deck/discard (`data-fx` anchors in PlayerPanel) and trash; attack streaks, Moat shield, turn banners. Another player's moves replay at a readable pace while `fxStore.busy` holds input, the decision modal and the game-over modal; a tap skips. `prefers-reduced-motion` skips flights
+- `components/GameUI/Tutorial.tsx` — six-page how-to-play (`uiStore.showRulesModal`), opened from the start screen (glows until first seen, `localStorage`) and the side panel's ? button
 - `components/GameUI/PlayedCards.tsx` — in-play row of small cards (`fx/miniCard.tsx`) in the space `tableLayout` leaves under the Supply; name chips when cramped
 - `services/websocket.ts` — WebSocket client with auto-reconnect; URL auto-detected from `window.location`
 

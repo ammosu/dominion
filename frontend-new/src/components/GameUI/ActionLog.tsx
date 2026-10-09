@@ -86,6 +86,14 @@ export function ActionLog({ drawer = false, open = false, onClose }: { drawer?: 
               <option key={style.id} value={style.id}>{style.name[language]}</option>
             ))}
           </select>
+          <button
+            className={styles.iconButton}
+            onClick={() => useUIStore.getState().setShowRulesModal(true)}
+            title={zh ? '新手教學' : 'How to play'}
+            data-testid="open-tutorial-ingame"
+          >
+            ?
+          </button>
           <button className={styles.iconButton} onClick={toggleSound} title={zh ? '音效' : 'Sound'}>
             {soundOn ? '🔊' : '🔇'}
           </button>

@@ -171,3 +171,44 @@
     opacity: 0;
   }
 }
+
+/* A Supply pile that just ran out: a red frame that flares, with a label. */
+.emptied {
+  position: absolute;
+  border-radius: 8px;
+  border: 3px solid rgba(232, 80, 64, 0.95);
+  box-shadow: 0 0 18px rgba(232, 80, 64, 0.7), inset 0 0 18px rgba(232, 80, 64, 0.35);
+  animation: emptied 1.3s ease-out forwards;
+}
+
+.emptied::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  padding: 2px 10px;
+  border: 2px solid #e85040;
+  border-radius: 4px;
+  background: rgba(30, 10, 8, 0.85);
+  color: #ffb4a8;
+  font: 700 calc(15px * var(--ui, 1)) 'Noto Sans TC', sans-serif;
+  white-space: nowrap;
+}
+
+@keyframes emptied {
+  0% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

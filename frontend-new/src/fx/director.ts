@@ -82,7 +82,13 @@ export class Director {
 
     this.inPlay.clear();
     prev.players.forEach((p, i) => this.inPlay.set(i, p.in_play.map((card) => ({ card, el: null }))));
-    const ctx: Context = { prev, next, viewer, handNames: groupNames(prev.players[viewer]?.hand ?? []) };
+    const ctx: Context = {
+      prev,
+      next,
+      viewer,
+      handNames: groupNames(prev.players[viewer]?.hand ?? []),
+      supplyLeft: { ...prev.supply },
+    };
 
     let at = 0;
     events.forEach((event, i) => {
@@ -140,9 +146,10 @@ export class Director {
     const mine = !('player' in event) || event.player === viewer;
     switch (event.kind) {
       case 'Buy':
-      case 'Shuffle':
       case 'GameOver':
         return 0;
+      case 'Shuffle':
+        return mine ? 300 : 380;
       case 'TurnStart':
         return mine ? 0 : 650;
       case 'Play':
@@ -196,8 +203,15 @@ export class Director {
           : event.to === 'Deck' ? this.pile('deck', event.player)
           : this.pile('discard', event.player);
         this.fly(event.card, spotOf(pile), to, { duration: duration + 60, arc: 0.18, land: true });
+        // Mark the moment a Supply pile runs out.
+        const left = (ctx.supplyLeft[event.card] ?? 0) - 1;
+        ctx.supplyLeft[event.card] = left;
+        if (left === 0) this.later(duration, () => this.emptied(pile));
         break;
       }
+      case 'Shuffle':
+        this.shuffle(this.pile('deck', event.player));
+        break;
       case 'Discard':
       case 'Topdeck':
       case 'Trash':
@@ -413,6 +427,54 @@ export class Director {
     };
   }
 
+  /** Two face-down halves split from the deck and riffle back together. */
+  private shuffle(at: Spot) {
+    const height = Math.max(at.height, 40);
+    const width = Math.round(height * CARD_RATIO);
+    const { language, artStyle } = useUIStore.getState();
+    const spread = width * 0.55;
+    for (let i = 0; i < 4; i++) {
+      const el = createMiniCard(null, width, height, language, artStyle);
+      el.classList.add(styles.ghost);
+      this.root.append(el);
+      this.ghosts.add(el);
+      const side = i % 2 === 0 ? -1 : 1;
+      const base = (dx: number, dy: number, rot: number) =>
+        `translate(${at.x - width / 2 + dx}px, ${at.y - height / 2 + dy}px) rotate(${rot}deg)`;
+      const anim = el.animate(
+        [
+          { transform: base(0, 0, 0), opacity: 0 },
+          { transform: base(side * spread, -4 - i * 2, side * 12), opacity: 1, offset: 0.4 },
+          { transform: base(0, -i * 2, 0), opacity: 1, offset: 0.8 },
+          { transform: base(0, 0, 0), opacity: 0 },
+        ],
+        { duration: 420, delay: i * 30, easing: 'ease-in-out', fill: 'both' },
+      );
+      anim.onfinish = () => {
+        el.remove();
+        this.ghosts.delete(el);
+      };
+    }
+  }
+
+  /** A red ring and a label over a Supply pile that just ran out. */
+  private emptied(pile: Rect) {
+    const { language } = useUIStore.getState();
+    const el = document.createElement('div');
+    el.className = styles.emptied;
+    el.style.left = `${pile.x}px`;
+    el.style.top = `${pile.y}px`;
+    el.style.width = `${pile.width}px`;
+    el.style.height = `${pile.height}px`;
+    el.dataset.label = language === 'zh' ? '售罄！' : 'Empty!';
+    this.root.append(el);
+    this.ghosts.add(el);
+    window.setTimeout(() => {
+      el.remove();
+      this.ghosts.delete(el);
+    }, 1300);
+  }
+
   /** A gold ring where a gained card lands. */
   private burst(at: Spot) {
     this.effect(styles.burst, at, 520);
@@ -468,6 +530,8 @@ interface Context {
   viewer: number;
   /** The viewer's hand as drawn (one card per name), before this message. */
   handNames: string[];
+  /** Supply counts as the replay goes, to spot the Gain that empties a pile. */
+  supplyLeft: Record<string, number>;
 }
 
 function groupNames(hand: string[]): string[] {

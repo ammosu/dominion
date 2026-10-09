@@ -16,6 +16,7 @@ import { DecisionModal } from './components/GameUI/DecisionModal';
 import { CardTooltip } from './components/GameUI/CardTooltip';
 import { CardInspector } from './components/GameUI/CardInspector';
 import { StartScreen } from './components/GameUI/StartScreen';
+import { Tutorial } from './components/GameUI/Tutorial';
 import { wsService } from './services/websocket';
 import { useGameStore } from './store/gameStore';
 import { useUIStore } from './store/uiStore';
@@ -69,6 +70,7 @@ function App() {
   return (
     <div className={styles.shell} style={{ '--ui': layout?.uiScale ?? 1 } as CSSProperties}>
       {!gameStarted && <StartScreen onStart={() => setGameStarted(true)} />}
+      <Tutorial />
 
       {/* Phaser draws the Supply and hand; overlays use the same table layout. */}
       <main className={styles.table} ref={tableRef}>

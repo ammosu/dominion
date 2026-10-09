@@ -12,6 +12,7 @@ import {
   getCardName,
 } from '../../utils/cardData';
 import { randomPlayerName } from '../../utils/playerNames';
+import { tutorialUnseen } from './Tutorial';
 import styles from './StartScreen.module.css';
 
 interface StartScreenProps {
@@ -38,6 +39,11 @@ export function StartScreen({ onStart }: StartScreenProps) {
   // switching language swaps an untouched name for one in the new language.
   const [playerName, setPlayerName] = useState(() => randomPlayerName(language));
   const [nameEdited, setNameEdited] = useState(false);
+  // Each roll spins the die once more.
+  const [nameRolls, setNameRolls] = useState(0);
+  const [kingdomRolls, setKingdomRolls] = useState(0);
+  const setShowTutorial = useUIStore((state) => state.setShowRulesModal);
+  const [firstVisit] = useState(tutorialUnseen);
   const [aiDifficulty, setAiDifficulty] = useState<'simple' | 'medium'>('medium');
   const [kingdomId, setKingdomId] = useState('first-game');
   const [randomCards, setRandomCards] = useState<string[]>(randomKingdom);
@@ -88,11 +94,12 @@ export function StartScreen({ onStart }: StartScreenProps) {
               onClick={() => {
                 setPlayerName(randomPlayerName(language, playerName));
                 setNameEdited(false);
+                setNameRolls((n) => n + 1);
               }}
               title={language === 'zh' ? '隨機名字' : 'Random name'}
               data-testid="reroll-name"
             >
-              🎲
+              <span key={nameRolls} className={nameRolls ? styles.roll : undefined}>🎲</span>
             </button>
           </div>
 
@@ -128,16 +135,23 @@ export function StartScreen({ onStart }: StartScreenProps) {
             {kingdomId === 'random' && (
               <button
                 className={styles.rerollButton}
-                onClick={() => setRandomCards(randomKingdom())}
+                onClick={() => {
+                  setRandomCards(randomKingdom());
+                  setKingdomRolls((n) => n + 1);
+                }}
                 title={language === 'zh' ? '重新抽選' : 'Reroll'}
               >
-                🎲
+                <span key={kingdomRolls} className={kingdomRolls ? styles.roll : undefined}>🎲</span>
               </button>
             )}
           </div>
           <div className={styles.kingdomPreview} data-testid="kingdom-preview">
-            {kingdomCards.map((card) => (
-              <span key={card} className={styles.kingdomChip}>
+            {kingdomCards.map((card, i) => (
+              <span
+                key={`${card}-${kingdomId}-${kingdomRolls}`}
+                className={styles.kingdomChip}
+                style={{ animationDelay: `${i * 35}ms` }}
+              >
                 <span className={styles.kingdomCost}>{getCardCost(card)}</span>
                 {getCardName(card, language)}
               </span>
@@ -159,6 +173,14 @@ export function StartScreen({ onStart }: StartScreenProps) {
 
           <button className={styles.startButton} onClick={handleStart}>
             {language === 'zh' ? '開始遊戲' : 'Start Game'}
+          </button>
+
+          <button
+            className={`${styles.langButton} ${firstVisit ? styles.tutorialHint : ''}`}
+            onClick={() => setShowTutorial(true)}
+            data-testid="open-tutorial"
+          >
+            {language === 'zh' ? '📖 新手教學' : '📖 How to play'}
           </button>
 
           <button

@@ -148,3 +148,72 @@ button.pile:not(:disabled):hover .pileCard {
   gap: calc(5px * var(--ui, 1));
   font-size: calc(11px * var(--ui, 1));
 }
+
+/* Score changes: the badge flashes green (up) or red (down), the difference slides out beside it. */
+.scoreWrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.scoreUp {
+  animation: scoreUp 0.9s ease-out 0.3s both;
+}
+
+.scoreDown {
+  animation: scoreDown 0.9s ease-out 0.3s both;
+}
+
+@keyframes scoreUp {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.35); background: #6cc070; box-shadow: 0 0 14px rgba(120, 220, 120, 0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes scoreDown {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.25); background: #b04838; box-shadow: 0 0 14px rgba(232, 80, 64, 0.9); }
+  100% { transform: scale(1); }
+}
+
+.scoreDelta {
+  position: absolute;
+  right: calc(100% + 4px);
+  top: 50%;
+  font-weight: 800;
+  font-size: calc(14px * var(--ui, 1));
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  animation: scoreDelta 1.3s ease-out 0.3s both;
+}
+
+.up {
+  color: #a8f0a0;
+}
+
+.down {
+  color: #ff9d8a;
+}
+
+@keyframes scoreDelta {
+  0% { opacity: 0; transform: translate(8px, -50%); }
+  20% { opacity: 1; transform: translate(0, -50%); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-6px, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scoreUp,
+  .scoreDown {
+    animation: none;
+  }
+  .scoreDelta {
+    animation: scoreFade 1.3s step-end both;
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes scoreFade {
+  to { opacity: 0; }
+}
