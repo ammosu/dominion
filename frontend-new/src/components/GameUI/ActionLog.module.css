@@ -12,6 +12,9 @@
 
 .header {
   display: flex;
+  /* A narrow column puts the controls on a second line under the title. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: calc(8px * var(--ui, 1));
   padding: calc(10px * var(--ui, 1)) calc(12px * var(--ui, 1));
@@ -19,7 +22,7 @@
 }
 
 .title {
-  flex: 1;
+  flex: 1 0 auto;
   font-family: 'Cinzel', 'Noto Sans TC', serif;
   font-weight: 700;
   font-size: calc(18px * var(--ui, 1));

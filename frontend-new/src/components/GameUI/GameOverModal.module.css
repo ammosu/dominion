@@ -27,6 +27,8 @@
   padding: 40px;
   max-width: 460px;
   width: 90%;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
   color: #e8dcc8;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(196, 164, 98, 0.05);
   animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.3, 1) 0.1s backwards;
@@ -225,5 +227,35 @@
 @media (max-width: 520px) {
   .modal {
     padding: 24px 16px;
+  }
+}
+
+/* Phones held sideways: winner beside the scores, Close always in view. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .modal {
+    max-width: 640px;
+    padding: 16px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: center;
+  }
+
+  .title,
+  .closeButton {
+    grid-column: 1 / -1;
+  }
+
+  .title {
+    margin-bottom: 8px;
+  }
+
+  .winner,
+  .scores {
+    margin: 0;
+  }
+
+  .closeButton {
+    margin-top: 12px;
   }
 }

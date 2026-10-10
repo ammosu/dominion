@@ -254,6 +254,31 @@
   }
 }
 
+/* Short screens (phones held sideways): the page scrolls, the nav stays in view. */
+@media (max-height: 500px) {
+  .dialog {
+    padding: 14px 18px 10px;
+  }
+
+  .page {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .title {
+    margin: 0 0 10px;
+  }
+
+  .nav {
+    flex-shrink: 0;
+    margin-top: 10px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .overlay,
   .dialog,

@@ -69,6 +69,36 @@
   cursor: not-allowed;
 }
 
+/* Phones held sideways: the card on the left, reason and buttons beside it,
+   so Buy never sits below the fold. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .sheet {
+    width: min(560px, 100%);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    grid-template-rows: 1fr auto auto;
+    column-gap: 12px;
+    align-items: end;
+  }
+
+  .card {
+    grid-row: 1 / -1;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .reason {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .buttons {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: column-reverse;
+  }
+}
+
 /* Entrance: the dialog rises and settles. */
 .sheet {
   animation: dialogIn 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.15) both;

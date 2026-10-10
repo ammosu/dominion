@@ -120,8 +120,9 @@ function wideLayout(width: number, height: number): TableLayout {
   const statusHeight = short ? 48 : Math.round(clamp(height * 0.075, 56, 64 * uiScale));
   const inPlayHeight = short ? 24 : Math.round(34 * uiScale);
 
-  // Bottom up: hand, status bar, in-play strip.
-  const handHeight = Math.round(clamp(height * 0.19, 72, 290));
+  // Bottom up: hand, status bar, in-play strip. Short tables (phones held
+  // sideways) give the hand a bigger share: it is what gets tapped most.
+  const handHeight = Math.round(clamp(height * (short ? 0.25 : 0.19), 72, 290));
   const handWidth = Math.round(handHeight * HAND_RATIO);
   const handTop = height - margin - handHeight;
   const statusTop = handTop - gap - statusHeight;
