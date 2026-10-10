@@ -11,10 +11,10 @@ pub struct WasmGame {
 
 #[wasm_bindgen]
 impl WasmGame {
-    /// Same options as the server's `/ws?difficulty=&kingdom=&name=`.
+    /// Same options as the server's `/ws?difficulty=&kingdom=&name=&opponent=`.
     #[wasm_bindgen(constructor)]
-    pub fn new(difficulty: &str, kingdom: &str, name: &str) -> WasmGame {
-        WasmGame { session: Session::new(difficulty, Some(kingdom), Some(name)) }
+    pub fn new(difficulty: &str, kingdom: &str, name: &str, opponent: &str) -> WasmGame {
+        WasmGame { session: Session::new(difficulty, Some(kingdom), Some(name), Some(opponent)) }
     }
 
     /// Initial `GameStateUpdate` as JSON.
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn plays_through_the_wasm_api() {
-        let mut game = WasmGame::new("medium", "first-game", "Tester");
+        let mut game = WasmGame::new("medium", "first-game", "Tester", "Bot");
         let start: serde_json::Value = serde_json::from_str(&game.start()).unwrap();
         assert_eq!(start["type"], "GameStateUpdate");
         let reply: serde_json::Value = serde_json::from_str(&game.send(r#"{"type":"EndPhase"}"#)).unwrap();

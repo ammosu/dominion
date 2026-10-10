@@ -54,7 +54,7 @@ cd frontend-new && npm run dev
 - `crates/wasm` — `WasmGame`: the same `Session` compiled to WebAssembly for the static GitHub Pages build
 
 **Key modules:**
-- `websocket.rs` — WebSocket handler; a thin loop around `shared::session::Session` (created from `?difficulty=&kingdom=&name=`)
+- `websocket.rs` — WebSocket handler; a thin loop around `shared::session::Session` (created from `?difficulty=&kingdom=&name=&opponent=`; the start screen picks a random opponent name)
 - `shared/protocol.rs` — `ClientMessage` (tagged enum, card fields deserialize straight into `Card`) and `ServerMessage`
 - `shared/session.rs` — game setup, `parse_kingdom`, and `handle(json)`: execute, then `run_ai_turns` until the human must act
 - `shared/ai/mod.rs` — `AiPlayer` trait, shared turn logic, `resolve_decision()` answers for every decision kind, `run_ai_turns()`

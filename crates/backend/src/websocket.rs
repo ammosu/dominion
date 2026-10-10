@@ -19,6 +19,9 @@ pub struct WsQuery {
     kingdom: Option<String>,
     #[serde(default)]
     name: Option<String>,
+    /// The AI opponent's name.
+    #[serde(default)]
+    opponent: Option<String>,
 }
 
 fn default_difficulty() -> String {
@@ -38,7 +41,12 @@ async fn send(sender: &mut futures_util::stream::SplitSink<WebSocket, Message>, 
 
 async fn handle_socket(socket: WebSocket, query: WsQuery) {
     let (mut sender, mut receiver) = socket.split();
-    let mut session = Session::new(&query.difficulty, query.kingdom.as_deref(), query.name.as_deref());
+    let mut session = Session::new(
+        &query.difficulty,
+        query.kingdom.as_deref(),
+        query.name.as_deref(),
+        query.opponent.as_deref(),
+    );
     println!("WebSocket connected: AI {}, kingdom {:?}", session.ai_name(), session.kingdom());
 
     if !send(&mut sender, session.start()).await {

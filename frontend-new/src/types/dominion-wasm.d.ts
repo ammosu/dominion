@@ -3,7 +3,7 @@
 declare module 'dominion-wasm' {
   export default function init(): Promise<unknown>;
   export class WasmGame {
-    constructor(difficulty: string, kingdom: string, name: string);
+    constructor(difficulty: string, kingdom: string, name: string, opponent: string);
     start(): string;
     send(message: string): string;
     free(): void;

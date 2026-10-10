@@ -40,19 +40,21 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(difficulty: &str, kingdom: Option<&str>, name: Option<&str>) -> Self {
+    /// `name` is the human's, `opponent` the AI's; both are trimmed to 20 characters.
+    pub fn new(difficulty: &str, kingdom: Option<&str>, name: Option<&str>, opponent: Option<&str>) -> Self {
         let ai: Box<dyn AiPlayer> = if difficulty == "simple" {
             Box::new(SimpleAi::new())
         } else {
             Box::new(MediumAi::new())
         };
-        let name = name
-            .map(|n| n.trim().chars().take(20).collect::<String>())
-            .filter(|n| !n.is_empty())
-            .unwrap_or_else(|| "Alice".to_string());
+        let clean = |name: Option<&str>, default: &str| {
+            name.map(|n| n.trim().chars().take(20).collect::<String>())
+                .filter(|n| !n.is_empty())
+                .unwrap_or_else(|| default.to_string())
+        };
         let players = vec![
-            PlayerInfo { name, is_ai: false },
-            PlayerInfo { name: "Bot".to_string(), is_ai: true },
+            PlayerInfo { name: clean(name, "Alice"), is_ai: false },
+            PlayerInfo { name: clean(opponent, "Bot"), is_ai: true },
         ];
         let game = GameState::new(players, &parse_kingdom(kingdom));
         Session { game, ai }
@@ -106,9 +108,10 @@ mod tests {
 
     #[test]
     fn session_round_trip() {
-        let mut session = Session::new("simple", Some("first-game"), Some("  Tester  "));
+        let mut session = Session::new("simple", Some("first-game"), Some("  Tester  "), Some(" 梅林 "));
         let start = serde_json::to_value(session.start()).unwrap();
         assert_eq!(start["payload"]["game_state"]["players"][0]["name"], "Tester");
+        assert_eq!(start["payload"]["game_state"]["players"][1]["name"], "梅林");
 
         let reply = serde_json::to_value(session.handle(r#"{"type":"EndPhase"}"#)).unwrap();
         assert!(reply["payload"]["error"].is_null());
@@ -121,7 +124,7 @@ mod tests {
 
     #[test]
     fn events_cover_one_message_and_the_ai_turn() {
-        let mut session = Session::new("simple", Some("first-game"), None);
+        let mut session = Session::new("simple", Some("first-game"), None, None);
         let start = serde_json::to_value(session.start()).unwrap();
         assert_eq!(start["payload"]["game_state"]["events"], serde_json::json!([]));
 

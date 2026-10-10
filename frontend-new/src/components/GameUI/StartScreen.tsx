@@ -58,10 +58,13 @@ export function StartScreen({ onStart }: StartScreenProps) {
     // Same-origin /ws: proxied to the backend by Vite (dev) or nginx (Docker)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
+    const name = playerName.trim() || randomPlayerName(language);
     const params = new URLSearchParams({
       difficulty: aiDifficulty,
       kingdom: kingdomId === 'random' ? randomCards.join(',') : kingdomId,
-      name: playerName.trim() || randomPlayerName(language),
+      name,
+      // A fresh opponent every game, never sharing the player's name.
+      opponent: randomPlayerName(language, name),
     });
     wsService.connect(`${protocol}//${host}/ws?${params}`);
     onStart();

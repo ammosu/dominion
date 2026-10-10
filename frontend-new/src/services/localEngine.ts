@@ -13,7 +13,7 @@ export class LocalEngineService {
   private handlers: MessageHandler[] = [];
   private game: InstanceType<WasmModule['WasmGame']> | null = null;
 
-  /** Accepts the same `...?difficulty=&kingdom=&name=` URL as the server. */
+  /** Accepts the same `...?difficulty=&kingdom=&name=&opponent=` URL as the server. */
   async connect(url?: string) {
     const params = new URL(url ?? '/ws', window.location.href).searchParams;
     const wasm = await import('dominion-wasm');
@@ -23,6 +23,7 @@ export class LocalEngineService {
       params.get('difficulty') ?? 'medium',
       params.get('kingdom') ?? 'first-game',
       params.get('name') ?? 'Alice',
+      params.get('opponent') ?? 'Bot',
     );
     this.emit(this.game.start());
   }
