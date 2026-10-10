@@ -457,6 +457,11 @@ export function getCardArtPath(cardName: string, style: ArtStyle): string | unde
     : undefined;
 }
 
+/** Start-screen backdrop for a style (tools/card-art/generate.py --backdrop). */
+export function getBackdropPath(style: ArtStyle, shape: 'wide' | 'tall'): string {
+  return `${import.meta.env.BASE_URL}assets/backdrops/${style}-${shape}.webp`;
+}
+
 export function getCardTextureKey(cardName: string, style: ArtStyle): string {
   return `card-art-${style}-${cardName.toLowerCase()}`;
 }

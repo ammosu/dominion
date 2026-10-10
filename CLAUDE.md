@@ -167,7 +167,7 @@ cd frontend-new && VITE_ENGINE=wasm BASE_PATH=/dominion/ npm run build
 
 **Frontend:**
 - Render `viewerPlayer` (this client), not `currentPlayer`: the human answers attacks during the AI's turn
-- Card art: several sets in `public/assets/cards/<style>/`, chosen in-game (`uiStore.artStyle`, saved to localStorage). Generate with `python3 tools/card-art/generate.py --style <name>` (Codex CLI; styles in `tools/card-art/styles/*.md`, subjects in `cards.json`), then add the style to `ART_STYLES` in `cardData.ts`. Phaser texture keys include the style; `TableScene.setArtStyle()` lazy-loads a set
+- Card art: several sets in `public/assets/cards/<style>/`, chosen in-game (`uiStore.artStyle`, saved to localStorage). Generate with `python3 tools/card-art/generate.py --style <name>` (Codex CLI; styles in `tools/card-art/styles/*.md`, subjects in `cards.json`), then add the style to `ART_STYLES` in `cardData.ts`. The start screen themes itself per style (`data-art` CSS variables in `StartScreen.module.css`) over `public/assets/backdrops/<style>-{wide,tall}.webp` from `generate.py --style <name> --backdrop` (a style can set the scene, e.g. time of day, with `<!-- backdrop: ... -->`) Phaser texture keys include the style; `TableScene.setArtStyle()` lazy-loads a set
 - Hand cards are Phaser objects on canvas, NOT React components — click handling is via Phaser events
 - Must call Phaser scene methods from React useEffect, never directly
 - Toast notifications auto-dismiss after 3 seconds

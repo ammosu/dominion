@@ -1,31 +1,128 @@
+/* One theme per art style (data-art on .overlay); every rule below reads these. */
+.overlay {
+  --bg: linear-gradient(170deg, #241a3a 0%, #1a1424 45%, #0e0a12 100%);
+  --veil: linear-gradient(180deg, rgba(20, 14, 32, 0.55) 0%, rgba(14, 10, 18, 0.88) 70%);
+  --backdrop-opacity: 0.55;
+  --text: #f3e6d0;
+  --accent: #f0c46a;
+  --muted: #c9a87a;
+  --glow: rgba(240, 196, 106, 0.25);
+  --field-bg: rgba(30, 22, 44, 0.72);
+  --field-border: rgba(240, 196, 106, 0.35);
+  --field-focus: rgba(240, 196, 106, 0.7);
+  --option-bg: #241a3a;
+  --radius: 14px;
+  --title-font: 'Cinzel', 'Noto Sans TC', serif;
+  --field-font: 'Cormorant Garamond', 'Noto Sans TC', serif;
+  --start-bg: linear-gradient(180deg, #f2b65a 0%, #d98a3a 100%);
+  --start-text: #3a2008;
+  --start-border: rgba(255, 220, 150, 0.6);
+  --start-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 24px rgba(240, 160, 80, 0.25);
+  --title-shadow: 0 0 32px rgba(240, 196, 106, 0.35), 0 4px 12px rgba(0, 0, 0, 0.6);
+  --chip-cost-bg: #f0c46a;
+  --chip-cost-text: #2a1a08;
+  --label-halo: 0 0 6px rgba(14, 10, 18, 0.9), 0 1px 2px rgba(14, 10, 18, 0.9);
+}
+
+.overlay[data-art='gouache-picturebook'] {
+  --bg: linear-gradient(175deg, #f7efdf 0%, #efe3cb 100%);
+  --veil: linear-gradient(180deg, rgba(247, 239, 223, 0.6) 0%, rgba(245, 236, 218, 0.94) 65%);
+  --backdrop-opacity: 0.7;
+  --text: #3b2a1c;
+  --accent: #b5452f;
+  --muted: #6a4e36;
+  --glow: rgba(181, 69, 47, 0.15);
+  --field-bg: rgba(255, 250, 240, 0.85);
+  --field-border: rgba(122, 95, 69, 0.4);
+  --field-focus: rgba(181, 69, 47, 0.6);
+  --option-bg: #fbf5ea;
+  --radius: 6px;
+  --title-font: 'Cormorant Garamond', 'Noto Sans TC', serif;
+  --field-font: 'Cormorant Garamond', 'Noto Sans TC', serif;
+  --start-bg: linear-gradient(180deg, #c4553a 0%, #a8402a 100%);
+  --start-text: #fff6e8;
+  --start-border: rgba(120, 40, 20, 0.5);
+  --start-shadow: 2px 3px 0 rgba(90, 60, 30, 0.25);
+  --title-shadow: 1px 2px 0 rgba(255, 255, 255, 0.7);
+  --chip-cost-bg: #d9a441;
+  --chip-cost-text: #3b2a1c;
+  --label-halo: 0 0 4px #f7efdf, 0 0 8px #f7efdf, 0 0 12px #f7efdf;
+}
+
+.overlay[data-art='pixel-art'] {
+  --bg: linear-gradient(180deg, #2b4a9a 0%, #3d6cc4 45%, #1d2f5e 100%);
+  --veil: linear-gradient(180deg, rgba(16, 24, 56, 0.35) 0%, rgba(12, 18, 40, 0.85) 65%);
+  --backdrop-opacity: 0.75;
+  --text: #ffffff;
+  --accent: #ffd34e;
+  --muted: #bfe2ff;
+  --glow: transparent;
+  --field-bg: #14204a;
+  --field-border: #ffffff;
+  --field-focus: #ffd34e;
+  --option-bg: #14204a;
+  --radius: 0;
+  --title-font: 'DotGothic16', 'Noto Sans TC', monospace;
+  --field-font: 'DotGothic16', 'Noto Sans TC', monospace;
+  --start-bg: #3fae3a;
+  --start-text: #ffffff;
+  --start-border: #ffffff;
+  --start-shadow: 4px 4px 0 #0a1230;
+  --title-shadow: 4px 4px 0 #0a1230, -2px -2px 0 #b8462e;
+  --chip-cost-bg: #ffd34e;
+  --chip-cost-text: #14204a;
+  --label-halo: 2px 0 0 #0a1230, -2px 0 0 #0a1230, 0 2px 0 #0a1230, 0 -2px 0 #0a1230;
+}
+
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(46, 36, 22, 0.4) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 80%, rgba(20, 40, 28, 0.3) 0%, transparent 60%),
-    linear-gradient(160deg, #1a1208 0%, #0e1a12 40%, #0a0e08 100%);
+  background: var(--bg);
   display: flex;
   overflow-y: auto;
   z-index: 3000;
+  transition: background 0.4s ease;
+}
+
+/* The style's own artwork behind a veil that keeps the form readable. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-image: var(--backdrop-wide);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--backdrop-opacity);
+  animation: backdropIn 0.6s ease-out both;
+  pointer-events: none;
+}
+
+.overlay[data-art='pixel-art'] .backdrop {
+  image-rendering: pixelated;
 }
 
 .overlay::before {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(196, 164, 98, 0.015) 2px,
-      rgba(196, 164, 98, 0.015) 4px
-    );
+  background: var(--veil);
   pointer-events: none;
+  z-index: 0;
+}
+
+@media (orientation: portrait) {
+  .backdrop {
+    background-image: var(--backdrop-tall);
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
 }
 
 .container {
@@ -33,19 +130,18 @@
   margin: auto;
   padding: 24px 12px;
   text-align: center;
-  color: #e8dcc8;
+  color: var(--text);
   position: relative;
+  z-index: 1;
 }
 
 .title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--title-font);
   font-size: 72px;
   font-weight: 900;
   margin-bottom: 16px;
-  color: #c4a462;
-  text-shadow:
-    0 0 40px rgba(196, 164, 98, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.6);
+  color: var(--accent);
+  text-shadow: var(--title-shadow);
   letter-spacing: 6px;
   line-height: 1;
 }
@@ -54,9 +150,14 @@
   content: '';
   display: block;
   width: 120px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(196, 164, 98, 0.5), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   margin: 24px auto 0;
+}
+
+.overlay[data-art='pixel-art'] .title::after {
+  background: repeating-linear-gradient(90deg, var(--accent) 0 8px, transparent 8px 12px);
+  height: 4px;
 }
 
 .form {
@@ -70,80 +171,78 @@
 .label {
   font-family: 'Noto Sans TC', serif;
   font-size: 14px;
-  font-weight: 400;
-  color: #907850;
+  font-weight: 500;
+  color: var(--muted);
+  text-shadow: var(--label-halo);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.input {
-  font-family: 'Cormorant Garamond', serif;
+.overlay[data-art='pixel-art'] .label {
+  font-family: var(--field-font);
+}
+
+.input,
+.select {
+  font-family: var(--field-font);
   padding: 12px 24px;
   font-size: 20px;
-  border: 1px solid rgba(196, 164, 98, 0.25);
-  border-radius: 3px;
-  background: rgba(196, 164, 98, 0.06);
-  color: #e8dcc8;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--field-bg);
+  color: var(--text);
   width: 280px;
   text-align: center;
   letter-spacing: 1px;
   transition: all 0.2s ease;
-}
-
-.input:focus {
-  outline: none;
-  border-color: rgba(196, 164, 98, 0.5);
-  background: rgba(196, 164, 98, 0.1);
-  box-shadow: 0 0 20px rgba(196, 164, 98, 0.08);
 }
 
 .select {
-  font-family: 'Cormorant Garamond', serif;
-  padding: 12px 24px;
-  font-size: 20px;
-  border: 1px solid rgba(196, 164, 98, 0.25);
-  border-radius: 3px;
-  background: rgba(196, 164, 98, 0.06);
-  color: #e8dcc8;
-  width: 280px;
-  text-align: center;
-  letter-spacing: 1px;
-  transition: all 0.2s ease;
   cursor: pointer;
 }
 
+.overlay[data-art='pixel-art'] .input,
+.overlay[data-art='pixel-art'] .select {
+  border-width: 3px;
+  box-shadow: 4px 4px 0 #0a1230;
+  font-size: 17px;
+}
+
+.input:focus,
 .select:focus {
   outline: none;
-  border-color: rgba(196, 164, 98, 0.5);
-  background: rgba(196, 164, 98, 0.1);
-  box-shadow: 0 0 20px rgba(196, 164, 98, 0.08);
+  border-color: var(--field-focus);
+  box-shadow: 0 0 20px var(--glow);
 }
 
 .select option {
-  background: #1a1208;
-  color: #e8dcc8;
+  background: var(--option-bg);
+  color: var(--text);
 }
 
 .startButton {
-  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-family: var(--title-font);
   padding: 14px 48px;
   font-size: 16px;
   font-weight: 700;
-  background: linear-gradient(180deg, #2a6038 0%, #1d4d2a 100%);
-  color: #c8e8d0;
-  border: 1px solid rgba(76, 160, 90, 0.35);
-  border-radius: 4px;
+  background: var(--start-bg);
+  color: var(--start-text);
+  border: 1px solid var(--start-border);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--start-shadow);
   letter-spacing: 2px;
   margin-top: 8px;
 }
 
+.overlay[data-art='pixel-art'] .startButton {
+  border-width: 3px;
+}
+
 .startButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, #327044 0%, #245a32 100%);
+  filter: brightness(1.08);
 }
 
 .startButton:active {
@@ -151,22 +250,21 @@
 }
 
 .langButton {
-  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  font-family: var(--title-font);
   padding: 6px 14px;
-  font-size: 11px;
-  background: transparent;
-  color: #806840;
-  border: 1px solid rgba(196, 164, 98, 0.15);
-  border-radius: 3px;
+  font-size: 12px;
+  background: var(--field-bg);
+  color: var(--muted);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 1px;
 }
 
 .langButton:hover {
-  background: rgba(196, 164, 98, 0.08);
-  border-color: rgba(196, 164, 98, 0.3);
-  color: #a08860;
+  border-color: var(--field-focus);
+  color: var(--accent);
 }
 
 .kingdomRow {
@@ -176,9 +274,9 @@
 }
 
 .rerollButton {
-  background: rgba(196, 164, 98, 0.1);
-  border: 1px solid rgba(196, 164, 98, 0.35);
-  border-radius: 4px;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
   padding: 6px 10px;
   cursor: pointer;
   font-size: 16px;
@@ -198,11 +296,16 @@
   align-items: center;
   gap: 5px;
   padding: 3px 8px 3px 3px;
-  border: 1px solid rgba(196, 164, 98, 0.25);
+  border: 1px solid var(--field-border);
   border-radius: 12px;
-  background: rgba(196, 164, 98, 0.06);
+  background: var(--field-bg);
   font-size: 12px;
-  color: #e8dcc8;
+  color: var(--text);
+}
+
+.overlay[data-art='pixel-art'] .kingdomChip,
+.overlay[data-art='pixel-art'] .kingdomCost {
+  border-radius: 0;
 }
 
 .kingdomCost {
@@ -212,8 +315,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #c4a462;
-  color: #1a1208;
+  background: var(--chip-cost-bg);
+  color: var(--chip-cost-text);
   font-weight: 700;
   font-size: 11px;
 }
@@ -299,8 +402,8 @@
 
 /* First visit: the tutorial button glows softly. */
 .tutorialHint {
-  border-color: rgba(244, 208, 106, 0.7);
-  color: #f4d06a;
+  border-color: var(--accent);
+  color: var(--accent);
   animation: rowIn 0.45s ease-out 0.55s both, hintGlow 1.8s ease-in-out 1s infinite;
 }
 
@@ -314,7 +417,8 @@
   .form > *,
   .roll,
   .kingdomChip,
-  .tutorialHint {
+  .tutorialHint,
+  .backdrop {
     animation: none;
   }
 }

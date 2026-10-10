@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type CSSProperties, useState } from 'react';
 import { useUIStore } from '../../store/uiStore';
 import { wsService } from '../../services/websocket';
 import {
@@ -8,6 +8,7 @@ import {
   CARD_DATA,
   KINGDOM_PRESETS,
   compareByCost,
+  getBackdropPath,
   getCardCost,
   getCardName,
 } from '../../utils/cardData';
@@ -67,7 +68,19 @@ export function StartScreen({ onStart }: StartScreenProps) {
   };
 
   return (
-    <div className={styles.overlay}>
+    // The screen takes on the chosen art style: its palette and fonts come from
+    // data-art in the CSS, the backdrop is that style's scene (portrait on phones), cross-faded.
+    <div className={styles.overlay} data-art={artStyle} data-testid="start-screen">
+      <div
+        key={artStyle}
+        className={styles.backdrop}
+        style={
+          {
+            '--backdrop-wide': `url(${getBackdropPath(artStyle, 'wide')})`,
+            '--backdrop-tall': `url(${getBackdropPath(artStyle, 'tall')})`,
+          } as CSSProperties
+        }
+      />
       <div className={styles.container}>
         <h1 className={styles.title}>
           {language === 'zh' ? '皇輿爭霸' : 'Dominion'}
