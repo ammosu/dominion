@@ -75,6 +75,8 @@
 }
 
 .overlay {
+  /* Every form row is this wide, including the ones with a die beside the field. */
+  --field-w: min(320px, calc(100vw - 32px));
   position: fixed;
   top: 0;
   left: 0;
@@ -168,6 +170,20 @@
   margin-top: 40px;
 }
 
+/* A label over its control(s). */
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
 .label {
   font-family: 'Noto Sans TC', serif;
   font-size: 14px;
@@ -191,7 +207,8 @@
   border-radius: var(--radius);
   background: var(--field-bg);
   color: var(--text);
-  width: 280px;
+  width: var(--field-w);
+  box-sizing: border-box;
   text-align: center;
   letter-spacing: 1px;
   transition: all 0.2s ease;
@@ -267,19 +284,29 @@
   color: var(--accent);
 }
 
-.kingdomRow {
+.fieldRow {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
+  width: var(--field-w);
+}
+
+.fieldRow > .input,
+.fieldRow > .select {
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 
 .rerollButton {
   background: var(--field-bg);
   border: 1px solid var(--field-border);
   border-radius: var(--radius);
-  padding: 6px 10px;
+  flex: none;
+  width: 48px;
+  padding: 0;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .kingdomPreview {
@@ -287,7 +314,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
-  max-width: 420px;
+  max-width: min(420px, calc(100vw - 24px));
   margin: 4px 0 8px;
 }
 
@@ -339,6 +366,74 @@
   .select {
     padding: 8px 20px;
     font-size: 18px;
+  }
+}
+
+/* Phones held sideways: two columns so Start fits on the first screen. */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 600px) {
+  .overlay {
+    --field-w: min(300px, calc(50vw - 36px));
+  }
+
+  .container {
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 40px;
+    margin-bottom: 0;
+  }
+
+  .title::after {
+    margin-top: 8px;
+  }
+
+  .form {
+    display: grid;
+    grid-template-columns: var(--field-w) var(--field-w);
+    grid-template-areas:
+      'name kingdom'
+      'difficulty kingdom'
+      'art start'
+      'footer footer';
+    column-gap: 32px;
+    row-gap: 10px;
+    margin-top: 12px;
+    align-items: end;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .nameField { grid-area: name; }
+  .difficultyField { grid-area: difficulty; }
+  .kingdomField { grid-area: kingdom; align-self: start; }
+  .artField { grid-area: art; }
+  .footerRow { grid-area: footer; }
+
+  .startButton {
+    grid-area: start;
+    margin: 0;
+    width: var(--field-w);
+    padding: 9px 0;
+  }
+
+  .input,
+  .select {
+    padding: 6px 16px;
+    font-size: 16px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 400px) and (min-width: 600px) {
+  .title {
+    font-size: 32px;
+  }
+
+  .form {
+    margin-top: 8px;
+    row-gap: 6px;
   }
 }
 

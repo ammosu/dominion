@@ -87,125 +87,135 @@ export function StartScreen({ onStart }: StartScreenProps) {
         </h1>
 
         <div className={styles.form}>
-          <label className={styles.label}>
-            {language === 'zh' ? '玩家名稱' : 'Player Name'}
-          </label>
-          <div className={styles.kingdomRow}>
-            <input
-              type="text"
-              className={styles.input}
-              value={playerName}
-              onChange={(e) => {
-                setPlayerName(e.target.value);
-                setNameEdited(true);
-              }}
-              maxLength={20}
-              data-testid="player-name"
-            />
-            <button
-              className={styles.rerollButton}
-              onClick={() => {
-                setPlayerName(randomPlayerName(language, playerName));
-                setNameEdited(false);
-                setNameRolls((n) => n + 1);
-              }}
-              title={language === 'zh' ? '隨機名字' : 'Random name'}
-              data-testid="reroll-name"
-            >
-              <span key={nameRolls} className={nameRolls ? styles.roll : undefined}>🎲</span>
-            </button>
-          </div>
-
-          <label className={styles.label}>
-            {language === 'zh' ? 'AI 難度' : 'AI Difficulty'}
-          </label>
-          <select
-            className={styles.select}
-            value={aiDifficulty}
-            onChange={(e) => setAiDifficulty(e.target.value as 'simple' | 'medium')}
-          >
-            <option value="simple">{language === 'zh' ? '簡單' : 'Simple'}</option>
-            <option value="medium">{language === 'zh' ? '中等' : 'Medium'}</option>
-          </select>
-
-          <label className={styles.label}>
-            {language === 'zh' ? '王國牌組' : 'Kingdom'}
-          </label>
-          <div className={styles.kingdomRow}>
-            <select
-              className={styles.select}
-              value={kingdomId}
-              onChange={(e) => setKingdomId(e.target.value)}
-              data-testid="kingdom-select"
-            >
-              {KINGDOM_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name[language]}
-                </option>
-              ))}
-              <option value="random">{language === 'zh' ? '隨機 10 張' : 'Random 10'}</option>
-            </select>
-            {kingdomId === 'random' && (
+          <div className={`${styles.field} ${styles.nameField}`}>
+            <label className={styles.label}>
+              {language === 'zh' ? '玩家名稱' : 'Player Name'}
+            </label>
+            <div className={styles.fieldRow}>
+              <input
+                type="text"
+                className={styles.input}
+                value={playerName}
+                onChange={(e) => {
+                  setPlayerName(e.target.value);
+                  setNameEdited(true);
+                }}
+                maxLength={20}
+                data-testid="player-name"
+              />
               <button
                 className={styles.rerollButton}
                 onClick={() => {
-                  setRandomCards(randomKingdom());
-                  setKingdomRolls((n) => n + 1);
+                  setPlayerName(randomPlayerName(language, playerName));
+                  setNameEdited(false);
+                  setNameRolls((n) => n + 1);
                 }}
-                title={language === 'zh' ? '重新抽選' : 'Reroll'}
+                title={language === 'zh' ? '隨機名字' : 'Random name'}
+                data-testid="reroll-name"
               >
-                <span key={kingdomRolls} className={kingdomRolls ? styles.roll : undefined}>🎲</span>
+                <span key={nameRolls} className={nameRolls ? styles.roll : undefined}>🎲</span>
               </button>
-            )}
-          </div>
-          <div className={styles.kingdomPreview} data-testid="kingdom-preview">
-            {kingdomCards.map((card, i) => (
-              <span
-                key={`${card}-${kingdomId}-${kingdomRolls}`}
-                className={styles.kingdomChip}
-                style={{ animationDelay: `${i * 35}ms` }}
-              >
-                <span className={styles.kingdomCost}>{getCardCost(card)}</span>
-                {getCardName(card, language)}
-              </span>
-            ))}
+            </div>
           </div>
 
-          <label className={styles.label}>
-            {language === 'zh' ? '插圖風格' : 'Art Style'}
-          </label>
-          <select
-            className={styles.select}
-            value={artStyle}
-            onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
-          >
-            {ART_STYLES.map((style) => (
-              <option key={style.id} value={style.id}>{style.name[language]}</option>
-            ))}
-          </select>
+          <div className={`${styles.field} ${styles.difficultyField}`}>
+            <label className={styles.label}>
+              {language === 'zh' ? 'AI 難度' : 'AI Difficulty'}
+            </label>
+            <select
+              className={styles.select}
+              value={aiDifficulty}
+              onChange={(e) => setAiDifficulty(e.target.value as 'simple' | 'medium')}
+            >
+              <option value="simple">{language === 'zh' ? '簡單' : 'Simple'}</option>
+              <option value="medium">{language === 'zh' ? '中等' : 'Medium'}</option>
+            </select>
+          </div>
+
+          <div className={`${styles.field} ${styles.kingdomField}`}>
+            <label className={styles.label}>
+              {language === 'zh' ? '王國牌組' : 'Kingdom'}
+            </label>
+            <div className={styles.fieldRow}>
+              <select
+                className={styles.select}
+                value={kingdomId}
+                onChange={(e) => setKingdomId(e.target.value)}
+                data-testid="kingdom-select"
+              >
+                {KINGDOM_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name[language]}
+                  </option>
+                ))}
+                <option value="random">{language === 'zh' ? '隨機 10 張' : 'Random 10'}</option>
+              </select>
+              {kingdomId === 'random' && (
+                <button
+                  className={styles.rerollButton}
+                  onClick={() => {
+                    setRandomCards(randomKingdom());
+                    setKingdomRolls((n) => n + 1);
+                  }}
+                  title={language === 'zh' ? '重新抽選' : 'Reroll'}
+                >
+                  <span key={kingdomRolls} className={kingdomRolls ? styles.roll : undefined}>🎲</span>
+                </button>
+              )}
+            </div>
+            <div className={styles.kingdomPreview} data-testid="kingdom-preview">
+              {kingdomCards.map((card, i) => (
+                <span
+                  key={`${card}-${kingdomId}-${kingdomRolls}`}
+                  className={styles.kingdomChip}
+                  style={{ animationDelay: `${i * 35}ms` }}
+                >
+                  <span className={styles.kingdomCost}>{getCardCost(card)}</span>
+                  {getCardName(card, language)}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${styles.field} ${styles.artField}`}>
+            <label className={styles.label}>
+              {language === 'zh' ? '插圖風格' : 'Art Style'}
+            </label>
+            <select
+              className={styles.select}
+              value={artStyle}
+              onChange={(e) => setArtStyle(e.target.value as ArtStyle)}
+            >
+              {ART_STYLES.map((style) => (
+                <option key={style.id} value={style.id}>{style.name[language]}</option>
+              ))}
+            </select>
+          </div>
 
           <button className={styles.startButton} onClick={handleStart}>
             {language === 'zh' ? '開始遊戲' : 'Start Game'}
           </button>
 
-          <button
-            className={`${styles.langButton} ${firstVisit ? styles.tutorialHint : ''}`}
-            onClick={() => setShowTutorial(true)}
-            data-testid="open-tutorial"
-          >
-            {language === 'zh' ? '📖 新手教學' : '📖 How to play'}
-          </button>
+          <div className={styles.footerRow}>
+            <button
+              className={`${styles.langButton} ${firstVisit ? styles.tutorialHint : ''}`}
+              onClick={() => setShowTutorial(true)}
+              data-testid="open-tutorial"
+            >
+              {language === 'zh' ? '📖 新手教學' : '📖 How to play'}
+            </button>
 
-          <button
-            className={styles.langButton}
-            onClick={() => {
-              const next = language === 'zh' ? 'en' : 'zh';
-              setLanguage(next);
-              if (!nameEdited) setPlayerName(randomPlayerName(next));
-            }}
-          >
-            {language === 'zh' ? 'English' : '中文'}
-          </button>
+            <button
+              className={styles.langButton}
+              onClick={() => {
+                const next = language === 'zh' ? 'en' : 'zh';
+                setLanguage(next);
+                if (!nameEdited) setPlayerName(randomPlayerName(next));
+              }}
+            >
+              {language === 'zh' ? 'English' : '中文'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
